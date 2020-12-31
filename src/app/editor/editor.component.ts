@@ -11,5 +11,4 @@ export class EditorComponent implements OnInit {
 
   ngOnInit(): void {
   }
-
 }

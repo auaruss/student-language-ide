@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+@import '~codemirror/lib/codemirror';
+@import '~codemirror/theme/material';
 
 textarea {
   font-size: 1rem;
@@ -9,4 +11,8 @@ textarea {
   Menlo,
   Courier,
   monospace;;
+}
+
+body {
+  background-color: rgba(129, 123, 123, 0.918);
 }

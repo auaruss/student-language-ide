@@ -1,1 +1,11 @@
-<textarea id="evaluations" placeholder="evaluations works!" tabindex="2"></textarea>
+<ngx-codemirror
+  #evaluations
+  [(ngModel)]="content"
+  id="evaluations"
+  [options]="{
+    lineNumbers: true,
+    theme: 'material',
+    mode: 'markdown',
+    readOnly: true
+  }"
+></ngx-codemirror>

@@ -6,21 +6,21 @@ body {
 .left,.right {
   overflow: hidden;
   resize: none;
-  width: 49%;
-  height: 94%;
+  width: 48.1vw;
+  height: 96vh;
   position: fixed;
   z-index: 1;
   overflow-x: hidden;
-  padding-top: 20px;
-  border: solid black 0.1em;
-  border-radius: 1em;
+  overflow-y: hidden;
+  border: solid black;
+  border-radius: 1.9vw;
   outline: none;
 }
 .left {
-  left: 0.1em;
+  left: 1vw;
 }
 .right {
-  right: 1%;
+  right: 1vw;
 }
 
 .editor {
