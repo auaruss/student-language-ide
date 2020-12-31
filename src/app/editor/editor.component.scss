@@ -1,0 +1,32 @@
+body {
+  font-family: Arial;
+  color: white;
+}
+
+.left,.right {
+  overflow: hidden;
+  resize: none;
+  width: 49%;
+  height: 94%;
+  position: fixed;
+  z-index: 1;
+  overflow-x: hidden;
+  padding-top: 20px;
+  border: solid black 0.1em;
+  border-radius: 1em;
+  outline: none;
+}
+.left {
+  left: 0.1em;
+}
+.right {
+  right: 1%;
+}
+
+.editor {
+  position: fixed;
+  top: 1%;
+  left: 1%;
+  height: 98%;
+  width: 98%;
+}
