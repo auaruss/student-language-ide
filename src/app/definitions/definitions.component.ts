@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, EventEmitter, Output } from '@angular/core';
 import * as CodeMirror from 'codemirror';
 
 
@@ -8,9 +8,10 @@ import * as CodeMirror from 'codemirror';
   styleUrls: ['./definitions.component.scss']
 })
 export class DefinitionsComponent implements OnInit {
-  content;
-
+  @Output() redirect: EventEmitter<any> = new EventEmitter();
   @ViewChild('editor') editor: any;
+
+  content;
   
   constructor() {
   }
@@ -19,7 +20,14 @@ export class DefinitionsComponent implements OnInit {
   }
 
   ngAfterViewInit(): void {
+    let rd = this.redirect;
     this.editor.codeMirror.setSize("100%", "100%");
-    this.editor.codeMirror.setValue("Hello, world.");
+    this.editor.codeMirror.on('change', (cm, change) => {
+      this.handleChange(rd, cm, change)
+    });
+  }
+  
+  handleChange(rd, cm, change): void {
+    rd.emit(this.content);
   }
 }

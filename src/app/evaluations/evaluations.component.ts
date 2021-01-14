@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Input } from '@angular/core';
 import * as CodeMirror from 'codemirror';
+import { print } from '../../evaluator/print';
 
 @Component({
   selector: 'app-evaluations',
@@ -8,8 +9,8 @@ import * as CodeMirror from 'codemirror';
 })
 export class EvaluationsComponent implements OnInit {
   content;
-  
   @ViewChild('evaluations') evaluations: any;
+  @Input() data:any;
   
   constructor() { }
 
@@ -18,6 +19,9 @@ export class EvaluationsComponent implements OnInit {
 
   ngAfterViewInit(): void {
     this.evaluations.codeMirror.setSize("100%", "100%");
-    this.evaluations.codeMirror.setValue("Hello, world.");
+  }
+
+  ngOnChanges(): void {
+    this.evaluations.codeMirror.setValue(print(this.data));
   }
 }
