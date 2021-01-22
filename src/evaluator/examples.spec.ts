@@ -397,14 +397,12 @@ t('(define bool #t123)',
   ],
 
   [
-    DefnErr('Cannot have a definition as the body of a definition',
+    DefnErr('A definition can\'t have more than 3 parts',
     [
-      SExps(
-        IdAtom('define'),
-        IdAtom('bool'),
-        TokErr('#'),
-        IdAtom('t123'),
-      )
+      IdAtom('define'),
+      IdAtom('bool'),
+      TokErr('#'),
+      IdAtom('t123'),
     ])
   ],
 );
