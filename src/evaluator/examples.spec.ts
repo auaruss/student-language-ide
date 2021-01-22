@@ -1173,7 +1173,7 @@ t('(define x (+ (+) 3)');
 /**
  * Our demo: (+ 2 3)
  */
-t('', [], [], [], [], '');
+t('', [], [], [], [], '\n');
 
 t('(',
   [OP],
@@ -1246,7 +1246,7 @@ t('(+ 2 4) (+',
   [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
   [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
   '6\n'
-  + 'Read Error: No Closing Paren for (+'
+  + 'Read Error: No Closing Paren for (+\n'
 );
 
 // // t('(+ 2 4) (+ ');
@@ -1257,7 +1257,7 @@ t('(+ 2 4) (+ 4',
   [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
   [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
   '6\n'
-  + 'Read Error: No Closing Paren for (+ 4'
+  + 'Read Error: No Closing Paren for (+ 4\n'
 );
 
 // t('(+ 2 4) (+ 4 ');
@@ -1268,7 +1268,7 @@ t('(+ 2 4) (+ 4 7',
   [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
   [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
   '6\n'
-  + 'Read Error: No Closing Paren for (+ 4 7'
+  + 'Read Error: No Closing Paren for (+ 4 7\n'
 );
 
 t('(+ 2 4) (+ 4 7)',
@@ -1277,7 +1277,7 @@ t('(+ 2 4) (+ 4 7)',
   [ Call('+', [NumExpr(2), NumExpr(4)]), Call('+', [NumExpr(4), NumExpr(7)]) ],
   [ NFn(6), NFn(11) ],
   '6\n' +
-  '11'
+  '11\n'
 );
 
 
