@@ -282,6 +282,38 @@ t('(123)',
   ]
 );
 
+t('(\n'
+  + '1',
+
+  [ OP, NL, NumTok('1') ],
+  [ ReadErr('No Closing Paren', [ OP, NumTok('1') ]) ],
+  [ ReadErr('No Closing Paren', [ OP, NumTok('1') ]) ],
+  [ ReadErr('No Closing Paren', [ OP, NumTok('1') ]) ],
+  'Read Error: No Closing Paren for (1\n'
+);
+
+//    1st option. ( [) 1
+// -> 2nd option. ([) 1 <- We are currently using this.
+//    3rd option. ( [ 1
+t('([)\n'
+  + '1'
+);
+
+
+// ([) ) 1
+t('([))\n'
+  + '1'
+);
+
+t('(]))\n'
++ '1'
+);
+
+t('([[[][][][][][])\n'
+  + '(define x 10)\n'
+  + 'x',
+);
+
 t('([[[][][][][][])))[][])))){}{}{}',
   
   [
