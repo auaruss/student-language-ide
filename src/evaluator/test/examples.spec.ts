@@ -618,7 +618,7 @@ t('(define (simple-choice x y z) (if x y z))\n'
   tokenize('(define (simple-choice x y z) (if x y z))')
   .concat([ NL ])
   .concat(tokenize('(simple-choice #t 10 20)'))
-  .concat([ Tok(TokenType.Whitespace, '\n\n') ])
+  .concat([ NL, NL ])
   .concat(tokenize('(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))'))
   .concat([ NL ])
   .concat(tokenize('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))'))
