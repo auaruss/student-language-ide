@@ -1,3 +1,4 @@
+
 import {
   TokenType, Token, TokenError,
   SExp, ReadError, Expr, ExprResult,
@@ -241,6 +242,6 @@ export const OSP: Token   = Tok(TokenType.OpenSquareParen,   '[');
 export const CSP: Token   = Tok(TokenType.CloseSquareParen,  ']');
 export const OBP: Token   = Tok(TokenType.OpenBraceParen,    '{');
 export const CBP: Token   = Tok(TokenType.CloseBraceParen,   '}');
-export const NL: Token    = Tok(TokenType.Whitespace,       '\n');
+export const NL: Token    = Tok(TokenType.Newline,       '\n');
 
 export const NOP: Nothing = { type: 'nothing' };

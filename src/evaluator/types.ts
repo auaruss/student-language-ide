@@ -20,6 +20,7 @@ export enum TokenType {
   Identifier='Identifier',
   Whitespace='Whitespace',
   Boolean='Boolean',
+  Newline='Newline',
   Comment='Comment'
 };
 
