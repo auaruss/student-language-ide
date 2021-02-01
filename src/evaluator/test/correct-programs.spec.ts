@@ -1,3 +1,5 @@
+'use strict';
+
 import { t } from './test-harness';
 
 import {

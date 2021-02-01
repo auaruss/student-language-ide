@@ -1,3 +1,5 @@
+'use strict';
+
 import {
   DefOrExpr, Definition, Expr, ReadError,
   TokenType, TokenError, Token, SExp, ExprResult, Result
