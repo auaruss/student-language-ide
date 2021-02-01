@@ -286,12 +286,13 @@ t(
         Bind('init-angle', NFn(0.3 * Math.PI)),
         Bind('init-x-vel', NFn(1.5 * Math.cos(0.3 * Math.PI))),
         Bind('init-y-vel', NFn(1.5 * Math.sin(0.3 * Math.PI))),
-        Bind('y-pos', Clos(['t']))
+        Bind('y-pos', Clos())
       ],
     
-  `Defined init-speed to be 1.5.
-  Defined init-angle to be ${0.3 * Math.PI}.
-  Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
-  Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
-  `
+`Defined init-speed to be 1.5.
+Defined init-angle to be ${0.3 * Math.PI}.
+Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
+Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
+Defined (y-pos t) to be (- (* init-y-vel t) (* 0.5 0.003 t t)).
+`
   );
