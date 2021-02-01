@@ -154,7 +154,5 @@ export const builtinEnv = (): Env => {
 
   m.set('pi', MakeJust(NFn(Math.PI)));
 
-  
-
   return m;
 }
