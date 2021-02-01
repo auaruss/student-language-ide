@@ -154,5 +154,43 @@ export const builtinEnv = (): Env => {
 
   m.set('pi', MakeJust(NFn(Math.PI)));
 
+  m.set('cos',
+    MakeJust(
+      BFn(
+        (vs: Value[]) => {
+          if (vs.length === 0) throw new Error('cos: expects at least 1 argument, but found none');
+          else if (vs.length > 1) return NFn(0); // Error
+          else {
+            let val = vs[0];
+            if (val.type === 'NonFunction') {
+              if (typeof val.value === 'number') return NFn(Math.cos(val.value));
+              else return NFn(0);
+            }
+            return NFn(0);
+          }
+        }
+      )
+    )
+  )
+
+  m.set('sin',
+  MakeJust(
+      BFn(
+        (vs: Value[]) => {
+          if (vs.length === 0) throw new Error('sin: expects at least 1 argument, but found none');
+          else if (vs.length > 1) return NFn(0); // Error
+          else {
+            let val = vs[0];
+            if (val.type === 'NonFunction') {
+              if (typeof val.value === 'number') return NFn(Math.sin(val.value));
+              else return NFn(0);
+            }
+            return NFn(0);
+          }
+        }
+      )
+    )
+  )
+
   return m;
 }
