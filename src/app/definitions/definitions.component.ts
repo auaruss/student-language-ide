@@ -28,6 +28,6 @@ export class DefinitionsComponent implements OnInit {
   }
   
   handleChange(rd, cm, change): void {
-    rd.emit(this.content);
+    rd.emit(this.editor.codeMirror.getValue());
   }
 }

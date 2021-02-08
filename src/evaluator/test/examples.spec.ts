@@ -10,7 +10,7 @@ import {
   BooleanTok, BooleanAtom, BooleanExpr,
   TokErr, ReadErr, DefnErr, ExprErr, ValErr,
   CP, OP, SPACE, OSP, CSP, OBP, CBP, NL,
-  SExps, VarDefn, FnDefn, Call
+  SExps, VarDefn, FnDefn, Call, Bind
 } from '../constructors';
 
 import {
@@ -618,7 +618,7 @@ t('(define (simple-choice x y z) (if x y z))\n'
   tokenize('(define (simple-choice x y z) (if x y z))')
   .concat([ NL ])
   .concat(tokenize('(simple-choice #t 10 20)'))
-  .concat([ NL, NL ])
+  .concat([ Tok(TokenType.Whitespace, '\n\n') ])
   .concat(tokenize('(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))'))
   .concat([ NL ])
   .concat(tokenize('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))'))
@@ -1109,6 +1109,28 @@ t('(define x (f 3)) (define (f y) y)'
 );
 
 t('(define x (+ (+) 3)');
+
+
+t(
+`(define x 10)
+(check-expect x 10)`,
+
+  [
+    OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP, NL,
+    OP, IdTok('check-expect'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP
+  ],
+
+  [
+    SExps(IdAtom('define'), IdAtom('x'), NumAtom(10)),
+    SExps(IdAtom('check-expect'), IdAtom('x'), NumAtom(10)),
+  ],
+
+  [
+    VarDefn('x', NumExpr(10)),
+    Call('check-expect', [IdExpr('x'), NumExpr(10)])
+  ]
+
+);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *

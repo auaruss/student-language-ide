@@ -15,8 +15,6 @@ import { Tok, TokErr } from './constructors';
 
 // Regexp Definitions.
 export const tokenExpressions: [TokenType, RegExp][] = [
-  [TokenType.Comment, /^;.*[\n$]/],
-  [TokenType.Newline, /^\n/],
   [TokenType.OpenParen, /^\(/],
   [TokenType.OpenSquareParen, /^\[/],
   [TokenType.OpenBraceParen, /^\{/],
@@ -27,7 +25,7 @@ export const tokenExpressions: [TokenType, RegExp][] = [
   [TokenType.String, /^"[^"]*"/],
   [TokenType.Identifier, /^[^",'`\(\)\[\]{};#\s]+/],
   [TokenType.Boolean, /^#t\b|^#T\b|^#f\b|^#F\b|^#true\b|^#false\b/],
-  [TokenType.Whitespace, /^\s+/]
+  [TokenType.Whitespace, /^\s+|^;.*[\n$]/],
 ];
 
 

@@ -20,7 +20,7 @@ export const NumTok     = (v: string): Token => { return Tok(TokenType.Number,  
 export const IdTok      = (v: string): Token => { return Tok(TokenType.Identifier,   v);            }
 export const StringTok  = (v: string): Token => { return Tok(TokenType.String, '"' + v + '"');      }
 export const BooleanTok = (v: string): Token => { return Tok(TokenType.Boolean,      v);            }
-export const CommentTok = (v: string): Token => { return Tok(TokenType.Comment,      v);            }
+export const CommentTok = (v: string): Token => { return Tok(TokenType.Whitespace,      v);            }
 
 export const TokErr = (v: string): TokenError => { 
   return { tokenError: 'Unidentified Token', string: v };
@@ -242,6 +242,12 @@ export const OSP: Token   = Tok(TokenType.OpenSquareParen,   '[');
 export const CSP: Token   = Tok(TokenType.CloseSquareParen,  ']');
 export const OBP: Token   = Tok(TokenType.OpenBraceParen,    '{');
 export const CBP: Token   = Tok(TokenType.CloseBraceParen,   '}');
-export const NL: Token    = Tok(TokenType.Newline,       '\n');
+export const NL: Token    = Tok(TokenType.Whitespace,       '\n');
 
 export const NOP: Nothing = { type: 'nothing' };
+
+export const Spaces = (x : number): Token => {
+  let spaces = '';
+  for (let i = 0; i < x; i++) spaces += ' ';
+  return Tok(TokenType.Whitespace, spaces);
+}
