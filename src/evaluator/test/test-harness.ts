@@ -1,3 +1,4 @@
+import { isBinding, isClos } from './../predicates';
 'use strict';
 
 import {
@@ -72,7 +73,19 @@ export const t  = (
         let doe = evaluateDefOrExprs(deforexprs);
         if (values) {
           it('should evaluate correctly', () => {
-            expect(doe).toEqual(values);
+            for (let i = 0; i < doe.length; i++) {
+              let d = doe[i];
+              let v = values[i];
+              if (isBinding(v)) {
+                if (isClos(v.toBe)) {
+                  expect(isBinding(d)).toBeTruthy();
+                  if (isBinding(d)) {
+                    expect(d.defined).toEqual(v.defined);
+                    expect(isClos(d.toBe)).toBeTruthy();
+                  }
+                }
+              } else expect(d).toEqual(v);
+            }
           });
         } else {
           values = doe;
@@ -82,7 +95,7 @@ export const t  = (
       }
     }
 
-    if (values) {
+    if (values) { // values cannot be guaranteed to be 
       try {
         let o = printResults(values);
         if (output) {
