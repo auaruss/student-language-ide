@@ -50,7 +50,8 @@ const printExprResult = (er: ExprResult): string => {
 }
 
 const printBinding = (b: Binding): string => {
-  return `Defined ${b.defined} to be ${printExprResult(b.toBe)}.`;
+  if (b.toBe) return `Defined ${b.defined} to be ${printExprResult(b.toBe)}.`;
+  else return `Defined ${b.defined} to be null`;
 }
 
 const printValue = (v: Value): string => {

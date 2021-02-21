@@ -1,3 +1,4 @@
+import { Closure } from './../types';
 'use strict';
 
 import { t } from './test-harness';
@@ -35,6 +36,7 @@ const A_CLOSURE: ExprResult = {
     }
   }
 };
+
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *
@@ -290,7 +292,7 @@ t(
         Bind('init-angle', NFn(0.3 * Math.PI)),
         Bind('init-x-vel', NFn(1.5 * Math.cos(0.3 * Math.PI))),
         Bind('init-y-vel', NFn(1.5 * Math.sin(0.3 * Math.PI))),
-        Bind('y-pos', A_CLOSURE)
+        Bind('y-pos', null)
       ],
     
 `Defined init-speed to be 1.5.

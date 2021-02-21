@@ -168,7 +168,7 @@ export function MakeJust<T>(t: T): Just<T> {
   return { type: 'just', thing: t };
 }
 
-export const Bind = (d: string, v: ExprResult): Binding => {
+export const Bind = (d: string, v: ExprResult | null): Binding => {
   return {
     type: 'define',
     defined: d,

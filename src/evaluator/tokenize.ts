@@ -25,7 +25,7 @@ export const tokenExpressions: [TokenType, RegExp][] = [
   [TokenType.String, /^"[^"]*"/],
   [TokenType.Identifier, /^[^",'`\(\)\[\]{};#\s]+/],
   [TokenType.Boolean, /^#t\b|^#T\b|^#f\b|^#F\b|^#true\b|^#false\b/],
-  [TokenType.Whitespace, /^\s+|^;.*[\n$]/],
+  [TokenType.Whitespace, /^\s+|^;.*\n|^;.*$/],
 ];
 
 

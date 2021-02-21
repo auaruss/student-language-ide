@@ -12,6 +12,8 @@ import { parse,    parseSexps         } from '../parse';
 import { evaluate, evaluateDefOrExprs } from '../eval';
 import { print,    printResults       } from '../print';
 
+
+
 export const t  = (
   input?: string,
   tokens?: Token[],
@@ -20,14 +22,15 @@ export const t  = (
   values?: Result[],
   output?: string
 ) => {
-  describe(input, () => {
-   
+
+  const inner = () =>{
     if (input) {
       try {
         let ts = tokenize(input);
         if (tokens) {
+          let toks: Token[] = tokens;
           it('should tokenize correctly', () => {
-            expect(ts).toEqual(tokens);
+            expect(ts).toEqual(toks);
           });
         } else {
           tokens = ts;
@@ -57,8 +60,10 @@ export const t  = (
       try {
         let d = parseSexps(sexps);
         if (deforexprs) {
+          // assign to a variable which has the definite type DefOrExpr[] instead of DefOrExpr[] | undefined.
+          let def: DefOrExpr[] = deforexprs;
           it('should parse correctly', () => {
-            expect(d).toEqual(deforexprs);
+            expect(d).toEqual(def);
           });
         } else {
           deforexprs = d;
@@ -72,10 +77,11 @@ export const t  = (
       try {
         let doe = evaluateDefOrExprs(deforexprs);
         if (values) {
+          let vals: Result[] = values;
           it('should evaluate correctly', () => {
             for (let i = 0; i < doe.length; i++) {
               let d = doe[i];
-              let v = values[i];
+              let v = vals[i];
               if (isBinding(v)) {
                 if (isClos(v.toBe)) {
                   expect(isBinding(d)).toBeTruthy();
@@ -107,5 +113,19 @@ export const t  = (
         it('Threw this error on the printer: ' + e, () => expect(e).toBeDefined());
       }
     }
-  });
+  }
+
+  if (input) {
+    describe(input, () => {inner()});
+  } else if (tokens) {
+    describe(tokens.toString(), () => {inner()});
+  } else if (sexps) {
+    describe(sexps.toString(), () => {inner()});
+  } else if (deforexprs) {
+    describe(deforexprs.toString(), () => {inner()});
+  } else if (values) {
+    describe(values.toString(), () => {inner()});
+  } else if (output) {
+    describe(output.toString(), () => {inner()});
+  }
 }

@@ -118,6 +118,8 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
         return readSexp(tokens.slice(1));
     }
   }
+
+  throw new Error('Could not find a proper return statement in readSexps.');
 }
 
 /**
@@ -154,8 +156,8 @@ export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
 }
 
 export const readTokens = (ts: Token[]): SExp[] => {
-  let tokens = ts.slice().filter((t: Token) => isTokenError(t) || t.type !== TokenType.Whitespace); 
-  let sexps = [];
+  let tokens: Token[] = ts.slice().filter((t: Token) => isTokenError(t) || t.type !== TokenType.Whitespace); 
+  let sexps: SExp[] = [];
   
   while (tokens.length !== 0) {
     let next = readSexp(tokens);

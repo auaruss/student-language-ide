@@ -10,7 +10,7 @@ import {
   BooleanTok, BooleanAtom, BooleanExpr,
   TokErr, ReadErr, DefnErr, ExprErr, ValErr,
   CP, OP, SPACE, OSP, CSP, OBP, CBP, NL,
-  SExps, VarDefn, FnDefn, Call, Bind
+  SExps, VarDefn, FnDefn, Call, Bind, CommentTok
 } from '../constructors';
 
 import {
@@ -1130,6 +1130,12 @@ t(
     Call('check-expect', [IdExpr('x'), NumExpr(10)])
   ]
 
+);
+
+
+t(
+`;(define x 10)`,
+[ CommentTok(';(define x 10)') ]
 );
 
 /*****************************************************************************

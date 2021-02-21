@@ -153,7 +153,7 @@ export type Binding
   = {
     type: 'define',
     defined: string,
-    toBe: ExprResult
+    toBe: ExprResult | null
   };
 
 export type Value
