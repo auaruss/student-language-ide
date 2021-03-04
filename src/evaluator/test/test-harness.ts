@@ -1,10 +1,18 @@
-import { isBinding, isClos } from './../predicates';
 'use strict';
+
+import { isBinding, isClos, isBindingError, isValueError, isValue, isExprError } from './../predicates';
 
 import {
   DefOrExpr, Definition, Expr, ReadError,
-  TokenType, TokenError, Token, SExp, ExprResult, Result
+  TokenType, TokenError, Token, SExp, ExprResult, Result, Binding,
+  Value, ValueError, ExprError
 } from '../types';
+
+import {
+  Bind, NFn
+} from '../constructors';
+
+import { checkExpect } from './check-expect';
 
 import { tokenize                     } from '../tokenize';
 import { read,     readTokens         } from '../read';
@@ -23,7 +31,7 @@ export const t  = (
   output?: string
 ) => {
 
-  const inner = () =>{
+  const inner = () => {
     if (input) {
       try {
         let ts = tokenize(input);
@@ -77,22 +85,30 @@ export const t  = (
       try {
         let doe = evaluateDefOrExprs(deforexprs);
         if (values) {
-          let vals: Result[] = values;
-          it('should evaluate correctly', () => {
-            for (let i = 0; i < doe.length; i++) {
-              let d = doe[i];
-              let v = vals[i];
-              if (isBinding(v)) {
-                if (isClos(v.toBe)) {
-                  expect(isBinding(d)).toBeTruthy();
-                  if (isBinding(d)) {
-                    expect(d.defined).toEqual(v.defined);
-                    expect(isClos(d.toBe)).toBeTruthy();
+          const vals: Result[] = values;
+
+          if (vals.length != doe.length) {
+            it('should evaluate to the correct number of results', () =>{
+              expect(doe.length).toEqual(vals.length);
+            });
+          } else {
+            it('should evaluate correctly', () => {
+
+              for (let i = 0; i < vals.length; i++) {
+                let d = doe[i];
+                let v = vals[i];
+
+                if (isBinding(d)) {
+                  if (isBinding(v)) {
+                    matchingBindings(d, v);
+                  } else {
+                    // expect(v).toBeInstanceOf(Binding);
                   }
                 }
-              } else expect(d).toEqual(v);
-            }
-          });
+              }
+
+            });
+          }
         } else {
           values = doe;
         }
@@ -115,17 +131,134 @@ export const t  = (
     }
   }
 
-  if (input) {
-    describe(input, () => {inner()});
-  } else if (tokens) {
-    describe(tokens.toString(), () => {inner()});
-  } else if (sexps) {
-    describe(sexps.toString(), () => {inner()});
-  } else if (deforexprs) {
-    describe(deforexprs.toString(), () => {inner()});
-  } else if (values) {
-    describe(values.toString(), () => {inner()});
-  } else if (output) {
-    describe(output.toString(), () => {inner()});
+  let subject;
+
+  for (let i of [input, tokens, sexps, deforexprs, values, output]) {
+    if (i) {
+      if (typeof i === 'string')
+        subject = i;
+      else
+        subject = i.toString();
+      break;
+    }
+    return;
+  }
+  describe(subject, inner)
+
+
+}
+// this is a separate function with 2 inputs
+            // for (let i = 0; i < doe.length; i++) {
+            //   let d = doe[i];
+            //   let v = vals[i];
+            //   if (isBinding(v)) {
+            //     if (v.toBe === null) { // should not use this should care whether a value is null or not
+            //         if (isBinding(d)) {
+            //         expect(d.defined).toEqual(v.defined);
+            //         expect(isClos(d.toBe)).toBeTruthy();
+            //       }
+            //       // check d is a binding and left hand side of v = left hand side of d 
+                  
+            //       expect(isBinding(d)).toBeTruthy();
+
+            //     } else expect(d).toEqual(v);
+            //   } else expect(d).toEqual(v);
+            // }
+            
+
+
+/**
+ * Determines whether two bindings match, allowing the developer to provide null for a closure
+ * in a binding for convenience.
+ * @param actual value returned from the evaluator
+ * @param expected value provided to the testing suite by a developer to test
+ * @returns whether two bindings are considered to match to the testing framework
+ */
+const matchingBindings = (actual: Binding, expected: Binding): boolean => {
+  if (actual.defined === expected.defined) {
+    if (actual.toBe === null) throw new Error("Null is not allowed to be returned from the evaluator in a Binding's toBe field.");
+    if (expected.toBe === null) return true;
+    
+    let actualToBe = actual.toBe;
+    let expectedToBe = expected.toBe;
+
+    return (
+      isValueError(expectedToBe)
+      ? isValueError(actualToBe) && matchingValueErrors(actualToBe, expectedToBe)
+      : isValue(actualToBe) && matchingValues(actualToBe, expectedToBe)
+    );
+
+  } else return false;
+}
+
+// write example bindings and tests here
+
+
+const v1 = NFn(10);
+const v2 = NFn('hello');
+const v3 = NFn("goodbye");
+
+const b1 = Bind('x', v1);
+const b2 = Bind('x', null);
+const b3 = Bind('s', v2);
+const b4 = Bind('s', v3);
+const b5 = Bind('t', v3);
+
+checkExpect(matchingBindings(b1, b1), true);
+checkExpect(matchingBindings(b1, b2), true);
+checkExpect(matchingBindings(b1, b3), false);
+checkExpect(matchingBindings(b3, b4), false);
+checkExpect(matchingBindings(b4, b5), false);
+
+
+// test for errors and closures here.
+
+
+const matchingValues = (actual: Value, expected: Value): boolean => {
+  if (expected.type === 'NonFunction') {
+    return actual.type === 'NonFunction' && expected.value === actual.value;
+  } else if (expected.type === 'BuiltinFunction') {
+    return actual.type === 'BuiltinFunction';
+  } else {
+    return actual.type === 'Closure';
   }
 }
+
+checkExpect(matchingValues(v1, v1), true);
+checkExpect(matchingValues(v2, v2), true);
+checkExpect(matchingValues(v3, v3), true);
+checkExpect(matchingValues(v1, v2), false);
+checkExpect(matchingValues(v2, v3), false);
+
+
+
+const matchingValueErrors = (actual: ValueError, expected: ValueError): boolean => {
+  if (isExprError(expected)) {
+    return isExprError(actual) && (matchingExprErrors(actual, expected));
+  } else {
+    if (isExprError(actual)) return false;
+    return expected.valueError === actual.valueError && matchingExprs(actual, expected);
+  }
+}
+
+const matchingExprs = (actual: Expr, expected: Expr): boolean => {
+  if (isExprError(expected)) {
+    return isExprError(actual) && (matchingExprErrors(actual, expected));
+  } else if (expected.type === 'Call') {
+    if (isExprError(actual) || actual.type !== 'Call') return false;
+    if (expected.op !== actual.op) return false;
+    if (expected.args.length !== actual.args.length) return false;
+    for (let i = 0; i < expected.args.length; i++) {
+      if (! matchingExprs(actual.args[i], expected.args[i]))
+        return false;
+    }
+    return true;
+  } else {
+    return (! isExprError(actual)) && expected.type === actual.type && expected.const === actual.const;
+  }
+}
+
+const matchingExprErrors = (actual: ExprError, expected: ExprError): boolean => {
+
+}
+
