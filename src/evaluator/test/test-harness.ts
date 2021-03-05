@@ -1,6 +1,9 @@
 'use strict';
 
-import { isBinding, isClos, isBindingError, isValueError, isValue, isExprError } from './../predicates';
+import {
+  isBinding, isClos, isBindingError, isValueError,
+  isValue, isExprError, isReadError, isTokenError,
+} from './../predicates';
 
 import {
   DefOrExpr, Definition, Expr, ReadError,
@@ -167,8 +170,68 @@ export const t  = (
             
 
 
+const matchingToken = (actual: Token, expected: Token): boolean => {
+  if (isTokenError(expected)) {
+    return isTokenError(actual) && matchingTokenErrors(actual, expected);
+  } else {
+    return (
+      (! isTokenError(actual))
+      && expected.type === actual.type
+      && expected.token === actual.token
+    );
+  }
+}
+
+const matchingTokenErrors = (actual: TokenError, expected: TokenError): boolean => {
+  return expected.tokenError === actual.tokenError && expected.string === actual.string;
+}
+
+const matchingTokens = (actual: Token[], expected: Token[]): boolean => {
+  if (expected.length !== actual.length) return false;
+  for (let i = 0; i < expected.length; i++) {
+    if (! matchingToken(actual[i], expected[i])) return false;
+  }
+  return true;
+}
+        
+const matchingSexp = (actual: SExp, expected: SExp): boolean => {
+  if (isReadError(expected)) {
+    return isReadError(actual) && matchingReadErrors(actual, expected);
+  } else if (expected.type === 'SExp Array') {
+    return (
+      (! isReadError(actual))
+      && actual.type === 'SExp Array'
+      && matchingSexps(actual.sexp, expected.sexp)
+    );
+  } else {
+    return (! isReadError(actual)) && expected.sexp === actual.sexp;
+  }
+}
+
+const matchingSexps = (actual: SExp[], expected: SExp[]): boolean => {
+  if (expected.length !== actual.length) return false;
+  for (let i = 0; i < expected.length; i++) {
+    if (! matchingSexp(actual[i], expected[i])) return false;
+  }
+  return true;
+}
+
+
+const matchingReadErrors = (actual: ReadError, expected: ReadError): boolean => {
+  if (isTokenError(expected)) {
+    return isTokenError(actual) && (matchingTokenErrors(actual, expected));
+  } else {
+    return (
+     (! isTokenError(actual))
+     && expected.readError === actual.readError
+     && matchingTokens(actual.tokens, expected.tokens)
+    );
+  }
+}
+
+
 /**
- * Determines whether two bindings match, allowing the developer to provide null for a closure
+ * Determines whether two bindings match, allowing the developer to provide null
  * in a binding for convenience.
  * @param actual value returned from the evaluator
  * @param expected value provided to the testing suite by a developer to test
@@ -194,21 +257,7 @@ const matchingBindings = (actual: Binding, expected: Binding): boolean => {
 // write example bindings and tests here
 
 
-const v1 = NFn(10);
-const v2 = NFn('hello');
-const v3 = NFn("goodbye");
 
-const b1 = Bind('x', v1);
-const b2 = Bind('x', null);
-const b3 = Bind('s', v2);
-const b4 = Bind('s', v3);
-const b5 = Bind('t', v3);
-
-checkExpect(matchingBindings(b1, b1), true);
-checkExpect(matchingBindings(b1, b2), true);
-checkExpect(matchingBindings(b1, b3), false);
-checkExpect(matchingBindings(b3, b4), false);
-checkExpect(matchingBindings(b4, b5), false);
 
 
 // test for errors and closures here.
@@ -224,20 +273,12 @@ const matchingValues = (actual: Value, expected: Value): boolean => {
   }
 }
 
-checkExpect(matchingValues(v1, v1), true);
-checkExpect(matchingValues(v2, v2), true);
-checkExpect(matchingValues(v3, v3), true);
-checkExpect(matchingValues(v1, v2), false);
-checkExpect(matchingValues(v2, v3), false);
-
-
-
 const matchingValueErrors = (actual: ValueError, expected: ValueError): boolean => {
   if (isExprError(expected)) {
     return isExprError(actual) && (matchingExprErrors(actual, expected));
   } else {
     if (isExprError(actual)) return false;
-    return expected.valueError === actual.valueError && matchingExprs(actual, expected);
+    return expected.valueError === actual.valueError && matchingExprs(actual.expr, expected.expr);
   }
 }
 
@@ -259,6 +300,36 @@ const matchingExprs = (actual: Expr, expected: Expr): boolean => {
 }
 
 const matchingExprErrors = (actual: ExprError, expected: ExprError): boolean => {
-
+  if (isReadError(expected)) {
+    return isReadError(actual) && (matchingReadErrors(actual, expected));
+  } else {
+    return (
+      (! isReadError(actual))
+      && expected.exprError === actual.exprError
+      && matchingSexps(actual.sexps, expected.sexps)
+    );
+  }
 }
 
+
+const v1 = NFn(10);
+const v2 = NFn('hello');
+const v3 = NFn('goodbye');
+
+const b1 = Bind('x', v1);
+const b2 = Bind('x', null);
+const b3 = Bind('s', v2);
+const b4 = Bind('s', v3);
+const b5 = Bind('t', v3);
+
+checkExpect(matchingBindings(b1, b1), true);
+checkExpect(matchingBindings(b1, b2), true);
+checkExpect(matchingBindings(b1, b3), false);
+checkExpect(matchingBindings(b3, b4), false);
+checkExpect(matchingBindings(b4, b5), false);
+
+checkExpect(matchingValues(v1, v1), true);
+checkExpect(matchingValues(v2, v2), true);
+checkExpect(matchingValues(v3, v3), true);
+checkExpect(matchingValues(v1, v2), false);
+checkExpect(matchingValues(v2, v3), false);
