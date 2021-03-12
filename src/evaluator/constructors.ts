@@ -2,7 +2,7 @@
 import {
   TokenType, Token, TokenError,
   SExp, ReadError, Expr, ExprResult,
-  DefOrExpr, ExprError, DefinitionError, Closure, Env,
+  TopLevel, ExprError, DefinitionError, Closure, Env,
   Definition, ReadResult, DefinitionResult, ValueError, BindingError,
   Binding, Value, Nothing, Just, Maybe
 } from './types';
@@ -13,7 +13,7 @@ import { isDefinitionResult } from './predicates';
 // ----------------------------------------------------------------------------
 
 export const Tok = (t: TokenType, v: string): Token => {
-  return { type: t, token: v};
+  return { type: t, token: v };
 }
 
 export const NumTok     = (v: string): Token => { return Tok(TokenType.Number,       v.toString()); }
