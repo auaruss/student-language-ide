@@ -15,6 +15,7 @@
  import { 
   NumTok, IdTok, StringTok, BooleanTok, CommentTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom, SExps,
+  NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
   NFn, Bind
 } from './../constructors';
 
@@ -55,24 +56,54 @@ export const goodbyeIdAtom = IdAtom('goodbye');
 export const helloStringAtom = StringAtom('hello');
 export const goodbyeStringAtom = StringAtom('goodbye');
 
-export const trueAtom = BooleanAtom("#t");
+export const trueAtom = BooleanAtom('#t');
 export const falseAtom = BooleanAtom('#f');
 
 // ----------------------------------------------------------------------------
 // | Definition examples                                                      |
 // ----------------------------------------------------------------------------
 
+
+
 // ----------------------------------------------------------------------------
 // | Expr examples                                                            |
 // ----------------------------------------------------------------------------
+
+export const negThirteenExpr = NumExpr(-13);
+export const negOneExpr = NumExpr(-1);
+export const negZeroExpr = NumExpr(-0);
+export const zeroExpr = NumExpr(0);
+export const oneExpr = NumExpr(1);
+export const thirteenExpr = NumExpr(13);
+
+export const helloIdExpr = IdExpr('hello');
+export const goodbyeIdExpr = IdExpr('goodbye');
+
+export const helloStringExpr = StringExpr('hello');
+export const goodbyeStringExpr = StringExpr('goodbye');
+
+export const trueExpr = BooleanExpr(true);
+export const falseExpr = BooleanExpr(false);
 
 // ----------------------------------------------------------------------------
 // | Result examples                                                          |
 // ----------------------------------------------------------------------------
 
+
+export const negThirteenVal = NFn(-13);
+export const negOneVal = NFn(-1);
+export const negZeroVal = NFn(-0);
+export const zeroVal = NFn(0);
+export const oneVal = NFn(1);
 export const tenVal = NFn(10);
+export const thirteenVal = NFn(13);
+
 export const helloVal = NFn('hello');
 export const goodbyeVal = NFn('goodbye');
+
+export const trueVal = NFn(true);
+export const falseVal = NFn(false);
+
 
 export const tenBind = Bind('x', tenVal);
 export const xNullBind = Bind('x', null);
