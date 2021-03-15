@@ -38,7 +38,7 @@ import { ɵdevModeEqual } from '@angular/core';
  * @param input user's expected program
  * @param tokens expected tokenization of user's program
  * @param sexps expected reading of previous tokenization
- * @param deforexprs expected parsing of previous reading
+ * @param toplevels expected parsing of previous reading
  * @param values expected evaluation of previous parsing
  * @param output expected printing of previous evaluation
  * @returns nothing, prints test output to the console
@@ -47,7 +47,7 @@ export const t  = (
   input?: string,
   tokens?: Token[],
   sexps?: SExp[],
-  deforexprs?: TopLevel[],
+  toplevels?: TopLevel[],
   values?: Result[],
   output?: string
 ): void => {
@@ -88,22 +88,22 @@ export const t  = (
     if (sexps) {
       try {
         let d = parseSexps(sexps);
-        if (deforexprs) {
-          let def: TopLevel[] = deforexprs;
+        if (toplevels) {
+          let def: TopLevel[] = toplevels;
           it('should parse correctly', () => {
             expect(d).toEqual(def);
           });
         } else {
-          deforexprs = d;
+          toplevels = d;
         }
       } catch (e) {
         it('Threw this error on the parser: ' + e, () => expect(e).toBeDefined());
       }
     }
 
-    if (deforexprs) {
+    if (toplevels) {
       try {
-        let doe = evaluateTopLevels(deforexprs);
+        let doe = evaluateTopLevels(toplevels);
         if (values) {
           const vals: Result[] = values;
 
@@ -153,7 +153,7 @@ export const t  = (
 
   let subject;
 
-  for (let i of [input, tokens, sexps, deforexprs, values, output]) {
+  for (let i of [input, tokens, sexps, toplevels, values, output]) {
     if (i) {
       if (typeof i === 'string')
         subject = i;
