@@ -50,8 +50,14 @@ const printExprResult = (er: ExprResult): string => {
 }
 
 const printBinding = (b: Binding): string => {
-  if (b.toBe) return `Defined ${b.defined} to be ${printExprResult(b.toBe)}.`;
-  else return `Defined ${b.defined}.`;
+    if (b.toBe) {
+	if (!(isValueError(b.toBe)) && b.toBe.type === 'Closure') {
+	    let c = b.toBe.value;
+	    return `Defined (${b.defined} ${c.args.join(" ")}) to be ${printExpr(c.body)}.`;
+	}
+	return `Defined ${b.defined} to be ${printExprResult(b.toBe)}.`;
+    }
+    else return `Defined ${b.defined}.`;
 }
 
 const printValue = (v: Value): string => {

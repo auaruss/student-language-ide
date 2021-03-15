@@ -1147,6 +1147,11 @@ t('(define (f x) (+ x x))',
   'Defined (f x) to be (+ x x).\n'
 );
 
+t('(define (f x y) (+ x y))',
+  undefined, undefined, undefined, undefined,
+  'Defined (f x y) to be (+ x y).\n'
+);
+
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
