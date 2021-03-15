@@ -122,7 +122,13 @@ export const t  = (
                   if (isBinding(v)) {
                     expect(matchingBindings(d, v)).toBeTruthy();
                   } else {
+                    fail('Expected a binding, but evaluator returned a non-binding.');
+                  }
+                } else {
+                  if (isBinding(v)) {
                     fail('Expected a non-binding, but evaluator returned a binding.');
+                  } else {
+                    expect(d).toEqual(v);
                   }
                 }
               }
