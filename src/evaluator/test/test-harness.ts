@@ -1,5 +1,12 @@
 'use strict';
 
+/**
+ * @fileoverview Holds the testing harness for conveniently testing the pipeline and some associated functions
+ * 
+ * @author Alice Russell
+ * 
+ */
+
 import {
   isBinding, isClos, isBindingError, isValueError,
   isValue, isExprError, isReadError, isTokenError,
@@ -11,11 +18,11 @@ import {
   Value, ValueError, ExprError
 } from '../types';
 
-import {
-  Bind, NFn
-} from '../constructors';
-
 import { checkExpect } from './check-expect';
+
+
+import { goodbyeVal, helloVal, sGoodbyeBind, xTenBind, tenVal, tGoodByeBind, negZeroTok, negThirteenAtom, negOneTok, negThirteenTok, oneTok, zeroTok, sHelloBind, xNullBind } from './examples';
+
 
 import { tokenize                     } from '../tokenize';
 import { read,     readTokens         } from '../read';
@@ -160,20 +167,6 @@ export const t  = (
   describe(subject, pipeline);
 }
 
-
-// Examples to test the matching functions.
-
-const v1 = NFn(10);
-const v2 = NFn('hello');
-const v3 = NFn('goodbye');
-
-const b1 = Bind('x', v1);
-const b2 = Bind('x', null);
-const b3 = Bind('s', v2);
-const b4 = Bind('s', v3);
-const b5 = Bind('t', v3);
-
-
 /**
  * Determines if two tokens are equal.
  * @param actual actual token produced by a function
@@ -192,6 +185,11 @@ const matchingTokens = (actual: Token, expected: Token): boolean => {
   }
 }
 
+checkExpect(matchingTokens(negThirteenTok, negThirteenTok), true);
+checkExpect(matchingTokens(negThirteenTok, negOneTok), false);
+checkExpect(matchingTokens(negZeroTok, zeroTok), false);
+checkExpect(matchingTokens(oneTok, oneTok), true);
+
 /**
  * Determines if two token arrays are equal.
  * @param actual actual token array produced by a function
@@ -205,6 +203,11 @@ const matchingTokenArrays = (actual: Token[], expected: Token[]): boolean => {
   }
   return true;
 }
+
+checkExpect(matchingTokenArrays([], []), true);
+checkExpect(matchingTokenArrays([negThirteenTok, negThirteenTok], [negThirteenTok, negThirteenTok]), true);
+checkExpect(matchingTokenArrays([negThirteenTok, negOneTok], []), false);
+checkExpect(matchingTokenArrays([oneTok, negZeroTok], [oneTok, zeroTok]), false);
 
 /**
  * Determines if two token errors are equal.
@@ -325,11 +328,11 @@ const matchingValues = (actual: Value, expected: Value): boolean => {
   }
 }
 
-checkExpect(matchingValues(v1, v1), true);
-checkExpect(matchingValues(v2, v2), true);
-checkExpect(matchingValues(v3, v3), true);
-checkExpect(matchingValues(v1, v2), false);
-checkExpect(matchingValues(v2, v3), false);
+checkExpect(matchingValues(tenVal, tenVal), true);
+checkExpect(matchingValues(helloVal, helloVal), true);
+checkExpect(matchingValues(goodbyeVal, goodbyeVal), true);
+checkExpect(matchingValues(tenVal, helloVal), false);
+checkExpect(matchingValues(helloVal, goodbyeVal), false);
 
 /**
  * Determines if two value errors are equal.
@@ -370,8 +373,8 @@ const matchingBindings = (actual: Binding, expected: Binding): boolean => {
   } else return false;
 }
 
-checkExpect(matchingBindings(b1, b1), true);
-checkExpect(matchingBindings(b1, b2), true);
-checkExpect(matchingBindings(b1, b3), false);
-checkExpect(matchingBindings(b3, b4), false);
-checkExpect(matchingBindings(b4, b5), false);
+checkExpect(matchingBindings(xTenBind, xTenBind), true);
+checkExpect(matchingBindings(xTenBind, xNullBind), true);
+checkExpect(matchingBindings(xTenBind, sHelloBind), false);
+checkExpect(matchingBindings(sHelloBind, sGoodbyeBind), false);
+checkExpect(matchingBindings(sGoodbyeBind, tGoodByeBind), false);

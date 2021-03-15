@@ -14,7 +14,7 @@ import {
 } from '../constructors';
 
 import {
-  DefOrExpr, Definition, Expr, ReadError,
+  TopLevel, Definition, Expr, ReadError,
   TokenType, TokenError, Token, SExp, ExprResult, Result
 } from '../types';
 
@@ -23,6 +23,9 @@ import { read,     readTokens         } from '../read';
 import { parse,    parseSexps         } from '../parse';
 import { evaluate, evaluateDefOrExprs } from '../eval';
 import { print,    printResults       } from '../print';
+
+
+// test harness tests
 
 
 /*****************************************************************************
@@ -1137,6 +1140,13 @@ t(
 `;(define x 10)`,
 [ CommentTok(';(define x 10)') ]
 );
+
+// write tests here for how a closure should be printed.
+t('(define (f x) (+ x x))',
+  undefined, undefined, undefined, undefined,
+  'Defined (f x) to be (+ x x).\n'
+);
+
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
