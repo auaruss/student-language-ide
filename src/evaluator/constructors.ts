@@ -135,8 +135,9 @@ export const ExprErr = (
    | 'Defn inside Expr'
    | 'No function name after open paren'
    | 'Function call with no arguments',
-  v: SExp[]): ExprError => { 
-  return { exprError: e, sexps: v }; 
+  v: SExp[]
+): ExprError => {
+  return { exprError: e, sexps: v };
 }
 
 export const DefnErr = (

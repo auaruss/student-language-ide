@@ -88,7 +88,6 @@ export const t  = (
       try {
         let d = parseSexps(sexps);
         if (deforexprs) {
-          // assign to a variable which has the definite type DefOrExpr[] instead of DefOrExpr[] | undefined.
           let def: TopLevel[] = deforexprs;
           it('should parse correctly', () => {
             expect(d).toEqual(def);
