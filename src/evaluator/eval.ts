@@ -3,7 +3,7 @@
 
 
 import {
-  DefOrExpr, Definition, Expr, ExprResult,
+  TopLevel, Definition, Expr, ExprResult,
   Env, ValueError, DefinitionResult, Result,
   Nothing, Just, Maybe, Value
 } from './types';
@@ -29,7 +29,7 @@ export const evaluate = (exp: string): Result[] => {
  * with a first pass which populates the environment.
  * @param deforexprs 
  */
-export const evaluateDefOrExprs = (deforexprs: DefOrExpr[]): Result[] => {
+export const evaluateDefOrExprs = (deforexprs: TopLevel[]): Result[] => {
   let env = builtinEnv();
   deforexprs.filter(isDefinition).forEach(
     (d: Definition) => env = extendEnv(d, env)
@@ -43,7 +43,7 @@ export const evaluateDefOrExprs = (deforexprs: DefOrExpr[]): Result[] => {
  * @param d 
  * @param env 
  */
-const evaluateDefOrExpr = (d: DefOrExpr, env: Env): Result => {
+const evaluateDefOrExpr = (d: TopLevel, env: Env): Result => {
   if (isDefinition(d)) {
     return evaluateDefinition(d, env);
   } else {

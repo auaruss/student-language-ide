@@ -1,7 +1,7 @@
 'use strict';
 
 import {
-  DefOrExpr, Definition, Expr, ExprResult,
+  TopLevel, Definition, Expr, ExprResult,
   Env, ValueError, DefinitionResult, Result,
   Nothing, Just, Maybe, Value
 } from './types';

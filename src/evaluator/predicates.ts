@@ -1,7 +1,7 @@
 import {
   Token, TokenError,
   SExp, ReadError,
-  DefOrExpr, Definition, Expr, DefinitionError, ExprError,
+  TopLevel, Definition, Expr, DefinitionError, ExprError,
   Value, Result, DefinitionResult, ExprResult, 
   Binding, BindingError, Closure, Env, ValueError
 } from './types';
@@ -64,7 +64,7 @@ export const isReadError = (x: any): x is ReadError => {
 
 // ----------------------------------------------------------------------------
 
-export const isDefOrExpr = (x: any): x is DefOrExpr => {
+export const isDefOrExpr = (x: any): x is TopLevel => {
   return isDefinition(x) || isExpr(x);
 }
 

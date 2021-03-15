@@ -1,4 +1,4 @@
-import { SExp, DefOrExpr, Expr, Definition } from './types';
+import { SExp, TopLevel, Expr, Definition } from './types';
 import { read } from './read';
 
 import {
@@ -14,7 +14,7 @@ import {
  * Given a program, parses the string into a set of definitions and expressions.
  * @param exp program to be parsed
  */
-export const parse = (exp: string): DefOrExpr[] => {
+export const parse = (exp: string): TopLevel[] => {
   return parseSexps(read(exp));
 }
 
@@ -22,7 +22,7 @@ export const parse = (exp: string): DefOrExpr[] => {
  * Given a program's SExp form, parses the string into a set of definitions and expressions.
  * @param sexps program to be parsed
  */
-export const parseSexps = (sexps: SExp[]): DefOrExpr[] => {
+export const parseSexps = (sexps: SExp[]): TopLevel[] => {
   return sexps.map(sexps => parseSexp(sexps));
 }
 
@@ -30,7 +30,7 @@ export const parseSexps = (sexps: SExp[]): DefOrExpr[] => {
  * Parses a single S-Expression into a definition or expression.
  * @param sexp
  */
-export const parseSexp = (sexp: SExp): DefOrExpr => {
+export const parseSexp = (sexp: SExp): TopLevel => {
   if (isReadError(sexp)) { 
     return sexp;
   } else switch (sexp.type) {

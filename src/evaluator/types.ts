@@ -26,7 +26,7 @@ export enum TokenType {
 
 export type TokenError
   = {
-    tokenError: 'Unidentified Token',
+    tokenError: string,
     string: string
   };
 
@@ -58,18 +58,14 @@ export type SExp
 
 export type ReadError
   =  {
-    readError: 'No Valid SExp'
-             | 'No Closing Paren'
-             | 'No Open Paren'
-             | 'Mismatched Parens'
-             | 'Invalid token found while reading SExp',
+    readError: string,
     tokens: Token[]
   } | TokenError;
 
 // ----------------------------------------------------------------------------
 
-export type DefOrExpr
-  = Definition | Expr;
+export type TopLevel
+  = Definition | Expr/* | Check*/;
 
 export type Definition
   = DefinitionError | {
@@ -103,42 +99,51 @@ export type Expr
     args: Expr[],
   };
 
+
+export type Check
+  = CheckError | {
+    type: 'check-expect',
+    actual: Expr,
+    expected: Expr
+  };
+
 export type DefinitionError
   = ReadError | {
-    defnError: 'Invalid expression passed where function name was expected'
-             | 'Invalid expression passed where function argument was expected'
-             | 'A definition requires two parts, but found none'
-             | 'A definition requires two parts, but found one'
-             | 'Passed a non-definition as definition'
-             | 'Expected a variable name, or a function header'
-             | 'Expected a function header with parameters in parentheses, received nothing in parentheses'
-             | 'Expected a function header with parameters in parentheses, received a function name with no parameters'
-             | 'A function in BSL cannot have zero parameters'
-             | 'A definition can\'t have more than 3 parts'
-             | 'Cannot have a definition as the body of a definition'
-             | 'The body given is not a valid Expr',
+    defnError: string,
     sexps: SExp[]
   };
 
 export type ExprError
   = ReadError | {
-    exprError: 'Empty Expr'
-             | 'Defn inside Expr'
-             | 'No function name after open paren'
-             | 'Function call with no arguments',
+    exprError: string,
+    sexps: SExp[]
+  };
+
+export type CheckError
+  = ReadError | {
+    checkError: string,
     sexps: SExp[]
   };
 
 // ----------------------------------------------------------------------------
 
 export type Result
-  = DefinitionResult | ExprResult;
+  = DefinitionResult | ExprResult/* | CheckResult*/;
 
 export type DefinitionResult
   = BindingError | Binding;
 
 export type ExprResult
   = ValueError | Value;
+
+export type CheckResult
+  = {
+    type: 'check-success'
+  } | {
+    type: 'check-failure'
+    actual: ExprResult,
+    expected: ExprResult
+  } | CheckError;
 
 export type Nothing
  = { type: 'nothing' };
@@ -170,20 +175,13 @@ export type Value
 
 export type BindingError
  = DefinitionError | {
-   bindingError: 'Repeated definition of the same name',
+   bindingError: string,
    definition: Definition
  }; // ...
 
 export type ValueError
    = ExprError | {
-    valueError: 'Id not in environment'
-              | 'Id referenced before definition'
-              | 'Arity mismatch'
-              | 'Function used as a predicate'
-              | 'Non-boolean value used as a predicate'
-              | 'Expression undefined in program'
-              | 'Expression defined later in program'
-              | 'Nonfunction applied as a function'
+    valueError: string,
     expr: Expr // put identifier for expr in this thing
   };
 
