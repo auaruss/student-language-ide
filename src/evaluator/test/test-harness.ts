@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * @fileoverview Holds the testing harness for conveniently testing the pipeline and some associated functions
+ * @fileoverview Holds the testing harness for conveniently testing the evaluator pipeline,
+ *               and also holds some associated functions.
  * 
  * @author Alice Russell
  * 
@@ -27,7 +28,7 @@ import { goodbyeVal, helloVal, sGoodbyeBind, xTenBind, tenVal, tGoodByeBind, neg
 import { tokenize                     } from '../tokenize';
 import { read,     readTokens         } from '../read';
 import { parse,    parseSexps         } from '../parse';
-import { evaluate, evaluateDefOrExprs } from '../eval';
+import { evaluate, evaluateTopLevels } from '../eval';
 import { print,    printResults       } from '../print';
 import { ɵdevModeEqual } from '@angular/core';
 
@@ -102,7 +103,7 @@ export const t  = (
 
     if (deforexprs) {
       try {
-        let doe = evaluateDefOrExprs(deforexprs);
+        let doe = evaluateTopLevels(deforexprs);
         if (values) {
           const vals: Result[] = values;
 

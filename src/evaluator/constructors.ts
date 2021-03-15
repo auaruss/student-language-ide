@@ -1,3 +1,9 @@
+/**
+ * @fileoverview The canonical way to construct an entity of any type from types.ts should live in this file.
+ *               Update this file with constructors when applicable changes are made to types.ts.
+ * 
+ * @author Alice Russell
+ */
 
 import {
   TokenType, Token, TokenError,

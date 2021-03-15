@@ -1,11 +1,11 @@
 /**
- * An S-exp tokenizer for the student languages.
+ * @fileoverview A tokenizer for the student languages.
+ *               Generally, produces types from the first section of types.ts given strings.
  * 
- * @todo The tokenizer should handle negative numbers and decimals.
- * @todo The tokenizer and reader must handle '().
- * @todo The tokenizer should remove the quotes around a string.
- * @todo The tokenizer should transform booleans
+ * @author Alice Russell
  */
+
+'use strict';
 
 import {
   Token, TokenType
@@ -13,7 +13,9 @@ import {
 
 import { Tok, TokErr } from './constructors';
 
-// Regexp Definitions.
+/**
+ * A association of token types to Regexp definitions.
+ */
 export const tokenExpressions: [TokenType, RegExp][] = [
   [TokenType.OpenParen, /^\(/],
   [TokenType.OpenSquareParen, /^\[/],
@@ -33,6 +35,7 @@ export const tokenExpressions: [TokenType, RegExp][] = [
 /**
  * Transforms a string into a list of tokens.
  * @param exp expression as a string
+ * @returns a list of tokens
  */
 export const tokenize = (exp: string): Token[] => {
   if (exp == '') {

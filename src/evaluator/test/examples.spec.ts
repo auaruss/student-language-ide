@@ -21,7 +21,7 @@ import {
 import { tokenize                     } from '../tokenize';
 import { read,     readTokens         } from '../read';
 import { parse,    parseSexps         } from '../parse';
-import { evaluate, evaluateDefOrExprs } from '../eval';
+import { evaluate, evaluateTopLevels } from '../eval';
 import { print,    printResults       } from '../print';
 
 

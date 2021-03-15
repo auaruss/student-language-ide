@@ -1,34 +1,48 @@
-import { SExp, TopLevel, Expr, Definition } from './types';
-import { read } from './read';
+/**
+ * @fileoverview An AST parser for the student languages.
+ *               Generally, produces types from the third section of types.ts given types
+ *               from the second section of types.ts.
+ * 
+ * @author Alice Russell
+ */
+
+'use strict';
+
+import { SExp, TopLevel, Definition } from './types';
+
+import {
+  StringExpr, NumExpr, IdExpr, BooleanExpr,
+  ExprErr, Call, DefnErr, FnDefn, VarDefn, SExps
+} from './constructors';
 
 import {
   isReadError, isExpr, isExprArray, 
 } from './predicates';
 
-import {
-  IdAtom, StringExpr, NumExpr, IdExpr, BooleanExpr,
-  ExprErr, Call, DefnErr, FnDefn, VarDefn, SExps
-} from './constructors';
+import { read } from './read';
 
 /**
  * Given a program, parses the string into a set of definitions and expressions.
  * @param exp program to be parsed
+ * @returns a list of top level syntactical objects
  */
 export const parse = (exp: string): TopLevel[] => {
   return parseSexps(read(exp));
 }
 
 /**
- * Given a program's SExp form, parses the string into a set of definitions and expressions.
+ * Given a program's read s-expression form, parses it into a set of definitions and expressions.
  * @param sexps program to be parsed
+ * @returns a list of top level syntactical objects
  */
 export const parseSexps = (sexps: SExp[]): TopLevel[] => {
   return sexps.map(sexps => parseSexp(sexps));
 }
 
 /**
- * Parses a single S-Expression into a definition or expression.
- * @param sexp
+ * Parses a single s-expression into a top level syntactical object.
+ * @param sexp a single s-expression from the reader
+ * @returns a single top level syntactical object
  */
 export const parseSexp = (sexp: SExp): TopLevel => {
   if (isReadError(sexp)) { 
@@ -65,8 +79,9 @@ export const parseSexp = (sexp: SExp): TopLevel => {
 
 /**
  * Parses some SExps into a Definition.
- * @param d definition Id (only one exists currently, define-struct can exist later)
- * @param sexps array of SExp after definition
+ * @param d definition identifier
+ * @param sexps array of s-expressions determined to be either a definition or an error
+ * @returns a top level definition or definition error
  */
 export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]): Definition => {
   if (sexps.length === 0) {

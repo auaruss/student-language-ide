@@ -1,29 +1,32 @@
-'use strict';
-
 /**
- * An S-exp reader for the student languages.
+ * @fileoverview An S-Expression reader for the student languages.
+ *               Generally, produces types from the second section of types.ts from types
+ *               from the first section of types.ts.
+ * 
+ * @author Alice Russell
  */
 
-
+'use strict';
 
 import {
   ReadError, ReadResult,
   SExp, Token, TokenType
 } from './types';
 
-import { tokenize } from './tokenize';
+import {
+  NumAtom, IdAtom, StringAtom, BooleanAtom, ReadErr, SExpsFromArray, Res,
+} from './constructors';
 
 import {
   isTokenError, isReadError
 } from './predicates';
 
-import {
-  Atom, NumAtom, IdAtom, StringAtom, BooleanAtom, ReadErr, SExps, SExpsFromArray, Res, TokErr
-} from './constructors';
+import { tokenize } from './tokenize';
 
 /**
  * Attempts to read the first SExp from a list of tokens.
- * @param tokens
+ * @param tokens a list of tokens from the tokenizer
+ * @returns a read result intended to be processed by the readTokens function
  */
 export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadError> => {
   if (tokens.length === 0)
@@ -124,7 +127,8 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
 
 /**
  * Reads as many SExp as possible from the start of the list of tokens.
- * @param tokens
+ * @param tokens a list of tokens from the tokenizer
+ * @returns a read result intended to be processed by readTokens
  */
 export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
   if (tokens.length === 0) return { thing: [], remain: [] };
@@ -155,6 +159,11 @@ export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
   }
 }
 
+/**
+ * Reads as many SExp as possible from the start of an expression represented as tokens.
+ * @param ts a list of tokens from the tokenizer
+ * @returns a list of as many s-expressions as possible read from the beginning of the list of tokens 
+ */
 export const readTokens = (ts: Token[]): SExp[] => {
   let tokens: Token[] = ts.slice().filter((t: Token) => isTokenError(t) || t.type !== TokenType.Whitespace); 
   let sexps: SExp[] = [];
@@ -175,7 +184,7 @@ export const readTokens = (ts: Token[]): SExp[] => {
 }
 
 /**
- * Reads as many SExp as possible from the start of an expression.
+ * Reads as many SExp as possible from the start of an expression string.
  * @param exp an expression as a string
  */
 export const read = (exp:string): SExp[] => {
@@ -188,8 +197,8 @@ export const read = (exp:string): SExp[] => {
  * 
  * @param op open paren token type
  * @param cp close paren token type
- * @return True if the types in the correct order and the paren types match,
- *         False if given any other token types, or given the types in the wrong order.
+ * @returns True if the types in the correct order and the paren types match,
+ *          False if given any other token types, or given the types in the wrong order.
  */
 const parensMatch = (
   op: TokenType, cp: TokenType): boolean => {

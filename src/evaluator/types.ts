@@ -1,6 +1,13 @@
-// Types used in the student language evaluator.
+/**
+ * @fileoverview The types for the entire pipeline from start to finish of the evaluator live here.
+ *               When you change this file, make sure to create any relevant constructors in constructors.ts.
+ *               When you change this file, make sure to create any relevant predicates in predicates.ts.
+ *               When you change this file, make sure to create any relevant examples for tests in tests/examples.ts.
+ * 
+ * @author Alice Russell
+ */
 
-import { isTokenError } from "./predicates";
+'use strict';
 
 export type Token
   = TokenError | {
