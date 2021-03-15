@@ -15,7 +15,7 @@ import {
 } from '../constructors';
 
 import {
-  DefOrExpr, Definition, Expr, ReadError,
+  TopLevel, Definition, Expr, ReadError,
   TokenType, TokenError, Token, SExp, ExprResult, Result
 } from '../types';
 
@@ -299,6 +299,6 @@ t(
 Defined init-angle to be ${0.3 * Math.PI}.
 Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
 Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
-Defined y-pos to be dummy-closure.
-`
+Defined y-pos.
+` // null means we dont print out the body
 );
