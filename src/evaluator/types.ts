@@ -72,7 +72,7 @@ export type ReadError
 // ----------------------------------------------------------------------------
 
 export type TopLevel
-  = Definition | Expr/* | Check*/;
+  = Definition | Expr | Check;
 
 export type Definition
   = DefinitionError | {

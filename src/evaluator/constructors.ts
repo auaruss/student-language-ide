@@ -10,7 +10,7 @@ import {
   SExp, ReadError, Expr, ExprResult,
   TopLevel, ExprError, DefinitionError, Closure, Env,
   Definition, ReadResult, DefinitionResult, ValueError, BindingError,
-  Binding, Value, Nothing, Just, Maybe
+  Binding, Value, Nothing, Just, Maybe, Check
 } from './types';
 import { isDefinitionResult } from './predicates';
 
@@ -161,6 +161,19 @@ export const DefnErr = (
   v: SExp[]): DefinitionError => {
     return { defnError: e, sexps: v };
 } 
+
+// ----------------------------------------------------------------------------
+// | Check constructors                                                       |
+// ----------------------------------------------------------------------------
+
+export const MakeCheckExpect = (actual: Expr, expected: Expr): Check => {
+  return {
+    type: 'check-expect',
+    actual: actual,
+    expected: expected
+  };
+}
+
 
 
 // ----------------------------------------------------------------------------
