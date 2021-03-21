@@ -16,7 +16,7 @@
   NumTok, IdTok, StringTok, BooleanTok, CommentTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom, SExps,
   NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
-  NFn, Bind
+  NFn, Bind, MakeCheckExpect
 } from './../constructors';
 
 // ----------------------------------------------------------------------------
@@ -94,6 +94,53 @@ export const goodbyeStringExpr = StringExpr('goodbye');
 
 export const trueExpr = BooleanExpr(true);
 export const falseExpr = BooleanExpr(false);
+
+// ----------------------------------------------------------------------------
+// | Check Expect examples                                                    |
+// ----------------------------------------------------------------------------
+
+// expected successes
+
+export const checkExpectSameNum
+  = MakeCheckExpect(negThirteenExpr, negThirteenExpr);
+
+export const checkExpectSameId
+  = MakeCheckExpect(helloIdExpr, helloIdExpr);
+
+export const checkExpectSameString
+  = MakeCheckExpect(helloStringExpr, helloStringExpr);
+
+export const checkExpectTrue
+  = MakeCheckExpect(trueExpr, trueExpr);
+
+export const checkExpectFalse
+  = MakeCheckExpect(falseExpr, falseExpr);
+
+
+
+// expected failures
+
+export const checkExpectDiffNum
+  = MakeCheckExpect(negThirteenExpr, oneExpr);
+
+export const checkExpectDiffId
+  = MakeCheckExpect(helloIdExpr, goodbyeIdExpr);
+
+export const checkExpectDiffString
+  = MakeCheckExpect(helloStringExpr, goodbyeStringExpr);
+
+export const checkExpectTrueIsNotFalse
+  = MakeCheckExpect(trueExpr, falseExpr);
+
+export const checkExpectDiffType1
+  = MakeCheckExpect(negThirteenExpr, helloIdExpr);
+
+export const checkExpectDiffType2
+  = MakeCheckExpect(helloIdExpr, helloStringExpr);
+
+export const checkExpectDiffType3
+  = MakeCheckExpect(trueExpr, goodbyeStringExpr);
+
 
 // ----------------------------------------------------------------------------
 // | Expr Error examples                                                      |
