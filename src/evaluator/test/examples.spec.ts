@@ -18,6 +18,15 @@ import {
   TokenType, TokenError, Token, SExp, ExprResult, Result
 } from '../types';
 
+import { 
+  checkExpectSameNum, checkExpectSameId, checkExpectSameString, 
+  checkExpectTrue, checkExpectFalse, checkExpectDiffNum, 
+  checkExpectDiffId, checkExpectDiffString,
+  checkExpectTrueIsNotFalse, checkExpectDiffType1, 
+  checkExpectDiffType2, checkExpectDiffType3
+} from './examples';
+
+
 import { tokenize                     } from '../tokenize';
 import { read,     readTokens         } from '../read';
 import { parse,    parseSexps         } from '../parse';
@@ -1151,6 +1160,103 @@ t('(define (f x y) (+ x y))',
   undefined, undefined, undefined, undefined,
   'Defined (f x y) to be (+ x y).\n'
 );
+
+// Check expect tests
+
+t('(check-expect -13 -13)', undefined, undefined,
+ [
+  checkExpectSameNum
+ ],
+ undefined,
+ '(check-expect -13 -13) passed.'
+)
+
+t('(check-expect hello hello)', undefined, undefined,
+ [
+  checkExpectSameId
+ ],
+ undefined,
+ '(check-expect hello hello) passed.'
+)
+
+t('(check-expect "hello" "hello")', undefined, undefined,
+ [
+  checkExpectSameString
+ ],
+ undefined,
+ '(check-expect "hello" "hello") passed.'
+)
+
+t('(check-expect #true #t)', undefined, undefined,
+ [
+  checkExpectTrue
+ ],
+ undefined,
+ '(check-expect #true #t) passed.'
+)
+
+t('(check-expect #false #f)', undefined, undefined,
+ [
+  checkExpectFalse
+ ],
+ undefined,
+ '(check-expect #false #f) passed.'
+)
+t('(check-expect -13 1)', undefined, undefined,
+ [
+  checkExpectDiffNum
+ ],
+ undefined,
+ '(check-expect -13 1) failed.'
+)
+
+t('(check-expect hello goodbye)', undefined, undefined,
+ [
+  checkExpectDiffId
+ ],
+ undefined,
+ '(check-expect hello goodbye) failed.'
+)
+
+t('(check-expect "hello" "goodbye")', undefined, undefined,
+ [
+  checkExpectDiffString
+ ],
+ undefined,
+ '(check-expect "hello" "goodbye") failed.'
+)
+
+t('(check-expect #t #f)', undefined, undefined,
+ [
+  checkExpectTrueIsNotFalse
+ ],
+ undefined,
+ '(check-expect #t #f) failed.'
+)
+
+t('(check-expect -13 hello)', undefined, undefined,
+ [
+  checkExpectDiffType1
+ ],
+ undefined,
+ '(check-expect -13 hello) failed.'
+)
+
+t('(check-expect hello "hello")', undefined, undefined,
+ [
+  checkExpectDiffType2
+ ],
+ undefined,
+ '(check-expect hello "hello") failed.'
+)
+
+t('(check-expect #true "goodbye")', undefined, undefined,
+ [
+  checkExpectDiffType3
+ ],
+ undefined,
+ '(check-expect #true "goodbye") failed.'
+)
 
 
 /*****************************************************************************
