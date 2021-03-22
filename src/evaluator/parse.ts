@@ -8,15 +8,17 @@
 
 'use strict';
 
-import { SExp, TopLevel, Definition } from './types';
+import { SExp, TopLevel, Definition, Check } from './types';
 
 import {
   StringExpr, NumExpr, IdExpr, BooleanExpr,
-  ExprErr, Call, DefnErr, FnDefn, VarDefn, SExps
+  ExprErr, Call, DefnErr, FnDefn, VarDefn, SExps,
+  MakeCheckExpect,
+  MakeCheckError
 } from './constructors';
 
 import {
-  isReadError, isExpr, isExprArray, 
+  isReadError, isExpr, isExprArray, isCheckError
 } from './predicates';
 
 import { read } from './read';
@@ -57,6 +59,8 @@ export const parseSexp = (sexp: SExp): TopLevel => {
       } else if (firstSexp.type === 'Id') {
         if (firstSexp.sexp === 'define') {
           return parseDefinition({type: 'Id', sexp: 'define'}, sexps.slice(1));
+        } else if (firstSexp.sexp === 'check-expect') {
+          return parseCheck({type: 'Id', sexp: 'check-expect'}, sexps.slice(1));
         }
         if (sexps.length === 1) return ExprErr('Function call with no arguments', sexps);
         let parseRest = parseSexps(sexps.slice(1));
@@ -141,7 +145,6 @@ export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]):
             }
           }
         case 'Id':
-          let x = varOrHeader.sexp;
           return VarDefn(varOrHeader.sexp, body);
         case 'Num':
           case 'String':
@@ -153,5 +156,28 @@ export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]):
     }
   } else {
     return DefnErr('A definition can\'t have more than 3 parts', [d, ...sexps]);
+  }
+}
+
+const parseCheck = (c: {type: 'Id', sexp: 'check-expect'}, sexps: SExp[]): Check => {
+  if (sexps.length === 0) {
+    return MakeCheckError('A check-expect requires two expressions, but found none', [c, ...sexps]);
+  } else if (sexps.length === 1) {
+    return MakeCheckError('A check-expect requires two expressions, but found one', [c, ...sexps]);
+  } else if (sexps.length === 2) {
+    const maybeExprs = sexps.map(parseSexp);
+    if (! isExpr(sexps[0]))
+      return MakeCheckError('First part of check-expect must be an expression.',  [c, ...sexps]);
+    if (! isExpr(sexps[1]))
+      return MakeCheckError('Second part of check-expect must be an expression.',  [c, ...sexps]);
+    
+    if (! isExprArray(maybeExprs)) {
+      throw new Error('Somehow, parseCheck and isExprArray disagree on whether this check-expect is an Expr array.');
+    } else {
+      return MakeCheckExpect(maybeExprs[0], maybeExprs[1]);
+    }
+
+  } else {
+    return MakeCheckError('A check-expect can\'t have more than 3 parts.', [c, ...sexps]);
   }
 }
