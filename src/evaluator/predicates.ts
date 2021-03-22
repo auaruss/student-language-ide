@@ -3,7 +3,7 @@ import {
   SExp, ReadError,
   TopLevel, Definition, Expr, DefinitionError, ExprError,
   Value, Result, DefinitionResult, ExprResult, 
-  Binding, BindingError, Closure, Env, ValueError
+  Binding, BindingError, Closure, Env, ValueError, CheckError
 } from './types';
 
 export const isToken = (x: any): x is Token => {
@@ -140,6 +140,14 @@ export const isExprError = (x: any): x is ExprError => {
       || x.exprError === 'Defn inside Expr'
       || x.exprError === 'No function name after open paren'
       || x.exprError === 'Function call with no arguments')
+    && Array.isArray(x.sexps)
+    && x.sexps.every(isSExp))
+    || isReadError(x);
+}
+
+export const isCheckError = (x: any): x is CheckError => {
+  return (x && typeof x === 'object'
+    && typeof x.checkError === 'string'
     && Array.isArray(x.sexps)
     && x.sexps.every(isSExp))
     || isReadError(x);
