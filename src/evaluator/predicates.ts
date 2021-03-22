@@ -156,14 +156,14 @@ export const isCheckError = (x: any): x is CheckError => {
 // ----------------------------------------------------------------------------
 
 export const isResult = (x: any): x is Result => {
-  return isDefinitionResult(x) || isExprValue(x);
+  return isDefinitionResult(x) || isExprResult(x);
 }
 
 export const isDefinitionResult = (x: any): x is DefinitionResult => {
   return isBinding(x) || isBindingError(x);
 }
 
-export const isExprValue = (x: any): x is ExprResult => {
+export const isExprResult = (x: any): x is ExprResult => {
   return isValue(x) || isValueError(x);
 }
 
@@ -191,7 +191,7 @@ export const isBinding = (x: any): x is Binding => {
   return x && typeof x === 'object'
     && x.type === 'define'
     && typeof x.defined === 'string'
-    && (isExprValue(x.toBe) || x.toBe === null);
+    && (isExprResult(x.toBe) || x.toBe === null);
 }
 
 export const isEnv = (x: any): x is Env => {
