@@ -147,9 +147,12 @@ export type CheckResult
   = {
     type: 'check-success'
   } | {
-    type: 'check-failure'
+    type: 'check-failure',
     actual: ExprResult,
-    expected: ExprResult
+    expected: Value
+  } | { 
+    type: 'check-expected-error',
+    expected: ValueError
   } | CheckError;
 
 export type Nothing
