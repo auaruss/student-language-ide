@@ -61,6 +61,22 @@ t('123',
   '123\n'
 );
 
+t('-13',
+  [ NumTok('-13') ],
+  [ NumAtom(-13) ],
+  [ NumExpr(-13) ],
+  [ NFn(-13) ], 
+  '123\n'
+);
+
+t('-0',
+  [ NumTok('-0') ],
+  [ NumAtom(0) ],
+  [ NumExpr(0) ],
+  [ NFn(0) ], 
+  '0\n'
+);
+
 t('"hello"',
   [ StringTok('hello') ],
   [ StringAtom('hello') ],
