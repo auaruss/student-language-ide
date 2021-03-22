@@ -135,7 +135,7 @@ export type CheckError
 // ----------------------------------------------------------------------------
 
 export type Result
-  = DefinitionResult | ExprResult/* | CheckResult*/;
+  = DefinitionResult | ExprResult | CheckResult;
 
 export type DefinitionResult
   = BindingError | Binding;
