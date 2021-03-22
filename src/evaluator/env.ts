@@ -1,3 +1,9 @@
+/**
+ * @fileoverview This file holds the built in environment for the Beginning Student Language.
+ * 
+ * @author Alice Russell
+ */
+
 'use strict';
 
 import {
@@ -12,10 +18,9 @@ import {
   MakeNothing, MakeJust, BindingErr
 } from './constructors';
 
-/**
- * This file holds the built in environment for the Beginning Student Language.
- */
 
+// fix errors
+// shorten each function to one line inside builtinEnv.
 
 export const builtinEnv = (): Env => {
   let m = new Map<String, Maybe<ExprResult>>();
@@ -44,7 +49,7 @@ export const builtinEnv = (): Env => {
     ))
   );
 
-  //special thanks to Leona
+  
   m.set('string-append',
    MakeJust(BFn(
      (vs: Value[]) => {
