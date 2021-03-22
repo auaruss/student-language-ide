@@ -10,7 +10,7 @@ import {
   SExp, ReadError, Expr, ExprResult,
   TopLevel, ExprError, DefinitionError, Closure, Env,
   Definition, ReadResult, DefinitionResult, ValueError, BindingError,
-  Binding, Value, Nothing, Just, Maybe, Check
+  Binding, Value, Nothing, Just, Maybe, Check, CheckError
 } from './types';
 import { isDefinitionResult } from './predicates';
 
@@ -174,7 +174,12 @@ export const MakeCheckExpect = (actual: Expr, expected: Expr): Check => {
   };
 }
 
-
+export const MakeCheckError = (err: string, sexps: SExp[]): CheckError => {
+  return {
+    checkError: err,
+    sexps: sexps
+  };
+}
 
 // ----------------------------------------------------------------------------
 // | Value constructors                                                       |
