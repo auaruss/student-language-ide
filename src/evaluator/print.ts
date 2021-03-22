@@ -1,5 +1,5 @@
 import { BindingErr } from './constructors';
-import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError } from './predicates';
+import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult } from './predicates';
 import {
   DefinitionResult, ExprResult, Result, Binding, BindingError,
   ValueError, TokenError, ReadError, Token, SExp, Definition, Expr,
@@ -27,8 +27,10 @@ export const printResults = (rs: Result[]): string => {
 const printResult = (r: Result): string => {
   if (isDefinitionResult(r)) {
     return printDefinitionResult(r);
-  } else {
+  } else if (isExprResult(r)) {
     return printExprResult(r);
+  } else {
+    return '';
   }
 }
 

@@ -58,8 +58,13 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
 const evaluateDefOrExpr = (toplevel: TopLevel, env: Env): Result => {
   if (isDefinition(toplevel)) {
     return evaluateDefinition(toplevel, env);
-  } else {
+  } else if (isExpr(toplevel)) {
     return evaluateExpr(toplevel, env);
+  } else {
+    //temporary dummy code to move on with testing the parser on check-expects.
+    return {
+      type: 'check-success'
+    };
   }
 }
 
