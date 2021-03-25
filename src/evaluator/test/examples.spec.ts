@@ -1,5 +1,6 @@
 'use strict';
 
+import { MakeCheckExpect } from '../constructors';
 import { t } from './test-harness';
 
 import {
@@ -1155,7 +1156,7 @@ t(
 
   [
     VarDefn('x', NumExpr(10)),
-    Call('check-expect', [IdExpr('x'), NumExpr(10)])
+    MakeCheckExpect(IdExpr('x'), NumExpr(10))
   ]
 
 );
@@ -1177,69 +1178,92 @@ t('(define (f x y) (+ x y))',
   'Defined (f x y) to be (+ x y).\n'
 );
 
+
+// do we report both of these?
+
+t('(+ hello hello)', undefined, undefined,undefined, undefined,
+  'hello: this variable is not defined.'
+);
+
 // Check expect tests
+
+// worries: print both expected errors and actual errors.
+// evaluate the expected first.
+
+// change the error messages to match DrRacket
+
+// add more interesting expressions to tests.
+
+// test that definitions can go after check-expects referencing them.
+
+// write a test with a definition in it.
+
+t('(check-expect (define x 10) 10)' // does not parse
+
+);
 
 t('(check-expect -13 -13)', undefined, undefined,
  [
   checkExpectSameNum
  ],
  undefined,
- '(check-expect -13 -13) passed.'
-)
+ '🎉'
+);
 
 t('(check-expect hello hello)', undefined, undefined,
  [
   checkExpectSameId
  ],
  undefined,
- '(check-expect hello hello) passed.'
-)
+'hello: this variable is not defined.'
+);
 
 t('(check-expect "hello" "hello")', undefined, undefined,
  [
   checkExpectSameString
  ],
  undefined,
- '(check-expect "hello" "hello") passed.'
-)
+ '🎉'
+);
 
 t('(check-expect #true #t)', undefined, undefined,
  [
   checkExpectTrue
  ],
  undefined,
- '(check-expect #true #t) passed.'
-)
+ '🎉'
+);
 
-t('(check-expect #false #f)', undefined, undefined,
+t('(check-expect #f #f)', undefined, undefined,
  [
   checkExpectFalse
  ],
  undefined,
- '(check-expect #false #f) passed.'
-)
+ '🎉'
+);
+
 t('(check-expect -13 1)', undefined, undefined,
  [
   checkExpectDiffNum
  ],
  undefined,
- '(check-expect -13 1) failed.'
-)
+ 'Actual value -13 differs from 1, the expected value.'
+);
 
 t('(check-expect hello goodbye)', undefined, undefined,
  [
   checkExpectDiffId
  ],
  undefined,
- '(check-expect hello goodbye) failed.'
-)
+ 'goodbye: this variable is not defined.'
+);
 
 t('(check-expect "hello" "goodbye")', undefined, undefined,
  [
   checkExpectDiffString
  ],
  undefined,
- '(check-expect "hello" "goodbye") failed.'
+ 'Actual value "hello" differs from "goodbye", the expected value.'
 )
 
 t('(check-expect #t #f)', undefined, undefined,
@@ -1247,7 +1271,7 @@ t('(check-expect #t #f)', undefined, undefined,
   checkExpectTrueIsNotFalse
  ],
  undefined,
- '(check-expect #t #f) failed.'
+ 'Actual value #true differs from #false, the expected value.'
 )
 
 t('(check-expect -13 hello)', undefined, undefined,
@@ -1255,7 +1279,7 @@ t('(check-expect -13 hello)', undefined, undefined,
   checkExpectDiffType1
  ],
  undefined,
- '(check-expect -13 hello) failed.'
+ 'hello: this variable is not defined.'
 )
 
 t('(check-expect hello "hello")', undefined, undefined,
@@ -1263,7 +1287,7 @@ t('(check-expect hello "hello")', undefined, undefined,
   checkExpectDiffType2
  ],
  undefined,
- '(check-expect hello "hello") failed.'
+ 'hello: this variable is not defined.'
 )
 
 t('(check-expect #true "goodbye")', undefined, undefined,
@@ -1271,7 +1295,7 @@ t('(check-expect #true "goodbye")', undefined, undefined,
   checkExpectDiffType3
  ],
  undefined,
- '(check-expect #true "goodbye") failed.'
+ 'Actual value #true differs from "goodbye", the expected value.'
 )
 
 
