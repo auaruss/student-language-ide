@@ -16,7 +16,7 @@
   NumTok, IdTok, StringTok, BooleanTok, CommentTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom, SExps,
   NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
-  NFn, Bind, MakeCheckExpect
+  NFn, Bind, MakeCheckExpect, MakeCheckSuccess, ValErr, MakeCheckExpectedError, MakeCheckFailure
 } from './../constructors';
 
 // ----------------------------------------------------------------------------
@@ -104,9 +104,6 @@ export const falseExpr = BooleanExpr(false);
 export const checkExpectSameNum
   = MakeCheckExpect(negThirteenExpr, negThirteenExpr);
 
-export const checkExpectSameId
-  = MakeCheckExpect(helloIdExpr, helloIdExpr);
-
 export const checkExpectSameString
   = MakeCheckExpect(helloStringExpr, helloStringExpr);
 
@@ -119,6 +116,8 @@ export const checkExpectFalse
 
 
 // expected failures
+export const checkExpectSameId
+  = MakeCheckExpect(helloIdExpr, helloIdExpr);
 
 export const checkExpectDiffNum
   = MakeCheckExpect(negThirteenExpr, oneExpr);
@@ -173,5 +172,34 @@ export const sGoodbyeBind = Bind('s', goodbyeVal);
 export const tGoodByeBind = Bind('t', goodbyeVal);
 
 // ----------------------------------------------------------------------------
+// | CheckResult examples                                                     |
+// ----------------------------------------------------------------------------
+
+export const checkExpectedErrorSameId
+  = MakeCheckExpectedError(ValErr('this variable is not defined', helloIdExpr));
+
+export const checkFailureDiffNum
+  = MakeCheckFailure(negThirteenVal, negOneVal);
+
+export const checkExpectedErrorDiffId
+  = MakeCheckExpectedError(ValErr('this variable is not defined', goodbyeIdExpr));
+
+export const checkFailureDiffString
+  = MakeCheckFailure(helloVal, goodbyeVal);
+
+export const checkFailureTrueIsNotFalse
+  = MakeCheckFailure(trueVal, falseVal);
+
+export const checkExpectedErrorDiffType1
+  = MakeCheckExpectedError(ValErr('this variable is not defined', helloIdExpr));
+
+export const checkFailureDiffType2
+  = MakeCheckFailure(ValErr('this variable is not defined', helloIdExpr), helloVal);
+
+export const checkFailureDiffType3
+  = MakeCheckFailure(trueVal, goodbyeVal);
+
+// ----------------------------------------------------------------------------
 // | Result Error examples                                                    |
 // ----------------------------------------------------------------------------
+

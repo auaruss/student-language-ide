@@ -1,6 +1,6 @@
 'use strict';
 
-import { MakeCheckExpect } from '../constructors';
+import { MakeCheckExpect, MakeCheckSuccess } from '../constructors';
 import { t } from './test-harness';
 
 import {
@@ -24,7 +24,7 @@ import {
   checkExpectTrue, checkExpectFalse, checkExpectDiffNum, 
   checkExpectDiffId, checkExpectDiffString,
   checkExpectTrueIsNotFalse, checkExpectDiffType1, 
-  checkExpectDiffType2, checkExpectDiffType3
+  checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3
 } from './examples';
 
 
@@ -1206,23 +1206,19 @@ t('(check-expect -13 -13)', undefined, undefined,
  [
   checkExpectSameNum
  ],
- undefined,
- '🎉'
-);
-
-t('(check-expect hello hello)', undefined, undefined,
  [
-  checkExpectSameId
+  MakeCheckSuccess()
  ],
- undefined,
-'hello: this variable is not defined.'
+ '🎉'
 );
 
 t('(check-expect "hello" "hello")', undefined, undefined,
  [
   checkExpectSameString
  ],
- undefined,
+ [
+  MakeCheckSuccess()
+ ],
  '🎉'
 );
 
@@ -1230,7 +1226,9 @@ t('(check-expect #true #t)', undefined, undefined,
  [
   checkExpectTrue
  ],
- undefined,
+ [
+  MakeCheckSuccess()
+ ],
  '🎉'
 );
 
@@ -1238,15 +1236,29 @@ t('(check-expect #f #f)', undefined, undefined,
  [
   checkExpectFalse
  ],
- undefined,
+ [
+  MakeCheckSuccess()
+ ],
  '🎉'
+);
+
+t('(check-expect hello hello)', undefined, undefined,
+ [
+  checkExpectSameId
+ ],
+ [
+  checkExpectedErrorSameId
+ ],
+'hello: this variable is not defined.'
 );
 
 t('(check-expect -13 1)', undefined, undefined,
  [
   checkExpectDiffNum
  ],
- undefined,
+ [
+  checkFailureDiffNum
+ ],
  'Actual value -13 differs from 1, the expected value.'
 );
 
@@ -1254,7 +1266,9 @@ t('(check-expect hello goodbye)', undefined, undefined,
  [
   checkExpectDiffId
  ],
- undefined,
+ [
+  checkExpectedErrorDiffId
+ ],
  'goodbye: this variable is not defined.'
 );
 
@@ -1262,41 +1276,51 @@ t('(check-expect "hello" "goodbye")', undefined, undefined,
  [
   checkExpectDiffString
  ],
- undefined,
+ [
+  checkFailureDiffString
+ ],
  'Actual value "hello" differs from "goodbye", the expected value.'
-)
+);
 
 t('(check-expect #t #f)', undefined, undefined,
  [
   checkExpectTrueIsNotFalse
  ],
- undefined,
+ [
+  checkExpectedErrorSameId
+ ],
  'Actual value #true differs from #false, the expected value.'
-)
+);
 
 t('(check-expect -13 hello)', undefined, undefined,
  [
   checkExpectDiffType1
  ],
- undefined,
+ [
+  checkExpectedErrorDiffType1
+ ],
  'hello: this variable is not defined.'
-)
+);
 
 t('(check-expect hello "hello")', undefined, undefined,
  [
   checkExpectDiffType2
  ],
- undefined,
+ [
+  checkFailureDiffType2
+ ],
  'hello: this variable is not defined.'
-)
+);
 
 t('(check-expect #true "goodbye")', undefined, undefined,
  [
   checkExpectDiffType3
  ],
- undefined,
+ [
+  checkFailureDiffType3
+ ],
  'Actual value #true differs from "goodbye", the expected value.'
-)
+);
 
 
 /*****************************************************************************

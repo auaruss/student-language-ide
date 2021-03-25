@@ -240,7 +240,7 @@ export const MakeCheckExpectedError = (expected: ValueError): CheckResult => {
   };
 }
 
-export const ValErr = (err: string, e: Expr): ValueError => {
+export const ValErr = (err: String, e: Expr): ValueError => {
   return { valueError: err, expr: e };
 }
 
