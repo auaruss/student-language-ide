@@ -8,11 +8,10 @@
 import {
   TokenType, Token, TokenError,
   SExp, ReadError, Expr, ExprResult,
-  TopLevel, ExprError, DefinitionError, Closure, Env,
-  Definition, ReadResult, DefinitionResult, ValueError, BindingError,
-  Binding, Value, Nothing, Just, Maybe, Check, CheckError
+  ExprError, DefinitionError, Env, Definition,
+  ReadResult, ValueError, BindingError, Binding, Value,
+  Nothing, Just, Check, CheckError, CheckResult
 } from './types';
-import { isDefinitionResult } from './predicates';
 
 // ----------------------------------------------------------------------------
 // | Token constructors                                                       |
@@ -182,7 +181,7 @@ export const MakeCheckError = (err: string, sexps: SExp[]): CheckError => {
 }
 
 // ----------------------------------------------------------------------------
-// | Value constructors                                                       |
+// | Result constructors                                                      |
 // ----------------------------------------------------------------------------
 
 export const MakeNothing = (): Nothing => {
@@ -220,16 +219,28 @@ export function Clos(a: string[], e: Env, b: Expr): Value {
   };
 }
 
-export const ValErr = (
-  err: 'Id not in environment'
-     | 'Id referenced before definition'
-     | 'Arity mismatch'
-     | 'Function used as a predicate'
-     | 'Non-boolean value used as a predicate'
-     | 'Expression undefined in program'
-     | 'Expression defined later in program'
-     | 'Nonfunction applied as a function',
-     e: Expr): ValueError => {
+export const MakeCheckSuccess = (): CheckResult => {
+  return {
+    type: 'check-success'
+  };
+}
+
+export const MakeCheckFailure = (actual: ExprResult, expected: Value): CheckResult => {
+  return {
+    type: 'check-failure',
+    actual: actual,
+    expected: expected
+  };
+}
+
+export const MakeCheckExpectedError = (expected: ValueError): CheckResult => {
+  return { 
+    type: 'check-expected-error',
+    expected: expected
+  };
+}
+
+export const ValErr = (err: string, e: Expr): ValueError => {
   return { valueError: err, expr: e };
 }
 
