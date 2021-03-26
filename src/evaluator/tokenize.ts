@@ -23,7 +23,7 @@ export const tokenExpressions: [TokenType, RegExp][] = [
   [TokenType.CloseParen, /^\)/],
   [TokenType.CloseSquareParen, /^]/],
   [TokenType.CloseBraceParen, /^}/],
-  [TokenType.Number, /^\d+\.\d+|^\d+/],
+  [TokenType.Number, /^\-?\d+\.\d+|^\-?\d+/],
   [TokenType.String, /^"[^"]*"/],
   [TokenType.Identifier, /^[^",'`\(\)\[\]{};#\s]+/],
   [TokenType.Boolean, /^#t\b|^#T\b|^#f\b|^#F\b|^#true\b|^#false\b/],
