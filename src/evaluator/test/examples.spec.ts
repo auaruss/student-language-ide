@@ -24,7 +24,7 @@ import {
   checkExpectTrue, checkExpectFalse, checkExpectDiffNum, 
   checkExpectDiffId, checkExpectDiffString,
   checkExpectTrueIsNotFalse, checkExpectDiffType1, 
-  checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3
+  checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3, checkFailureTrueIsNotFalse
 } from './examples';
 
 
@@ -67,14 +67,14 @@ t('-13',
   [ NumAtom(-13) ],
   [ NumExpr(-13) ],
   [ NFn(-13) ], 
-  '123\n'
+  '-13\n'
 );
 
 t('-0',
   [ NumTok('-0') ],
-  [ NumAtom(0) ],
-  [ NumExpr(0) ],
-  [ NFn(0) ], 
+  [ NumAtom(-0) ],
+  [ NumExpr(-0) ],
+  [ NFn(-0) ], 
   '0\n'
 );
 
@@ -90,8 +90,8 @@ t('hello',
   [ IdTok('hello') ],
   [ IdAtom('hello') ],
   [ IdExpr('hello') ],
-  [ ValErr('Id not in environment', IdExpr('hello') )],
-  'Value Error: Id not in environment; value: hello\n'
+  [ ValErr('this variable is not defined', IdExpr('hello') )],
+  'hello: this variable is not defined.\n'
 );
 
 t('#true',
@@ -99,7 +99,7 @@ t('#true',
   [ BooleanAtom('#true') ],
   [ BooleanExpr(true) ],
   [ NFn(true)],
-  '#t\n'
+  '#true\n'
 );
 
 t('(', 
@@ -1182,7 +1182,7 @@ t('(define (f x y) (+ x y))',
 // do we report both of these?
 
 t('(+ hello hello)', undefined, undefined,undefined, undefined,
-  'hello: this variable is not defined.'
+  'hello: this variable is not defined.\n'
 );
 
 // Check expect tests
@@ -1209,7 +1209,7 @@ t('(check-expect -13 -13)', undefined, undefined,
  [
   MakeCheckSuccess()
  ],
- '🎉'
+ '🎉\n'
 );
 
 t('(check-expect "hello" "hello")', undefined, undefined,
@@ -1219,7 +1219,7 @@ t('(check-expect "hello" "hello")', undefined, undefined,
  [
   MakeCheckSuccess()
  ],
- '🎉'
+ '🎉\n'
 );
 
 t('(check-expect #true #t)', undefined, undefined,
@@ -1229,7 +1229,7 @@ t('(check-expect #true #t)', undefined, undefined,
  [
   MakeCheckSuccess()
  ],
- '🎉'
+ '🎉\n'
 );
 
 t('(check-expect #f #f)', undefined, undefined,
@@ -1239,7 +1239,7 @@ t('(check-expect #f #f)', undefined, undefined,
  [
   MakeCheckSuccess()
  ],
- '🎉'
+ '🎉\n'
 );
 
 t('(check-expect hello hello)', undefined, undefined,
@@ -1249,7 +1249,7 @@ t('(check-expect hello hello)', undefined, undefined,
  [
   checkExpectedErrorSameId
  ],
-'hello: this variable is not defined.'
+'hello: this variable is not defined.\n'
 );
 
 t('(check-expect -13 1)', undefined, undefined,
@@ -1259,7 +1259,7 @@ t('(check-expect -13 1)', undefined, undefined,
  [
   checkFailureDiffNum
  ],
- 'Actual value -13 differs from 1, the expected value.'
+ 'Actual value -13 differs from 1, the expected value.\n'
 );
 
 t('(check-expect hello goodbye)', undefined, undefined,
@@ -1269,7 +1269,7 @@ t('(check-expect hello goodbye)', undefined, undefined,
  [
   checkExpectedErrorDiffId
  ],
- 'goodbye: this variable is not defined.'
+ 'goodbye: this variable is not defined.\n'
 );
 
 t('(check-expect "hello" "goodbye")', undefined, undefined,
@@ -1279,7 +1279,7 @@ t('(check-expect "hello" "goodbye")', undefined, undefined,
  [
   checkFailureDiffString
  ],
- 'Actual value "hello" differs from "goodbye", the expected value.'
+ 'Actual value "hello" differs from "goodbye", the expected value.\n'
 );
 
 t('(check-expect #t #f)', undefined, undefined,
@@ -1287,9 +1287,9 @@ t('(check-expect #t #f)', undefined, undefined,
   checkExpectTrueIsNotFalse
  ],
  [
-  checkExpectedErrorSameId
+  checkFailureTrueIsNotFalse
  ],
- 'Actual value #true differs from #false, the expected value.'
+ 'Actual value #true differs from #false, the expected value.\n'
 );
 
 t('(check-expect -13 hello)', undefined, undefined,
@@ -1299,7 +1299,7 @@ t('(check-expect -13 hello)', undefined, undefined,
  [
   checkExpectedErrorDiffType1
  ],
- 'hello: this variable is not defined.'
+ 'hello: this variable is not defined.\n'
 );
 
 t('(check-expect hello "hello")', undefined, undefined,
@@ -1309,7 +1309,7 @@ t('(check-expect hello "hello")', undefined, undefined,
  [
   checkFailureDiffType2
  ],
- 'hello: this variable is not defined.'
+ 'hello: this variable is not defined.\n'
 );
 
 t('(check-expect #true "goodbye")', undefined, undefined,
@@ -1319,7 +1319,7 @@ t('(check-expect #true "goodbye")', undefined, undefined,
  [
   checkFailureDiffType3
  ],
- 'Actual value #true differs from "goodbye", the expected value.'
+ 'Actual value #true differs from "goodbye", the expected value.\n'
 );
 
 

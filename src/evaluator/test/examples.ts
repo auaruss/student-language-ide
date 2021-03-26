@@ -179,7 +179,7 @@ export const checkExpectedErrorSameId
   = MakeCheckExpectedError(ValErr('this variable is not defined', helloIdExpr));
 
 export const checkFailureDiffNum
-  = MakeCheckFailure(negThirteenVal, negOneVal);
+  = MakeCheckFailure(negThirteenVal, oneVal);
 
 export const checkExpectedErrorDiffId
   = MakeCheckExpectedError(ValErr('this variable is not defined', goodbyeIdExpr));
