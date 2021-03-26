@@ -1,9 +1,9 @@
 import { BindingErr } from './constructors';
-import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult } from './predicates';
+import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError } from './predicates';
 import {
   DefinitionResult, ExprResult, Result, Binding, BindingError,
   ValueError, TokenError, ReadError, Token, SExp, Definition, Expr,
-  Value, DefinitionError, ExprError, TokenType
+  Value, DefinitionError, ExprError, TokenType, CheckResult
 } from './types';
 
 import { evaluate } from './eval';
@@ -30,7 +30,7 @@ const printResult = (r: Result): string => {
   } else if (isExprResult(r)) {
     return printExprResult(r);
   } else {
-    return '';
+    return printCheckResult(r);
   }
 }
 
@@ -64,8 +64,8 @@ const printBinding = (b: Binding): string => {
 
 const printValue = (v: Value): string => {
   if (v.type === 'NonFunction') {
-    if (v.value === true) return "#t";
-    if (v.value === false) return "#f";
+    if (v.value === true) return "#true";
+    if (v.value === false) return "#false";
     if (typeof v.value === 'string') return `"${v.value}"`
     return v.value.toString();
   } else if (v.type === 'BuiltinFunction') {
@@ -95,7 +95,7 @@ const printValueError = (ve: ValueError): string => {
   } else if (isExprError(ve)) {
     return printExprError(ve);
   } else {
-    return `Value Error: ${ve.valueError}; value: ${printExpr(ve.expr)}`;
+    return `${printExpr(ve.expr)}: ${ve.valueError}.`;
   }
 }
 
@@ -177,4 +177,20 @@ const printExpr = (e: Expr): string => {
         ).trim()})`
     );
   else return e.const.toString();
+}
+
+const printCheckResult = (c: CheckResult): string => {
+  if (isCheckError(c)) {
+    return '';
+  } else if (c.type === 'check-success') {
+    return '🎉';
+  } else if (c.type === 'check-failure') {
+    if (isValueError(c.actual)) {
+      return printValueError(c.actual);
+    } else {
+      return `Actual value ${ printExprResult(c.actual) } differs from ${ printExprResult(c.expected) }, the expected value.`
+    }
+  } else {
+    return printValueError(c.expected);
+  }
 }
