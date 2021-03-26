@@ -1185,16 +1185,37 @@ t('(+ hello hello)', undefined, undefined,undefined, undefined,
   'hello: this variable is not defined.\n'
 );
 
+
+t('+',
+  undefined, undefined, undefined, undefined,
+  '+: expected a function call, but there is no open parenthesis before this function\n'
+);
+
+t(
+`(define (! x)
+(if (= x 0)
+    1
+      (* x (! (- x 1)))))
+!
+`,
+  undefined, undefined, undefined, undefined,
+  '+: expected a function call, but there is no open parenthesis before this function\n'
+);
+
 // Check expect tests
-
-// worries: print both expected errors and actual errors.
-// evaluate the expected first.
-
-// change the error messages to match DrRacket
 
 // add more interesting expressions to tests.
 
 // test that definitions can go after check-expects referencing them.
+t('(check-expect + +)',
+  undefined, undefined, undefined, undefined,
+  '+: expected a function call, but there is no open parenthesis before this function\n'
+);
+
+t('(check-expect ! !)',
+  undefined, undefined, undefined, undefined,
+  '+: expected a function call, but there is no open parenthesis before this function\n'
+);
 
 // write a test with a definition in it.
 
