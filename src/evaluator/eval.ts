@@ -1,3 +1,5 @@
+import { xNullBind } from './test/examples';
+import { isCheckError, isValue } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -11,15 +13,15 @@
 import {
   TopLevel, Definition, Expr, ExprResult,
   Env, ValueError, DefinitionResult, Result,
-  Maybe, Value
+  Maybe, Value, Check, CheckResult
 } from './types';
 
 import {
   Bind, Clos, NFn, ValErr,
-  MakeNothing, MakeJust, BindingErr
+  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, MakeCheckSuccess, MakeCheckFailure
 } from './constructors';
 
-import { isDefinition, isExpr, isExprError, isValueError, isDefinitionError } from './predicates';
+import { isDefinition, isExpr, isCheck, isExprError, isValueError, isDefinitionError } from './predicates';
 
 import { parse } from './parse';
 
@@ -46,25 +48,26 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
     (d: Definition) => env = extendEnv(d, env)
   );
 
-  return toplevels.map(e => evaluateDefOrExpr(e, env));
+  const evalPass = toplevels.map(
+    e => isCheck(e) ? e : evaluateDefOrExpr(e, env)
+  );
+
+  return evalPass.map(
+    e => isCheck(e) ? evaluateCheck(e, env): e
+  );
 }
 
 /**
  * Evaluates a top level syntactical object into a result.
- * @param toplevel a top level syntactical object 
+ * @param deforexpr a definition or expression
  * @param env the environment for the selected student language
  * @returns a result after evaluating the top level syntactical object
  */
-const evaluateDefOrExpr = (toplevel: TopLevel, env: Env): Result => {
-  if (isDefinition(toplevel)) {
-    return evaluateDefinition(toplevel, env);
-  } else if (isExpr(toplevel)) {
-    return evaluateExpr(toplevel, env);
+const evaluateDefOrExpr = (deforexpr: Definition | Expr, env: Env): Result => {
+  if (isDefinition(deforexpr)) {
+    return evaluateDefinition(deforexpr, env);
   } else {
-    //temporary dummy code to move on with testing the parser on check-expects.
-    return {
-      type: 'check-success'
-    };
+    return evaluateExpr(deforexpr, env);
   }
 }
 
@@ -119,7 +122,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
     case 'Id':
       let x = getVal(e.const, env);
       if (!x) {
-        return ValErr('Id not in environment', e);
+        return ValErr('this variable is not defined', e);
       } else if (x.type === 'nothing') {
         return ValErr('Id referenced before definition', e);
       } else {
@@ -200,6 +203,41 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
   }
 }
 
+/**
+ * Tests a Check.
+ * @param c Check to be tested
+ */
+const evaluateCheck = (c: Check, env: Env): CheckResult => {
+  if (isCheckError(c))
+    return c;
+  else {
+    const expected = evaluateExpr(c.expected, env);
+    if (isValueError(expected)) {
+      return MakeCheckExpectedError(expected);
+    } else {
+      const actual = evaluateExpr(c.actual, env);
+      if (actualEqualsExpected(actual, expected)) {
+        return MakeCheckSuccess();
+      } else {
+        return MakeCheckFailure(actual, expected);
+      }
+    }
+  }
+}
+
+const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
+  if (isValue(actual)) {
+    if (expected.type === 'NonFunction') {
+      return actual.type === 'NonFunction' && expected.value === actual.value;
+    } else if (expected.type === 'BuiltinFunction') {
+      // ???
+      return false;
+    } else {
+      // false for bsl...? 
+      return false;
+    }
+  } else return false;
+}
 
 
 /**
