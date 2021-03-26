@@ -3,7 +3,7 @@ import {
   SExp, ReadError,
   TopLevel, Definition, Expr, DefinitionError, ExprError,
   Value, Result, DefinitionResult, ExprResult, 
-  Binding, BindingError, Closure, Env, ValueError, CheckError
+  Binding, BindingError, Closure, Env, Check, ValueError, CheckError
 } from './types';
 
 export const isToken = (x: any): x is Token => {
@@ -115,6 +115,15 @@ const isCall = (x: any): boolean => {
     && x.args.every(isExpr);
 }
 
+
+export const isCheck = (x: any): x is Check => {
+  return (x && typeof x === 'object'
+    && x.type === 'check-expect'
+    && isExpr(x.actual)
+    && isExpr(x.expected)
+  );
+}
+
 export const isDefinitionError = (x: any): x is DefinitionError => {
   return (x && typeof x === 'object'
     && ( x.defnError === 'Invalid expression passed where function name was expected'
@@ -200,15 +209,7 @@ export const isEnv = (x: any): x is Env => {
 
 export const isValueError = (x: any): x is ValueError => {
   return (x && typeof x === 'object'
-    && (   x.valueError === 'Id not in environment'
-        || x.valueError === 'Id referenced before definition'
-        || x.valueError === 'Arity mismatch'
-        || x.valueError === 'Function used as a predicate'
-        || x.valueError === 'Non-boolean value used as a predicate'
-        || x.valueError === 'Expression undefined in program'
-        || x.valueError === 'Expression defined later in program'
-        || x.valueError === 'Nonfunction applied as a function'
-    )
+    && typeof x.valueError === 'string'
     && isExpr(x.expr))
   || isExprError(x);
 }
