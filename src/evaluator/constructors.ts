@@ -10,7 +10,7 @@ import {
   SExp, ReadError, Expr, ExprResult,
   ExprError, DefinitionError, Env, Definition,
   ReadResult, ValueError, BindingError, Binding, Value,
-  Nothing, Just, Check, CheckError, CheckResult
+  Nothing, Just, Check, CheckError, CheckResult, StructType
 } from './types';
 
 // ----------------------------------------------------------------------------
@@ -206,6 +206,35 @@ export const NFn = (v: string|number|boolean): Value => {
 
 export const BFn = (v: ((vs: Value[]) => ExprResult)): Value => {
   return { type: 'BuiltinFunction', value: v };
+}
+
+export const MakeStructureConstructor = (st: StructType): Value => {
+  return {
+    type: 'StructureConstructor',
+    struct: st
+  };
+};
+
+export const MakeStructureAccessor = (st: StructType, i: number): Value => {
+  return {
+    type: 'StructureAccessor', // if applying to a struct, check that the two struct types are equal with ===
+    struct: st,
+    index: i
+  };
+}
+
+export const MakeStructurePredicate =  (st: StructType): Value => {
+  return {
+    type: 'StructurePredicate',
+    struct: st
+  };
+}
+
+export const MakeStructType = (name: string, fields: string[]): StructType => {
+  return {
+    name: name,
+    fields: fields
+  };
 }
 
 export function Clos(a: string[], e: Env, b: Expr): Value {
