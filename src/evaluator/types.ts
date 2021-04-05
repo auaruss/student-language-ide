@@ -173,7 +173,7 @@ export type Binding
 
 export type Value
   = {
-    type: 'NonFunction',
+    type: 'NonFunction', // rename to Atomic
     value: string | number | boolean
   } | {
     type: 'BuiltinFunction',
@@ -181,6 +181,26 @@ export type Value
   } | {
     type: 'Closure',
     value: Closure
+  } | {
+    type: 'Struct',
+    struct: StructType
+    values: ExprResult[]
+  } | {
+    type: 'StructureConstructor',
+    struct: StructType
+  } | {
+    type: 'StructureAccessor', // if applying to a struct, check that the two struct types are equal with ===
+    struct: StructType,
+    index: number
+  } | {
+    type: 'StructurePredicate',
+    struct: StructType
+  };
+
+type StructType
+  = {
+    name: string,
+    fields: string[]
   };
 
 export type BindingError
