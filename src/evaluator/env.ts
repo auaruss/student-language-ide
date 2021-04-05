@@ -18,184 +18,119 @@ import {
   MakeNothing, MakeJust, BindingErr
 } from './constructors';
 
-
-// fix errors
-// shorten each function to one line inside builtinEnv.
-
 export const builtinEnv = (): Env => {
-  let m = new Map<String, Maybe<ExprResult>>();
+  let env = new Map<String, Maybe<ExprResult>>();
+
+  env.set('+',  BFnEnv(constructReducableNumberOperation((a, b) => a + b, 0)));
+  env.set('-',  BFnEnv(constructReducableNumberOperation((a, b) => a - b, 0)));
+  env.set('*',  BFnEnv(constructReducableNumberOperation((a, b) => a * b, 1)));
+  env.set('/',  
+    BFnEnv(checkArityThenApply(constructReducableNumberOperation((a, b) => a / b, 1), 1, true))
+  );
+
+  env.set('string-append',  BFnEnv(constructReducableStringOperation((a, b) => a.concat(b), '')));
   
-  m.set('+',
-    MakeJust(BFn(
-      (vs: Value[]) => {
-        let ns:number[] = vs.map( v => {
-          if (typeof v.value == 'number') {
-            return v.value;
-          } else {
-            return 0;
-            // error non-num passed to +
-          }
-        });
-
-        if (ns) {
-          return NFn(
-            ns.reduce((acc: number, elem: number) => acc + elem, 0)
-          );
-        } else {
-          //  Error '+: All arguments to + must be numbers.'
-          return NFn(0);
-        }
-      }
-    ))
-  );
-
+  env.set('pi', NFnEnv(Math.PI));
   
-  m.set('string-append',
-   MakeJust(BFn(
-     (vs: Value[]) => {
-      let strings:string[] = vs.map( v => {
-        if (typeof v.value == 'string') {
-          return v.value;
-        } else {
-          return '';
-          // error non-num passed to +
-        }
-      });
+  env.set('sin', BFnEnv(constructSingletonNumberOperation(x => Math.sin(x))));
+  env.set('cos', BFnEnv(constructSingletonNumberOperation(x => Math.cos(x))));
 
-      if (strings) {
-        return NFn(
-          strings.reduce((acc: string, elem: string) => acc.concat(elem), '')
-        );
-      } else {
-        //  Error '+: All arguments to + must be numbers.'
-        return NFn('');
-      }
-     }
-   ))
-  );
-
-  m.set('*',
-    MakeJust(BFn(
-      (vs: Value[]) => {
-        let ns:number[] = vs.map( v => {
-          if (typeof v.value == 'number') {
-            return v.value;
-          } else {
-            return 0;
-            // error non-num passed to +
-          }
-        });
-
-        if (ns) {
-          return NFn(
-            ns.reduce((acc: number, elem: number) => acc * elem, 1)
-          );
-        } else {
-          //  Error '*: All arguments to + must be numbers.'
-          return NFn(0);
-        }
-      }
-    ))
-  );
+  return env;
+}
 
 
-  m.set('-',
-    MakeJust(BFn(
-      (vs: Value[]) => {
-        let ns:number[] = vs.map( v => {
-          if (typeof v.value == 'number') {
-            return v.value;
-          } else {
-            return 0;
-            // error non-num passed to +
-          }
-        });
-
-        if (ns) {
-          return NFn(
-            ns.slice(1).reduce((acc: number, elem: number) => acc - elem, ns[0])
-          );
-        } else {
-          //  Error '-: All arguments to - must be numbers.'
-          return NFn(0);
-        }
-      }
-    )));
-
-    m.set('/',
-    MakeJust(BFn(
-      (vs: Value[]) => {
-        let ns:number[] = vs.map( v => {
-          if (typeof v.value == 'number') {
-            return v.value;
-          } else {
-            return 0;
-            // error non-num passed to +
-          }
-        });
-  
-        if (ns) {
-          return NFn(
-            ns.reduce((acc: number, elem: number) => acc / elem, 1)
-          );
-        } else {
-          //  Error '/: All arguments to + must be numbers.'
-          return NFn(0);
-        }
-      }
-    )));
-
-  m.set('=',
-    MakeJust(BFn(
-      (vs: Value[]) => {
-        if (vs.length === 0) throw new Error('=: expects at least 1 argument, but found none');
-        let valToBeEqualTo = vs[0].value;
-        return NFn(
-          vs.slice(1).reduce((acc: boolean, elem: Value) => acc && elem.value === valToBeEqualTo, true)
-        );
-      }
-    ))
-  );
-
-  m.set('pi', MakeJust(NFn(Math.PI)));
-
-  m.set('cos',
-    MakeJust(
-      BFn(
-        (vs: Value[]) => {
-          if (vs.length === 0) throw new Error('cos: expects at least 1 argument, but found none');
-          else if (vs.length > 1) return NFn(0); // Error
-          else {
-            let val = vs[0];
-            if (val.type === 'NonFunction') {
-              if (typeof val.value === 'number') return NFn(Math.cos(val.value));
-              else return NFn(0);
-            }
-            return NFn(0);
-          }
-        }
-      )
-    )
+const constructSingletonNumberOperation = (
+  op: (x: number) => number,
+): ((vs: Value[]) => ExprResult) => {
+  return checkArityThenApply(
+    (vs: Value[]) => {
+      const nums = checkIfIsNumbers(vs);
+      if (vs.length !== 1)
+        throw new Error('Impossible arity mismatch; fix constructSingletonNumberOperation bug');
+      const num = nums[0];
+      return NFn(op(num));
+    },
+    1, false
   )
+}
 
-  m.set('sin',
-  MakeJust(
-      BFn(
-        (vs: Value[]) => {
-          if (vs.length === 0) throw new Error('sin: expects at least 1 argument, but found none');
-          else if (vs.length > 1) return NFn(0); // Error
-          else {
-            let val = vs[0];
-            if (val.type === 'NonFunction') {
-              if (typeof val.value === 'number') return NFn(Math.sin(val.value));
-              else return NFn(0);
-            }
-            return NFn(0);
-          }
-        }
-      )
-    )
-  )
+const constructReducableNumberOperation = (
+  op: (a: number, b: number) => number,
+  id: number
+): ((vs: Value[]) => ExprResult) => {
+  return (vs: Value[]) => {
+    const nums: number[] | false = checkIfIsNumbers(vs);
+    
+    if (nums === false) {
+      return ValErr('Not a number', vs);
+    }
+    
+    return NFn(nums.reduce(op, id));
+  };
+}
 
-  return m;
+const constructReducableStringOperation = (
+  op: (a: string, b: string) => string,
+  id: string
+): ((vs: Value[]) => ExprResult) => {
+  return (vs: Value[]) => {
+    const strings: string[] | false = checkIfIsStrings(vs);
+    
+    if (strings === false) {
+      return ValErr('Not a string', vs);
+    }
+    
+    return NFn(strings.reduce(op, id));
+  };
+}
+
+const BFnEnv = ( v: ((vs: Value[]) => ExprResult)): Just<ExprResult> => {
+  return MakeJust(BFn(v));
+}
+
+const NFnEnv = (v: string | boolean | number): Just<ExprResult> => {
+  return MakeJust(NFn(v));
+}
+
+const checkIfIsNumbers = (vs: Value[]): number[] | false => {
+  const nums: number[] = []
+  for (let v of vs) {
+    if (! (v.type === 'NonFunction'))
+      return false;
+    if (typeof v.value !== 'number')
+      return false;
+    nums.push(v.value);
+  }
+
+  return nums;
+}
+
+const checkIfIsStrings = (vs: Value[]): string[] | false => {
+  const strings: string[] = []
+  for (let v of vs) {
+    if (! (v.type === 'NonFunction'))
+      return false;
+    if (typeof v.value !== 'string')
+      return false;
+    strings.push(v.value);
+  }
+
+  return strings;
+}
+
+const checkArityThenApply = (
+  f: ((vs: Value[]) => ExprResult),
+  arity: number,
+  allowUnlimited: boolean,
+  max?: number
+): ((vs: Value[]) => ExprResult) => {
+  // if max is not defined default to be equal to the arity argument
+  let gate = max ? max : arity;
+
+  return (vs: Value[]) => {
+    if (vs.length < arity) return ValErr('Arity mismatch', vs);
+    if ((! allowUnlimited) && vs.length > gate) return ValErr('Arity mismatch', vs);
+
+    return f(vs);
+  }
 }
