@@ -25,18 +25,9 @@ import { parse,    parseSexps         } from '../parse';
 import { evaluate, evaluateTopLevels } from '../eval';
 import { print,    printResults       } from '../print';
 
-const A_CLOSURE: ExprResult = {
-  type: 'Closure',
-  value: {
-    args: [],
-    env: new Map(),
-    body: {
-      type: 'String',
-      const: 'dummy-closure'
-    }
-  }
-};
-
+const tIO = (input: string, output: string): void => {
+  t(input, undefined, undefined, undefined, undefined, output);
+}
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *
@@ -301,4 +292,46 @@ Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
 Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
 Defined y-pos.
 ` // null means we dont print out the body
+);
+
+
+tIO(
+`; Exercise 1.
+
+; init-speed: Number
+(define init-speed 1.5)
+
+; init-angle: Number
+(define init-angle (* 0.3 pi))
+
+; Exercise 2.
+
+; init-x-vel: Number
+(define init-x-vel (* init-speed (cos init-angle)))
+
+; init-y-vel: Number
+(define init-y-vel (* init-speed (sin init-angle)))
+
+; Exercise 3.
+
+; y-pos: Number -> Number
+; Calculates the altitude of the rocket as a function of time.
+(define (y-pos t)
+  (- (* init-y-vel t)
+      (* 0.5 0.003 t t)))
+      
+(check-expect (y-pos -1) (- (* init-y-vel -1) (* 0.5 0.003 -1 -1)))
+(check-expect (y-pos 0) 0)
+(check-expect (y-pos 10) 11.985254915624212)`,
+
+
+`Defined init-speed to be 1.5.
+Defined init-angle to be ${0.3 * Math.PI}.
+Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
+Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
+Defined y-pos.
+🎉
+🎉
+🎉
+`
 );

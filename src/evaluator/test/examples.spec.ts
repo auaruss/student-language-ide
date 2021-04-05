@@ -1212,9 +1212,12 @@ t('(check-expect + +)',
   '+: expected a function call, but there is no open parenthesis before this function\n'
 );
 
-t('(check-expect ! !)',
+t(
+`(define (! x) x)
+(check-expect ! !)
+`,
   undefined, undefined, undefined, undefined,
-  '+: expected a function call, but there is no open parenthesis before this function\n'
+  '!: expected a function call, but there is no open parenthesis before this function\n'
 );
 
 // write a test with a definition in it.
@@ -1343,6 +1346,20 @@ t('(check-expect #true "goodbye")', undefined, undefined,
  'Actual value #true differs from "goodbye", the expected value.\n'
 );
 
+// Some posn tests
+
+t('(make-posn (+ 2 "hello") 2)',
+ undefined, undefined, undefined, undefined,
+ 'some error including the phrase "hello is not a number"...'
+);
+
+
+t(`(define p (make-posn (+ 2 "hello") 3))
+(posn-y p)
+`,
+  undefined, undefined, undefined, undefined,
+  'this should not be 3...'
+);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
