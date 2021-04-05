@@ -212,7 +212,7 @@ export type BindingError
 export type ValueError
    = ExprError | {
     valueError: string,
-    expr: Expr // put identifier for expr in this thing
+    expr: Expr | Value[] // put identifier for expr in this thing
   };
 
 export type Closure
