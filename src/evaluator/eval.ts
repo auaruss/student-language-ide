@@ -156,7 +156,12 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
         let body = maybeBody.thing;
         if (isValueError(body)) {
           return body;
-        } else if (body.type === 'NonFunction') {
+        } else if (
+          body.type === 'NonFunction'
+          || body.type === 'Struct'
+          || body.type === 'StructureAccessor'
+          || body.type === 'StructureConstructor'
+          || body.type === 'StructurePredicate') {
           return ValErr('Nonfunction applied as a function', e);
         } else if (body.type === 'BuiltinFunction') {
           let valuesWithoutError: Value[] = [];
