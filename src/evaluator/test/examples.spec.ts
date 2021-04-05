@@ -1345,19 +1345,21 @@ t('(check-expect #true "goodbye")', undefined, undefined,
 
 // Some posn tests
 
-tIO('(make-posn 2 3)', 'Made a posn structure.');
+tIO('(make-posn 2 3)', '(make-posn 2 3)');
 
 tIO('(posn-x (make-posn 2 3))', '2');
 
 tIO('(posn-x (make-posn 2 3))', '3');
 
 tIO('(make-posn (+ 2 "hello") 2)',
- 'some error including the phrase "hello is not a number"...'
+ '+: expects a number as 2nd argument, given "hello"'
 );
 
 tIO(`(define p (make-posn (+ 2 "hello") 3))
 (posn-y p)
-`, 'this should not be 3...'
+`,
+`+: expects a number as 2nd argument, given "hello"
+p: this variable is not defined`
 );
 
 /*****************************************************************************
