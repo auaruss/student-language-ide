@@ -28,15 +28,12 @@ import {
 } from './examples';
 
 
-import { tokenize                     } from '../tokenize';
-import { read,     readTokens         } from '../read';
-import { parse,    parseSexps         } from '../parse';
-import { evaluate, evaluateTopLevels } from '../eval';
-import { print,    printResults       } from '../print';
+import { tokenize } from '../tokenize';
+import { read } from '../read';
 
-
-// test harness tests
-
+const tIO = (input: string, output: string): void => {
+  t(input, undefined, undefined, undefined, undefined, output);
+}
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *
@@ -1348,17 +1345,19 @@ t('(check-expect #true "goodbye")', undefined, undefined,
 
 // Some posn tests
 
-t('(make-posn (+ 2 "hello") 2)',
- undefined, undefined, undefined, undefined,
+tIO('(make-posn 2 3)', 'Made a posn structure.');
+
+tIO('(posn-x (make-posn 2 3))', '2');
+
+tIO('(posn-x (make-posn 2 3))', '3');
+
+tIO('(make-posn (+ 2 "hello") 2)',
  'some error including the phrase "hello is not a number"...'
 );
 
-
-t(`(define p (make-posn (+ 2 "hello") 3))
+tIO(`(define p (make-posn (+ 2 "hello") 3))
 (posn-y p)
-`,
-  undefined, undefined, undefined, undefined,
-  'this should not be 3...'
+`, 'this should not be 3...'
 );
 
 /*****************************************************************************
