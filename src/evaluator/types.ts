@@ -197,7 +197,7 @@ export type Value
     struct: StructType
   };
 
-type StructType
+export type StructType
   = {
     name: string,
     fields: string[]
