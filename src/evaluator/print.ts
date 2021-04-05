@@ -1,5 +1,5 @@
 import { BindingErr } from './constructors';
-import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError } from './predicates';
+import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError, isExpr } from './predicates';
 import {
   DefinitionResult, ExprResult, Result, Binding, BindingError,
   ValueError, TokenError, ReadError, Token, SExp, Definition, Expr,
@@ -70,7 +70,12 @@ const printValue = (v: Value): string => {
     return v.value.toString();
   } else if (v.type === 'BuiltinFunction') {
     return 'Builtin function.'
-  } else {
+  } else if (v.type === 'Struct'
+             || v.type === 'StructureAccessor'
+             || v.type === 'StructureConstructor'
+             || v.type === 'StructurePredicate') {
+      return '';
+    } else {
     return printExpr(v.value.body);
   }
 }
@@ -95,7 +100,10 @@ const printValueError = (ve: ValueError): string => {
   } else if (isExprError(ve)) {
     return printExprError(ve);
   } else {
-    return `${printExpr(ve.expr)}: ${ve.valueError}.`;
+    return `${ isExpr(ve.expr)
+               ? printExpr(ve.expr) 
+               : ve.expr.map(printValue).reduce((a, b) => a.concat(b))
+            }: ${ve.valueError}.`;
   }
 }
 

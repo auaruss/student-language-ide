@@ -351,6 +351,7 @@ const matchingValueErrors = (actual: ValueError, expected: ValueError): boolean 
     return isExprError(actual) && (matchingExprErrors(actual, expected));
   } else {
     if (isExprError(actual)) return false;
+    if (Array.isArray(actual.expr) || Array.isArray(expected.expr)) return false;
     return expected.valueError === actual.valueError && matchingExprs(actual.expr, expected.expr);
   }
 }
