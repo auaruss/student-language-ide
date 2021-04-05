@@ -1,3 +1,4 @@
+import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from './constructors';
 /**
  * @fileoverview This file holds the built in environment for the Beginning Student Language.
  * 
@@ -7,15 +8,11 @@
 'use strict';
 
 import {
-  TopLevel, Definition, Expr, ExprResult,
-  Env, ValueError, DefinitionResult, Result,
-  Nothing, Just, Maybe, Value
+  ExprResult, Env, Just, Maybe, Value
 } from './types';
-import { isDefinition, isExpr, isExprError, isValueError, isDefinitionError } from './predicates';
-import { parse } from './parse';
+
 import {
-  Bind, BFn, Clos, NFn, ValErr,
-  MakeNothing, MakeJust, BindingErr
+BFn, NFn, ValErr, MakeJust, 
 } from './constructors';
 
 export const builtinEnv = (): Env => {
@@ -35,9 +32,13 @@ export const builtinEnv = (): Env => {
   env.set('sin', BFnEnv(constructSingletonNumberOperation(x => Math.sin(x))));
   env.set('cos', BFnEnv(constructSingletonNumberOperation(x => Math.cos(x))));
 
+  env.set('make-posn', MakeJust(MakeStructureConstructor(MakeStructType('posn', ['x', 'y']))));
+  env.set('posn-x', MakeJust(MakeStructureAccessor(MakeStructType('posn', ['x', 'y']), 0)));
+  env.set('posn-y', MakeJust(MakeStructureAccessor(MakeStructType('posn', ['x', 'y']), 1)));
+  env.set('posn?', MakeJust(MakeStructureConstructor(MakeStructType('posn', ['x', 'y']))))
+
   return env;
 }
-
 
 const constructSingletonNumberOperation = (
   op: (x: number) => number,
