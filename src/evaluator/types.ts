@@ -72,7 +72,7 @@ export type ReadError
 // ----------------------------------------------------------------------------
 
 export type TopLevel
-  = Definition | Expr | If | Cond | Check;
+  = Definition | Expr | Check;
 
 export type Definition
   = DefinitionError | {
@@ -104,7 +104,7 @@ export type Expr
     type: 'Call',
     op: string,
     args: Expr[],
-  };
+  } | If | Cond;
 
 export type If
   = {
@@ -118,7 +118,7 @@ export type Cond
   = {
     type: 'Cond',
     clauses: [Expr, Expr][]
-  };
+  }
 
 export type Check
   = CheckError | {

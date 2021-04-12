@@ -16,7 +16,7 @@
   NumTok, IdTok, StringTok, BooleanTok, CommentTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom, SExps,
   NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
-  NFn, Bind, MakeCheckExpect, MakeCheckSuccess, ValErr, MakeCheckExpectedError, MakeCheckFailure
+  NFn, Bind, MakeCheckExpect, MakeCheckSuccess, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, FnDefn, MakeCond
 } from './../constructors';
 
 // ----------------------------------------------------------------------------
@@ -68,14 +68,6 @@ export const falseAtom = BooleanAtom('#f');
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-// | Definition examples                                                      |
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// | Definition Error examples                                                |
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
 // | Expr examples                                                            |
 // ----------------------------------------------------------------------------
 
@@ -94,6 +86,47 @@ export const goodbyeStringExpr = StringExpr('goodbye');
 
 export const trueExpr = BooleanExpr(true);
 export const falseExpr = BooleanExpr(false);
+
+// ----------------------------------------------------------------------------
+// | If/Cond examples                                                         |
+// ----------------------------------------------------------------------------
+
+export const basicIf1 = MakeIf(trueExpr, helloStringExpr, goodbyeStringExpr);
+export const basicIf2 = MakeIf(falseExpr, helloStringExpr, goodbyeStringExpr);
+export const factorialIf
+  = MakeIf(
+      Call('=', [IdExpr('n'), NumExpr(0)]),
+      NumExpr(1),
+      Call('*', [
+        IdExpr('n'),
+        Call('!', [Call('-', [IdExpr('n'), NumExpr(1)])])
+      ])
+    );
+
+export const factorialCond
+  = MakeCond(
+      [
+        [Call('=', [IdExpr('n'), NumExpr(0)]), NumExpr(1)],
+        [
+          IdExpr('else'), 
+          Call('*', [
+            IdExpr('n'),
+            Call('!', [Call('-', [IdExpr('n'), NumExpr(1)])])
+          ])
+        ]
+      ]
+    );
+
+// ----------------------------------------------------------------------------
+// | Definition examples                                                      |
+// ----------------------------------------------------------------------------
+
+export const factorialIfDefn = FnDefn('!', ['n'], factorialIf);
+export const factorialCondDefn = FnDefn('!', ['n'], factorialCond);
+
+// ----------------------------------------------------------------------------
+// | Definition Error examples                                                |
+// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 // | Check Expect examples                                                    |

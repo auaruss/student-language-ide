@@ -1362,6 +1362,14 @@ tIO(`(define p (make-posn (+ 2 "hello") 3))
 p: this variable is not defined`
 );
 
+
+t('(define (f x) (if x))'); // This is parse error at 'if'. Fix the parser.
+
+t('(define x 10) (define x 20)');
+
+tIO('(posn-x (make-color 15 15 15 15))',
+'posn-x cannot be applied to a make-color');
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *

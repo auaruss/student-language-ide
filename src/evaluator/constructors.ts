@@ -10,7 +10,7 @@ import {
   SExp, ReadError, Expr, ExprResult,
   ExprError, DefinitionError, Env, Definition,
   ReadResult, ValueError, BindingError, Binding, Value,
-  Nothing, Just, Check, CheckError, CheckResult, StructType
+  Nothing, Just, Check, CheckError, CheckResult, StructType, If, Cond
 } from './types';
 
 // ----------------------------------------------------------------------------
@@ -135,31 +135,35 @@ export const Call = (op: string, args: Expr[]): Expr => {
   };
 }
 
-export const ExprErr = (
-  e: 'Empty Expr'
-   | 'Defn inside Expr'
-   | 'No function name after open paren'
-   | 'Function call with no arguments',
+export const ExprErr = (e: string,
   v: SExp[]
 ): ExprError => {
   return { exprError: e, sexps: v };
 }
 
-export const DefnErr = (
-  e: 'Invalid expression passed where function name was expected'
-   | 'Invalid expression passed where function argument was expected'
-   | 'A definition requires two parts, but found none'
-   | 'A definition requires two parts, but found one' 
-   | 'Passed a non-definition as definition'
-   | 'Expected a variable name, or a function header'
-   | 'Expected a function header with parameters in parentheses, received nothing in parentheses'
-   | 'Expected a function header with parameters in parentheses, received a function name with no parameters'
-   | 'A function in BSL cannot have zero parameters'
-   | 'A definition can\'t have more than 3 parts'
-   | 'Cannot have a definition as the body of a definition',
-  v: SExp[]): DefinitionError => {
+export const DefnErr = (e: string, v: SExp[]): DefinitionError => {
     return { defnError: e, sexps: v };
 } 
+
+// ----------------------------------------------------------------------------
+// | If/Cond constructors                                                     |
+// ----------------------------------------------------------------------------
+
+export const MakeIf = (p: Expr, c: Expr, a: Expr): If => {
+  return {
+    type: 'if',
+    predicate: p,
+    consequent: c,
+    alternative: a
+  };
+}
+
+export const MakeCond = (clauses: [Expr, Expr][]): Cond => {
+  return {
+    type: 'Cond',
+    clauses: clauses
+  };
+}
 
 // ----------------------------------------------------------------------------
 // | Check constructors                                                       |
@@ -269,7 +273,8 @@ export const MakeCheckExpectedError = (expected: ValueError): CheckResult => {
   };
 }
 
-export const ValErr = (err: string, e: Expr | Value[]): ValueError => {
+export const ValErr = (err: string, e?: Expr): ValueError => {
+  if (! e) return { valueError: err };
   return { valueError: err, expr: e };
 }
 
