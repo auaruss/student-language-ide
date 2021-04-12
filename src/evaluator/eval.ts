@@ -208,6 +208,8 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
 
     case 'StructureConstructor':
     case 'StructurePredicate':
+
+    return NFn(1);
   }
 
 }

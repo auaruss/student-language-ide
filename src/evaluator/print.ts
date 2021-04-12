@@ -100,9 +100,9 @@ const printValueError = (ve: ValueError): string => {
   } else if (isExprError(ve)) {
     return printExprError(ve);
   } else {
-    return `${ isExpr(ve.expr)
+    return `${ ve.expr
                ? printExpr(ve.expr) 
-               : ve.expr.map(printValue).reduce((a, b) => a.concat(b))
+               : ''
             }: ${ve.valueError}.`;
   }
 }
@@ -184,6 +184,8 @@ const printExpr = (e: Expr): string => {
           ''
         ).trim()})`
     );
+  else if (e.type === 'cond') return '';
+  else if (e.type === 'if') return '';
   else return e.const.toString();
 }
 
