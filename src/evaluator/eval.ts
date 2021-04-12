@@ -156,10 +156,10 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
     case 'Call':
       const op = evaluateOperator(e, e.op, env);
       if (isValueError(op)) return op;
-      if (op.type === 'NonFunction') return ValErr('Tried to apply a nonfunction as a function', e);
 
       const args = evaluateOperands(e.args, env);
       if (! isValueArray(args)) return ValErr('An argument didn\'t evaluate properly', e);
+  
       return apply(op, args, env, e);
   }
 }
@@ -182,9 +182,13 @@ const evaluateOperands = (args: Expr[], env: Env): ExprResult[] => {
 
 const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
   switch (op.type) {
-    case 'NonFunction': throw new Error('this should not be reachable in apply');
+    case 'NonFunction':
+    case 'Struct':
+      return ValErr('Tried to apply a nonfunction as a function', e);
+
     case 'BuiltinFunction':
       return op.value(args);
+
     case 'Closure':
       let clos = op.value;
       if (! (clos.args.length === args.length))
@@ -198,8 +202,6 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
         
       return evaluateExpr(clos.body, localEnv);
 
-    case 'Struct':
-      return ValErr('struct cannot be applied as a function', e);
     case 'StructureAccessor':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
       if (args[0].type !== 'Struct') return ValErr ('must apply a structure accessor to a struct', e);

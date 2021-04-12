@@ -1,4 +1,4 @@
-import { Closure } from './../types';
+import { Closure } from '../types';
 'use strict';
 
 import { t } from './test-harness';
