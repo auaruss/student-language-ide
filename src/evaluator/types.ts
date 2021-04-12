@@ -72,7 +72,7 @@ export type ReadError
 // ----------------------------------------------------------------------------
 
 export type TopLevel
-  = Definition | Expr | Check;
+  = Definition | Expr | If | Cond | Check;
 
 export type Definition
   = DefinitionError | {
@@ -106,6 +106,19 @@ export type Expr
     args: Expr[],
   };
 
+export type If
+  = {
+    type: 'if',
+    predicate: Expr,
+    consequent: Expr,
+    alternative: Expr
+  };
+
+export type Cond
+  = {
+    type: 'Cond',
+    clauses: [Expr, Expr][]
+  };
 
 export type Check
   = CheckError | {
@@ -212,8 +225,8 @@ export type BindingError
 export type ValueError
    = ExprError | {
     valueError: string,
-    expr: Expr | Value[] // put identifier for expr in this thing
-  };
+    expr?: Expr // put identifier for expr in this thing
+  }; // maybe subdivide into type error?
 
 export type Closure
   = {
@@ -222,6 +235,11 @@ export type Closure
     body: Expr
   };
 
+
+/**
+ * The Maybe object is needed for the first pass/second pass system in the evaluator
+ * (to fill the first pass with holes, and the second pass with Just objects)
+ */
 export type Env = Map<String, Maybe<ExprResult>>;
 
 

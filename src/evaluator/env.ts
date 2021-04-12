@@ -8,7 +8,7 @@ import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from 
 'use strict';
 
 import {
-  ExprResult, Env, Just, Maybe, Value
+  ExprResult, Env, Just, Maybe, Value, StructType
 } from './types';
 
 import {
@@ -17,6 +17,8 @@ BFn, NFn, ValErr, MakeJust,
 
 export const builtinEnv = (): Env => {
   let env = new Map<String, Maybe<ExprResult>>();
+
+  const posnType: StructType = MakeStructType('posn', ['x', 'y']);
 
   env.set('+',  BFnEnv(constructReducableNumberOperation((a, b) => a + b, 0)));
   env.set('-',  BFnEnv(constructReducableNumberOperation((a, b) => a - b, 0)));
@@ -32,10 +34,10 @@ export const builtinEnv = (): Env => {
   env.set('sin', BFnEnv(constructSingletonNumberOperation(x => Math.sin(x))));
   env.set('cos', BFnEnv(constructSingletonNumberOperation(x => Math.cos(x))));
 
-  env.set('make-posn', MakeJust(MakeStructureConstructor(MakeStructType('posn', ['x', 'y']))));
-  env.set('posn-x', MakeJust(MakeStructureAccessor(MakeStructType('posn', ['x', 'y']), 0)));
-  env.set('posn-y', MakeJust(MakeStructureAccessor(MakeStructType('posn', ['x', 'y']), 1)));
-  env.set('posn?', MakeJust(MakeStructureConstructor(MakeStructType('posn', ['x', 'y']))))
+  env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
+  env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
+  env.set('posn-y', MakeJust(MakeStructureAccessor(posnType, 1)));
+  env.set('posn?', MakeJust(MakeStructureConstructor(posnType)));
 
   return env;
 }
@@ -63,7 +65,7 @@ const constructReducableNumberOperation = (
     const nums: number[] | false = checkIfIsNumbers(vs);
     
     if (nums === false) {
-      return ValErr('Not a number', vs);
+      return ValErr('Not a number');
     }
     
     return NFn(nums.reduce(op, id));
@@ -78,7 +80,7 @@ const constructReducableStringOperation = (
     const strings: string[] | false = checkIfIsStrings(vs);
     
     if (strings === false) {
-      return ValErr('Not a string', vs);
+      return ValErr('Not a string');
     }
     
     return NFn(strings.reduce(op, id));
@@ -129,8 +131,8 @@ const checkArityThenApply = (
   let gate = max ? max : arity;
 
   return (vs: Value[]) => {
-    if (vs.length < arity) return ValErr('Arity mismatch', vs);
-    if ((! allowUnlimited) && vs.length > gate) return ValErr('Arity mismatch', vs);
+    if (vs.length < arity) return ValErr('Arity mismatch');
+    if ((! allowUnlimited) && vs.length > gate) return ValErr('Arity mismatch');
 
     return f(vs);
   }
