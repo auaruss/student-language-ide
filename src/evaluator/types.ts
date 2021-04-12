@@ -116,7 +116,7 @@ export type If
 
 export type Cond
   = {
-    type: 'Cond',
+    type: 'cond',
     clauses: [Expr, Expr][]
   }
 

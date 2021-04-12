@@ -160,7 +160,7 @@ export const MakeIf = (p: Expr, c: Expr, a: Expr): If => {
 
 export const MakeCond = (clauses: [Expr, Expr][]): Cond => {
   return {
-    type: 'Cond',
+    type: 'cond',
     clauses: clauses
   };
 }

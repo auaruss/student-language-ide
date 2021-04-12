@@ -188,6 +188,10 @@ export const isValue = (x: any): x is Value => {
         && isClos(x.value)));
 }
 
+export const isValueArray = (x: any): x is Value[] => {
+  return Array.isArray(x) && x.every(isValue);
+}
+
 export const isClos = (x: any): x is Closure => {
   return x && typeof x === 'object'
     && Array.isArray(x.args)
