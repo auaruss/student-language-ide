@@ -1,3 +1,4 @@
+import { MakeCond, MakeIf } from './constructors';
 /**
  * @fileoverview An AST parser for the student languages.
  *               Generally, produces types from the third section of types.ts given types
@@ -8,7 +9,7 @@
 
 'use strict';
 
-import { SExp, TopLevel, Definition, Check } from './types';
+import { SExp, TopLevel, Definition, Check, Expr, Cond } from './types';
 
 import {
   StringExpr, NumExpr, IdExpr, BooleanExpr,
@@ -53,22 +54,37 @@ export const parseSexp = (sexp: SExp): TopLevel => {
     case 'SExp Array':
       let sexps = sexp.sexp;
       if (sexps.length === 0)  return ExprErr('Empty Expr', [ SExps() ]);
+
       let firstSexp = sexps[0];
+
       if (isReadError(firstSexp) || Array.isArray(firstSexp)) {
+
         return ExprErr('No function name after open paren', sexps);
+
       } else if (firstSexp.type === 'Id') {
+
         if (firstSexp.sexp === 'define') {
           return parseDefinition({type: 'Id', sexp: 'define'}, sexps.slice(1));
         } else if (firstSexp.sexp === 'check-expect') {
           return parseCheck({type: 'Id', sexp: 'check-expect'}, sexps.slice(1));
+        } else if (firstSexp.sexp === 'if') {
+
+        } else if (firstSexp.sexp === 'cond') {
+          
         }
+
         if (sexps.length === 1) return ExprErr('Function call with no arguments', sexps);
+
         let parseRest = parseSexps(sexps.slice(1));
+
         if (isExprArray(parseRest))
           return Call(firstSexp.sexp, parseRest);
         return ExprErr('Defn inside Expr', sexps);
+
       } else {
+
         return ExprErr('No function name after open paren', sexps);
+
       }
     case 'String':
       return StringExpr(sexp.sexp)
@@ -180,4 +196,56 @@ const parseCheck = (c: {type: 'Id', sexp: 'check-expect'}, sexps: SExp[]): Check
   } else {
     return MakeCheckError('A check-expect can\'t have more than 3 parts.', [c, ...sexps]);
   }
+}
+
+const parseIf = (i: {type: 'Id', sexp: 'if'}, sexps: SExp[]): Expr => {
+  if (sexps.length === 0) {
+    return ExprErr('An if requires three expressions, but found none', [i, ...sexps]);
+  } else if (sexps.length === 1) {
+    return ExprErr('An if requires three expressions, but found one', [i, ...sexps]);
+  } else if (sexps.length === 2) {
+    return ExprErr('An if requires three expressions, but found two', [i, ...sexps]);
+  } else if (sexps.length === 3) {
+
+    const maybeExprs = sexps.map(parseSexp);
+
+    if (! isExpr(sexps[0]))
+      return ExprErr('First argument to if must be an expression.',  [i, ...sexps]);
+    if (! isExpr(sexps[1]))
+      return ExprErr('Second argument to if must be an expression.',  [i, ...sexps]);
+    if (! isExpr(sexps[1]))
+      return ExprErr('Third argument to if must be an expression.',  [i, ...sexps]);
+
+    if (! isExprArray(maybeExprs)) {
+      throw new Error('Somehow, parseIf and isExprArray disagree on whether these are is an Exprs.');
+    } else {
+      return MakeIf(maybeExprs[0], maybeExprs[1], maybeExprs[2]);
+    }
+  } else {
+    return ExprErr('if cannot take more than three expressions.', [i, ...sexps]);
+  }
+}
+
+const parseCond = (c: {type: 'Id', sexp: 'cond'}, sexps: SExp[]): Expr => {
+  let clauses: [Expr, Expr][] = [];
+
+  for (let s of sexps) {
+    if (isReadError(s))
+      return ExprErr('All arguments to cond must be clauses.',  [c, ...sexps]);
+    if (s.type !== 'SExp Array')
+      return ExprErr('All arguments to cond must be clauses.',  [c, ...sexps]);
+    if (s.sexp.length !== 2)
+      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
+    const pred = parseSexp(s.sexp[0]);
+    const conseq = parseSexp(s.sexp[1]);
+
+    if (! isExpr(pred))
+      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
+    if (! isExpr(conseq))
+      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
+    
+    clauses.push([pred, conseq]);
+  }
+
+  return MakeCond(clauses);
 }
