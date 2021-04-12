@@ -1370,6 +1370,9 @@ t('(define x 10) (define x 20)');
 tIO('(posn-x (make-color 15 15 15 15))',
 'posn-x cannot be applied to a make-color');
 
+t('(cond ["#t" "hello"] [else "goodbye"])');
+
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *

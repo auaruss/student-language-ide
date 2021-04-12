@@ -212,6 +212,14 @@ export const BFn = (v: ((vs: Value[]) => ExprResult)): Value => {
   return { type: 'BuiltinFunction', value: v };
 }
 
+export const MakeStruct = (s: StructType, v: ExprResult[]) => {
+  return {
+    type: 'Struct',
+    struct: s,
+    values: v
+  }
+}
+
 export const MakeStructureConstructor = (st: StructType): Value => {
   return {
     type: 'StructureConstructor',

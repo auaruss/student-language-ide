@@ -1,5 +1,5 @@
 import { xNullBind } from './test/examples';
-import { isCheckError, isValue } from './predicates';
+import { isCheckError, isValue, isValueArray } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -13,12 +13,12 @@ import { isCheckError, isValue } from './predicates';
 import {
   TopLevel, Definition, Expr, ExprResult,
   Env, ValueError, DefinitionResult, Result,
-  Maybe, Value, Check, CheckResult
+  Maybe, Value, Check, CheckResult, Just
 } from './types';
 
 import {
   Bind, Clos, NFn, ValErr,
-  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, MakeCheckSuccess, MakeCheckFailure
+  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, MakeCheckSuccess, MakeCheckFailure, MakeStructureConstructor, MakeStruct
 } from './constructors';
 
 import { isDefinition, isExpr, isCheck, isExprError, isValueError, isDefinitionError } from './predicates';
@@ -45,7 +45,11 @@ export const evaluate = (exp: string): Result[] => {
 export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
   let env = builtinEnv();
   toplevels.filter(isDefinition).forEach(
-    (d: Definition) => env = extendEnv(d, env)
+    (d: Definition) => { 
+      if (! isDefinitionError(d)) {
+        env = extendEnv(d.name, env)
+      }
+    }
   );
 
   const evalPass = toplevels.map(
@@ -84,7 +88,7 @@ const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
   } else {
     let defnVal = env.get(d.name);
     if (defnVal === undefined) {
-      throw new Error('Somehow, the environment was not populated correctly by the first pass');
+      throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
     } else {
       let sndarg: Maybe<ExprResult>;
       switch (d.type) {
@@ -128,84 +132,84 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       } else {
         return x.thing;
       }
+
+    case 'if':
+      const pred = evaluateExpr(e.predicate, env);
+      if (isValueError(pred)) return pred;
+      if (pred.type !== 'NonFunction' || typeof pred.value !== 'boolean')
+        return ValErr('predicate must be a boolean', e);
+      return pred.value ? evaluateExpr(e.consequent, env) : evaluateExpr(e.alternative, env);
+
+    case 'cond':
+      for (let clause of e.clauses) {
+        const pred = evaluateExpr(clause[0], env);
+        if (isValueError(pred)) return pred;
+        if (pred.type === 'NonFunction' && pred.value === 'else')
+          return evaluateExpr(clause[1], env);
+        if (! (pred.type === 'NonFunction' && typeof pred.value === "boolean"))
+          return ValErr('Expression used as clause predicate in cond must evaluate to a boolean', e);
+        if (pred.value) return evaluateExpr(clause[1], env);
+      }
+
+      return ValErr('cond reached the end of its clauses without a true predicate or else clause', e);
+
     case 'Call':
-      if (e.op === 'if') {
-        if (e.args.length !== 3) {
-          return ValErr('Arity mismatch', e);
-        } else {
-          let pred = evaluateExpr(e.args[0], env);
-          if (isValueError(pred)) {
-            return pred;
-          } else if (! (pred.type === 'NonFunction')) {
-            return ValErr('Function used as a predicate', e);
-          } else if (pred.value === true) {
-            return evaluateExpr(e.args[1], env);
-          } else if (pred.value === false) {
-            return evaluateExpr(e.args[2], env);
-          } else {
-            return ValErr('Non-boolean value used as a predicate', e);
-          }
-        }
-      }
-      let maybeBody = getVal(e.op, env);
-      if (!maybeBody) {
-        return ValErr('Expression undefined in program', e);
-      } else if (maybeBody.type === 'nothing') {
-        return ValErr('Expression defined later in program', e);
-      } else {
-        let body = maybeBody.thing;
-        if (isValueError(body)) {
-          return body;
-        } else if (
-          body.type === 'NonFunction'
-          || body.type === 'Struct'
-          || body.type === 'StructureAccessor'
-          || body.type === 'StructureConstructor'
-          || body.type === 'StructurePredicate') {
-          return ValErr('Nonfunction applied as a function', e);
-        } else if (body.type === 'BuiltinFunction') {
-          let valuesWithoutError: Value[] = [];
-          let possibleErrors: ValueError[] = []; 
-          valuesWithoutError = e.args.reduce(
-            (acc, elem) => {
-              let t = evaluateExpr(elem, env);
-              if (!isValueError(t)) acc.push(t);
-              else possibleErrors.push(t);
-              return acc;
-            },
-            valuesWithoutError
-          );
+      const op = evaluateOperator(e, e.op, env);
+      if (isValueError(op)) return op;
+      if (op.type === 'NonFunction') return ValErr('Tried to apply a nonfunction as a function', e);
 
-          if (possibleErrors.length === 0) {
-            return body.value(valuesWithoutError);
-          } else {
-            return possibleErrors[0]; // This could return more info, but this works for now.
-          }
-        } else {
-          let clos = body.value;
-          if (clos.args.length === e.args.length) {
-            let localEnv = new Map<String, Maybe<ExprResult>>(clos.env);
-            let zipped: [string, ExprResult][] = clos.args.map(
-              (_, i) => [_, evaluateExpr(e.args[i], env)]
-            );
-
-            for (let elem of zipped) {
-              let [param, exp] = elem;
-              if (isValueError(exp)) {
-                return exp;
-              } else {
-                extendEnv(param, localEnv);
-                mutateEnv(param, MakeJust(exp), localEnv);
-              }
-            }
-            
-            return evaluateExpr(clos.body, localEnv);
-          } else {
-            return ValErr('Arity mismatch', e);
-          }
-        }
-      }
+      const args = evaluateOperands(e.args, env);
+      if (! isValueArray(args)) return ValErr('An argument didn\'t evaluate properly', e);
+      return apply(op, args, env, e);
   }
+}
+
+const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
+  let maybeBody = getVal(op, env);
+
+  if (!maybeBody) {
+    return ValErr('Expression undefined in program', e);
+  } else if (maybeBody.type === 'nothing') {
+    return ValErr('Expression defined later in program', e);
+  }
+
+  return maybeBody.thing;
+}
+
+const evaluateOperands = (args: Expr[], env: Env): ExprResult[] => {
+  return args.map(arg => evaluateExpr(arg, env));
+}
+
+const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
+  switch (op.type) {
+    case 'NonFunction': throw new Error('this should not be reachable in apply');
+    case 'BuiltinFunction':
+      return op.value(args);
+    case 'Closure':
+      let clos = op.value;
+      if (! (clos.args.length === args.length))
+        return ValErr('Arity mismatch', e);
+
+      let localEnv = new Map<String, Maybe<ExprResult>>(clos.env);
+
+      for (let i = 0; i < args.length; i++) {
+        localEnv = extendEnv(clos.args[i], localEnv, MakeJust(args[i]));
+      }
+        
+      return evaluateExpr(clos.body, localEnv);
+
+    case 'Struct':
+      return ValErr('struct cannot be applied as a function', e);
+    case 'StructureAccessor':
+      if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
+      if (args[0].type !== 'Struct') return ValErr ('must apply a structure accessor to a struct', e);
+      if (args[0].struct !== op.struct) return ValErr('applied structure accessor to the wrong type of struct', e);
+      return args[0].values[op.index];
+
+    case 'StructureConstructor':
+    case 'StructurePredicate':
+  }
+
 }
 
 /**
@@ -247,23 +251,18 @@ const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
 
 /**
  * Puts a definition into an environment. Does not mutate the original environment.
- * @param d a definition (used for top level defines)
- *          or string (used for lexical scoping of function calls)
+ * @param name
  * @param env an environment to be extended
  * @returns a new copy of the environment extended with another top level definition
  */
-const extendEnv = (d: string|Definition, env: Env): Env => {
-  if (isDefinitionError(d)) {
-    return env;
-  } else if (typeof d === 'string') {
-    let e: Env = new Map(env);
-    e.set(d, MakeNothing());
-    return e;
-  } else {
-    let e: Env = new Map(env);
-    e.set(d.name, MakeNothing());
-    return e;
-  }
+const extendEnv = (
+  name: string,
+  env: Env,
+  expression: Maybe<ExprResult>=MakeNothing()
+): Env => {
+  let e: Env = new Map(env);
+  e.set(name, expression);
+  return e;
 }
 
 /**
