@@ -178,7 +178,12 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       if (isValueError(op)) return op;
 
       const args = evaluateOperands(e.args, env);
-      if (! isValueArray(args)) return ValErr('An argument didn\'t evaluate properly', e);
+      if (! isValueArray(args)) {
+        for (let arg of args) {
+          if (isValueError(arg)) return arg;
+        }
+        throw new Error("Bug in evaluateExpr, an argument to a function somehow is neither a value or a value error. Check all related predicates if you don't think the bug is here.");
+      }
   
       return apply(op, args, env, e);
   }
