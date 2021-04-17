@@ -151,7 +151,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
         if (pred.value) return evaluateExpr(clause[1], env);
       }
 
-      return ValErr('cond reached the end of its clauses without a true predicate or else clause', e);
+      return ValErr('all cond questions are false', e);
 
     case 'Call':
       const op = evaluateOperator(e, e.op, env);
@@ -204,14 +204,19 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
 
     case 'StructureAccessor':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
-      if (args[0].type !== 'Struct') return ValErr ('must apply a structure accessor to a struct', e);
+      if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
       if (args[0].struct !== op.struct) return ValErr('applied structure accessor to the wrong type of struct', e);
       return args[0].values[op.index];
 
     case 'StructureConstructor':
-    case 'StructurePredicate':
+      if (args.length !== op.struct.fields.length)
+        return ValErr('incorrect number of fields for make-' + op.struct.name, e);
+      return MakeStruct(op.struct, args);
 
-    return NFn(1);
+    case 'StructurePredicate':
+      if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
+      if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
+      return NFn(op.struct === args[0].struct);
   }
 
 }
