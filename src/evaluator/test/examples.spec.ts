@@ -1178,25 +1178,23 @@ t('(define (f x y) (+ x y))',
 
 // do we report both of these?
 
-t('(+ hello hello)', undefined, undefined,undefined, undefined,
+tIO('(+ hello hello)',
   'hello: this variable is not defined.\n'
 );
 
 
-t('+',
-  undefined, undefined, undefined, undefined,
+tIO('+',
   '+: expected a function call, but there is no open parenthesis before this function\n'
 );
 
-t(
+tIO(
 `(define (! x)
 (if (= x 0)
     1
       (* x (! (- x 1)))))
 !
 `,
-  undefined, undefined, undefined, undefined,
-  '+: expected a function call, but there is no open parenthesis before this function\n'
+'+: expected a function call, but there is no open parenthesis before this function\n'
 );
 
 // Check expect tests
@@ -1204,16 +1202,14 @@ t(
 // add more interesting expressions to tests.
 
 // test that definitions can go after check-expects referencing them.
-t('(check-expect + +)',
-  undefined, undefined, undefined, undefined,
+tIO('(check-expect + +)',
   '+: expected a function call, but there is no open parenthesis before this function\n'
 );
 
-t(
+tIO(
 `(define (! x) x)
 (check-expect ! !)
 `,
-  undefined, undefined, undefined, undefined,
   '!: expected a function call, but there is no open parenthesis before this function\n'
 );
 
@@ -1389,8 +1385,15 @@ tIO(`(+ 2 3)
 *: expects at least 2 arguments, but found only 1
 0.6666666666666666
 /: expects at least 2 arguments, but found only 1
-`)
+`);
 
+tIO('(sin 1)',
+`${ Math.sin(1) }`
+);
+
+tIO('(sin 2 3)',
+'sin: expects only 1 argument, but found 2'
+);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
