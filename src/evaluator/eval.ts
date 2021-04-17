@@ -1,5 +1,5 @@
 import { xNullBind } from './test/examples';
-import { isCheckError, isValue, isValueArray } from './predicates';
+import { isCheckError, isValue, isValueArray, isTokenError } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -107,8 +107,9 @@ const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
           break;
         case 'define-constant':
           const v = evaluateExpr(d.body, env);
-          if (! isValueError(v))
-            switch (v.type) {
+          if (isValueError(v))
+            return BindingErr('Assigned an erroneous value to ' + d.name, d);
+          else switch (v.type) {
               case 'BuiltinFunction':
               case 'Closure':
               case 'StructureAccessor':
