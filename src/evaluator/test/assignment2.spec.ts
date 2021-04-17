@@ -1,7 +1,7 @@
 import { Closure } from '../types';
 'use strict';
 
-import { t } from './test-harness';
+import { t, tIO } from './test-harness';
 
 import {
   Tok,
@@ -25,9 +25,6 @@ import { parse,    parseSexps         } from '../parse';
 import { evaluate, evaluateTopLevels } from '../eval';
 import { print,    printResults       } from '../print';
 
-const tIO = (input: string, output: string): void => {
-  t(input, undefined, undefined, undefined, undefined, output);
-}
 
 t(
 `; Exercise 1.

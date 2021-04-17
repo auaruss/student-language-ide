@@ -32,6 +32,15 @@ import { evaluate, evaluateTopLevels } from '../eval';
 import { print,    printResults       } from '../print';
 import { ɵdevModeEqual } from '@angular/core';
 
+/**
+ * The testing harness for if you just need to give the input and output strings.
+ * @param input user's expected program
+ * @param output expected printing of previous evaluation
+ * @returns nothing, but prints test output to the console
+ */
+export const tIO = (input: string, output: string): void => {
+  t(input, undefined, undefined, undefined, undefined, output);
+}
 
 /**
  * The test harness for the evaluator pipeline.
@@ -41,7 +50,7 @@ import { ɵdevModeEqual } from '@angular/core';
  * @param toplevels expected parsing of previous reading
  * @param values expected evaluation of previous parsing
  * @param output expected printing of previous evaluation
- * @returns nothing, prints test output to the console
+ * @returns nothing, but prints test output to the console
  */
 export const t  = (
   input?: string,

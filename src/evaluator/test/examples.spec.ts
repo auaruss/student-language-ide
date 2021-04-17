@@ -1,7 +1,7 @@
 'use strict';
 
 import { MakeCheckExpect, MakeCheckSuccess } from '../constructors';
-import { t } from './test-harness';
+import { t, tIO } from './test-harness';
 
 import {
   Tok,
@@ -30,10 +30,6 @@ import {
 
 import { tokenize } from '../tokenize';
 import { read } from '../read';
-
-const tIO = (input: string, output: string): void => {
-  t(input, undefined, undefined, undefined, undefined, output);
-}
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *
