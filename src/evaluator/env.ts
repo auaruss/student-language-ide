@@ -25,8 +25,8 @@ export const builtinEnv = (): Env => {
     BFnEnv(
       checkArityThenApply('-',
         (vs: Value[]) => {
-          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 1;
-          if (id === false) throw new Error("/: This error should never be reachable.");
+          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 0;
+          if (id === false) throw new Error("-: This error should never be reachable.");
           if (vs.length === 1) return constructReducableNumberOperation((acc, elem) => acc, -id)(vs);
           return constructReducableNumberOperation((acc, elem) => acc - elem, id)(vs.slice(1));
         },
