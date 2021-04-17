@@ -79,8 +79,8 @@ export const isDefinition = (x: any): x is Definition => {
 
 export const isExpr = (x: any): x is Expr => {
   return (x && typeof x === 'object'
-  && x.type
-  || (
+  && x.type &&
+  ((
     x.type === 'String'
     && typeof x.const === 'string'
   )
@@ -101,7 +101,7 @@ export const isExpr = (x: any): x is Expr => {
     && typeof x.op === 'string'
     && Array.isArray(x.args)
     && x.args.every(isExpr)
-  )) || isExprError(x);
+  ))) || isExprError(x);
 }
 
 export const isExprArray = (x: any): x is Expr[] => {
