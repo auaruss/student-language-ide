@@ -3,7 +3,7 @@ import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, is
 import {
   DefinitionResult, ExprResult, Result, Binding, BindingError,
   ValueError, TokenError, ReadError, Token, SExp, Definition, Expr,
-  Value, DefinitionError, ExprError, TokenType, CheckResult
+  Value, DefinitionError, ExprError, TokenType, CheckResult, If, Cond
 } from './types';
 
 import { evaluate } from './eval';
@@ -184,9 +184,25 @@ const printExpr = (e: Expr): string => {
           ''
         ).trim()})`
     );
-  else if (e.type === 'cond') return '';
-  else if (e.type === 'if') return '';
+  else if (e.type === 'cond') return printCond(e);
+  else if (e.type === 'if') return printIf(e);
   else return e.const.toString();
+}
+
+const printIf = (i: If): string => {
+  return ( 
+`(if ${ printExpr(i.predicate) } ${ printExpr(i.consequent) } ${ printExpr(i.alternative) })`
+  );
+}
+
+const printCond = (c: Cond): string => {
+  let clauses = '';
+  
+  for (let clause of c.clauses) {
+    clauses += `[${ printExpr(clause[0]) } ${ printExpr(clause[1]) }]`
+  }
+
+  return `(cond ${clauses})`
 }
 
 const printCheckResult = (c: CheckResult): string => {
