@@ -1394,6 +1394,11 @@ tIO('(sin 2 3)',
 'sin: expects only 1 argument, but found 2\n'
 );
 
+tIO('(define f +)', 
+`+: expected a function call, but there is no open parenthesis before this function
+`
+);
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
