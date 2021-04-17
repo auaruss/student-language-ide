@@ -227,7 +227,7 @@ export const checkExpectedErrorDiffType1
   = MakeCheckExpectedError(ValErr('this variable is not defined', helloIdExpr));
 
 export const checkFailureDiffType2
-  = MakeCheckFailure(ValErr('this variable is not defined', helloIdExpr), helloVal);
+  = MakeCheckExpectedError(ValErr('this variable is not defined', helloIdExpr));
 
 export const checkFailureDiffType3
   = MakeCheckFailure(trueVal, goodbyeVal);
