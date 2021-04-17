@@ -329,7 +329,7 @@ tIO(
 Defined init-angle to be ${0.3 * Math.PI}.
 Defined init-x-vel to be ${1.5 * Math.cos(0.3 * Math.PI)}.
 Defined init-y-vel to be ${1.5 * Math.sin(0.3 * Math.PI)}.
-Defined y-pos.
+Defined (y-pos t) to be (- (* init-y-vel t) (* 0.5 0.003 t t)).
 🎉
 🎉
 🎉

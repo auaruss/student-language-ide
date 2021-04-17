@@ -1373,6 +1373,25 @@ tIO('(posn-x (make-color 15 15 15 15))',
 t('(cond ["#t" "hello"] [else "goodbye"])');
 
 
+tIO(`(+ 2 3)
+(+ 1)
+(- 2 3)
+(- 1)
+(* 2 3)
+(* 1)
+(/ 2 3)
+(/ 1)`,
+`5
++: expects at least 2 arguments, but found only 1
+-1
+-1
+6
+*: expects at least 2 arguments, but found only 1
+0.6666666666666666
+/: expects at least 2 arguments, but found only 1
+`)
+
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
