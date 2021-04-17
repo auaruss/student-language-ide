@@ -214,7 +214,7 @@ export const isEnv = (x: any): x is Env => {
 export const isValueError = (x: any): x is ValueError => {
   return (x && typeof x === 'object'
     && typeof x.valueError === 'string'
-    && isExpr(x.expr))
+    && (x.expr === undefined || isExpr(x.expr)))
   || isExprError(x);
 }
 

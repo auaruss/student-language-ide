@@ -282,7 +282,7 @@ export const MakeCheckExpectedError = (expected: ValueError): CheckResult => {
 }
 
 export const ValErr = (err: string, e?: Expr): ValueError => {
-  if (! e) return { valueError: err };
+  if (! e) return { valueError: err, expr: undefined };
   return { valueError: err, expr: e };
 }
 
