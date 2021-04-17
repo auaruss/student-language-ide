@@ -68,9 +68,9 @@ export const parseSexp = (sexp: SExp): TopLevel => {
         } else if (firstSexp.sexp === 'check-expect') {
           return parseCheck({type: 'Id', sexp: 'check-expect'}, sexps.slice(1));
         } else if (firstSexp.sexp === 'if') {
-
+          return parseIf({type: 'Id', sexp: 'if'}, sexps.slice(1));
         } else if (firstSexp.sexp === 'cond') {
-          
+          return parseCond({type: 'Id', sexp: 'cond'}, sexps.slice(1));
         }
 
         if (sexps.length === 1) return ExprErr('Function call with no arguments', sexps);
