@@ -24,7 +24,7 @@ export const isToken = (x: any): x is Token => {
 
 export const isTokenError = (x: any): x is TokenError => {
   return x && typeof x === 'object'
-    && x.tokenError === 'Unidentified Token'
+    && typeof x.tokenError === 'string'
     && typeof x.string === 'string';
 }
 
@@ -52,11 +52,7 @@ export const isSExp = (x: any): x is SExp => {
 
 export const isReadError = (x: any): x is ReadError => {
   return (x && typeof x === 'object'
-    && ( x.readError === 'No Valid SExp'
-      || x.readError === 'No Closing Paren'
-      || x.readError === 'No Open Paren'
-      || x.readError === 'Mismatched Parens'
-    )
+    && typeof x.readError === 'string'
     && Array.isArray(x.tokens)
     && x.tokens.every(isToken))
     || isTokenError(x);
@@ -126,18 +122,7 @@ export const isCheck = (x: any): x is Check => {
 
 export const isDefinitionError = (x: any): x is DefinitionError => {
   return (x && typeof x === 'object'
-    && ( x.defnError === 'Invalid expression passed where function name was expected'
-      || x.defnError === 'Invalid expression passed where function argument was expected'
-      || x.defnError === 'A definition requires two parts, but found none'
-      || x.defnError === 'A definition requires two parts, but found one'
-      || x.defnError === 'Passed a non-definition as definition'
-      || x.defnError === 'Expected a variable name, or a function header'
-      || x.defnError === 'Expected a function header with parameters in parentheses, received nothing in parentheses'
-      || x.defnError === 'Expected a function header with parameters in parentheses, received a function name with no parameters'
-      || x.defnError === 'A function in BSL cannot have zero parameters'
-      || x.defnError === 'A definition can\'t have more than 3 parts'
-      || x.defnError === 'Cannot have a definition as the body of a definition'
-      || x.defnError === 'The body given is not a valid Expr')
+    && typeof x.defnError === 'string'
     && Array.isArray(x.sexps)
     && x.sexps.every(isSExp))
     || isReadError(x);
@@ -145,10 +130,7 @@ export const isDefinitionError = (x: any): x is DefinitionError => {
 
 export const isExprError = (x: any): x is ExprError => {
   return (x && typeof x === 'object'
-    && ( x.exprError === 'Empty Expr'
-      || x.exprError === 'Defn inside Expr'
-      || x.exprError === 'No function name after open paren'
-      || x.exprError === 'Function call with no arguments')
+    && typeof x.exprError === 'string'
     && Array.isArray(x.sexps)
     && x.sexps.every(isSExp))
     || isReadError(x);
@@ -220,7 +202,7 @@ export const isValueError = (x: any): x is ValueError => {
 
 export const isBindingError = (x: any): x is BindingError => {
   return (x && typeof x === 'object'
-    && x.bindingError === 'Repeated definition of the same name'
+    && typeof x.bindingError === 'string'
     && isDefinition(x.definition))
   || isDefinitionError(x);
 }
