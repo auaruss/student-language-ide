@@ -71,7 +71,17 @@ const evaluateDefOrExpr = (deforexpr: Definition | Expr, env: Env): Result => {
   if (isDefinition(deforexpr)) {
     return evaluateDefinition(deforexpr, env);
   } else {
-    return evaluateExpr(deforexpr, env);
+    const v = evaluateExpr(deforexpr, env);
+    if (! isValueError(v))
+      switch (v.type) {
+        case 'BuiltinFunction':
+        case 'Closure':
+        case 'StructureAccessor':
+        case 'StructureConstructor':
+        case 'StructurePredicate':
+          return ValErr('expected a function call, but there is no open parenthesis before this function', deforexpr);
+      }
+    return v;
   }
 }
 
@@ -96,6 +106,16 @@ const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
           sndarg = MakeJust(Clos(d.params, env, d.body));
           break;
         case 'define-constant':
+          const v = evaluateExpr(d.body, env);
+          if (! isValueError(v))
+            switch (v.type) {
+              case 'BuiltinFunction':
+              case 'Closure':
+              case 'StructureAccessor':
+              case 'StructureConstructor':
+              case 'StructurePredicate':
+                return BindingErr('expected a function call, but there is no open parenthesis before this function', d);
+            }
           sndarg = MakeJust(evaluateExpr(d.body, env));
       }
       if (defnVal.type === 'nothing') {
@@ -232,13 +252,45 @@ const evaluateCheck = (c: Check, env: Env): CheckResult => {
     const expected = evaluateExpr(c.expected, env);
     if (isValueError(expected)) {
       return MakeCheckExpectedError(expected);
-    } else {
-      const actual = evaluateExpr(c.actual, env);
-      if (actualEqualsExpected(actual, expected)) {
-        return MakeCheckSuccess();
-      } else {
-        return MakeCheckFailure(actual, expected);
-      }
+    } else switch (expected.type) {
+      // Checking function equality is not allowed.
+      case 'BuiltinFunction':
+      case 'Closure':
+      case 'StructureAccessor':
+      case 'StructureConstructor':
+      case 'StructurePredicate':
+        return MakeCheckExpectedError(
+          ValErr(
+            'expected a function call, but there is no open parenthesis before this function',
+            c.expected
+          )
+        );
+      case 'NonFunction':
+      case 'Struct':
+        const actual = evaluateExpr(c.actual, env);
+        if (isValueError(actual)) {
+          return MakeCheckExpectedError(actual);
+        } else switch (actual.type) {
+          case 'BuiltinFunction':
+          case 'Closure':
+          case 'StructureAccessor':
+          case 'StructureConstructor':
+          case 'StructurePredicate':
+            return MakeCheckExpectedError(
+              ValErr(
+                'expected a function call, but there is no open parenthesis before this function',
+                c.actual
+              )
+            );
+          case 'NonFunction':
+          case 'Struct':
+            if (actualEqualsExpected(actual, expected)) {
+              return MakeCheckSuccess();
+            } else {
+              return MakeCheckFailure(actual, expected);
+            }
+        }
+
     }
   }
 }
@@ -248,10 +300,8 @@ const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
     if (expected.type === 'NonFunction') {
       return actual.type === 'NonFunction' && expected.value === actual.value;
     } else if (expected.type === 'BuiltinFunction') {
-      // ???
       return false;
     } else {
-      // false for bsl...? 
       return false;
     }
   } else return false;
