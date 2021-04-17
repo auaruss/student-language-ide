@@ -103,7 +103,7 @@ const printValueError = (ve: ValueError): string => {
     return `${ ve.expr
                ? printExpr(ve.expr) + ': '
                : ''
-            }${ve.valueError}.`;
+            }${ve.valueError}`;
   }
 }
 
