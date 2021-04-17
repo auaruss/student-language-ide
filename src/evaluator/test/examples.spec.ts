@@ -88,7 +88,7 @@ t('hello',
   [ IdAtom('hello') ],
   [ IdExpr('hello') ],
   [ ValErr('this variable is not defined', IdExpr('hello') )],
-  'hello: this variable is not defined.\n'
+  'hello: this variable is not defined\n'
 );
 
 t('#true',
@@ -1210,7 +1210,9 @@ tIO(
 `(define (! x) x)
 (check-expect ! !)
 `,
-  '!: expected a function call, but there is no open parenthesis before this function\n'
+`Defined (! x) to be x.
+!: expected a function call, but there is no open parenthesis before this function
+`
 );
 
 // write a test with a definition in it.
@@ -1266,7 +1268,7 @@ t('(check-expect hello hello)', undefined, undefined,
  [
   checkExpectedErrorSameId
  ],
-'hello: this variable is not defined.\n'
+'hello: this variable is not defined\n'
 );
 
 t('(check-expect -13 1)', undefined, undefined,
@@ -1286,7 +1288,7 @@ t('(check-expect hello goodbye)', undefined, undefined,
  [
   checkExpectedErrorDiffId
  ],
- 'goodbye: this variable is not defined.\n'
+ 'goodbye: this variable is not defined\n'
 );
 
 t('(check-expect "hello" "goodbye")', undefined, undefined,
@@ -1316,7 +1318,7 @@ t('(check-expect -13 hello)', undefined, undefined,
  [
   checkExpectedErrorDiffType1
  ],
- 'hello: this variable is not defined.\n'
+ 'hello: this variable is not defined\n'
 );
 
 t('(check-expect hello "hello")', undefined, undefined,
@@ -1326,7 +1328,7 @@ t('(check-expect hello "hello")', undefined, undefined,
  [
   checkFailureDiffType2
  ],
- 'hello: this variable is not defined.\n'
+ 'hello: this variable is not defined\n'
 );
 
 t('(check-expect #true "goodbye")', undefined, undefined,
@@ -1388,11 +1390,12 @@ tIO(`(+ 2 3)
 `);
 
 tIO('(sin 1)',
-`${ Math.sin(1) }`
+`${ Math.sin(1) }
+`
 );
 
 tIO('(sin 2 3)',
-'sin: expects only 1 argument, but found 2'
+'sin: expects only 1 argument, but found 2\n'
 );
 
 /*****************************************************************************
