@@ -1,6 +1,6 @@
 'use strict';
 
-import { MakeCheckExpect, MakeCheckSuccess } from '../constructors';
+import { MakeCheckExpect, MakeCheckSuccess, MakeIf } from '../constructors';
 import { t, tIO } from './test-harness';
 
 import {
@@ -459,25 +459,22 @@ t('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))',
     FnDefn(
       'fact',
       ['n'],
-      Call(
-        'if',
-        [
-          Call(
-            '=',
-            [ IdExpr('n'), NumExpr(0) ]
-          ),
-          NumExpr(1),
-          Call(
-            '*',
-            [
-              IdExpr('n'),
-              Call(
-                'fact',
-                [ Call('-', [IdExpr('n'), NumExpr(1)]) ]
-              )
-            ]
-          )
-        ]
+      MakeIf(
+        Call(
+          '=',
+          [ IdExpr('n'), NumExpr(0) ]
+        ),
+        NumExpr(1),
+        Call(
+          '*',
+          [
+            IdExpr('n'),
+            Call(
+              'fact',
+              [ Call('-', [IdExpr('n'), NumExpr(1)]) ]
+            )
+          ]
+        )
       )
     )
   ]
@@ -1175,7 +1172,7 @@ t('(define (f x y) (+ x y))',
 // do we report both of these?
 
 tIO('(+ hello hello)',
-  'hello: this variable is not defined.\n'
+  'hello: this variable is not defined\n'
 );
 
 
@@ -1190,7 +1187,9 @@ tIO(
       (* x (! (- x 1)))))
 !
 `,
-'+: expected a function call, but there is no open parenthesis before this function\n'
+`Defined (! x) to be (if (= x 0) 1 (* x (! (- x 1)))).
+!: expected a function call, but there is no open parenthesis before this function
+`
 );
 
 // Check expect tests
