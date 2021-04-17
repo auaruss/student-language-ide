@@ -29,16 +29,6 @@ const tIO = (input: string, output: string): void => {
   t(input, undefined, undefined, undefined, undefined, output);
 }
 
-/*****************************************************************************
- *                        Test cases for correctness.                        *
- *                                                                           *
- * These test cases are intended to test the basic behavior of a BSL program *
- * regardless of live editing behavior. These tests are generally based on   *
- * the problem sets from Indiana University's C211 class.                    *
- *****************************************************************************/
-
- /* Assignment 2 tests. */
-
 t(
 `; Exercise 1.
 
