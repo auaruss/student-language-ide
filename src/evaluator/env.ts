@@ -20,19 +20,40 @@ export const builtinEnv = (): Env => {
 
   const posnType: StructType = MakeStructType('posn', ['x', 'y']);
 
-  env.set('+',  BFnEnv(constructReducableNumberOperation((a, b) => a + b, 0)));
-  env.set('-',  BFnEnv(constructReducableNumberOperation((a, b) => a - b, 0)));
-  env.set('*',  BFnEnv(constructReducableNumberOperation((a, b) => a * b, 1)));
+  env.set('+',  BFnEnv(checkArityThenApply('+', constructReducableNumberOperation((acc, elem) => acc + elem, 0), 2, true)));
+  env.set('-', 
+    BFnEnv(
+      checkArityThenApply('-',
+        (vs: Value[]) => {
+          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 1;
+          if (id === false) throw new Error("/: This error should never be reachable.");
+          if (vs.length === 1) return constructReducableNumberOperation((acc, elem) => acc, -id)(vs);
+          return constructReducableNumberOperation((acc, elem) => acc - elem, id)(vs.slice(1));
+        },
+        1, true
+      )
+    )
+  );
+  env.set('*',  BFnEnv(checkArityThenApply('*', constructReducableNumberOperation((acc, elem) => acc * elem, 1), 2, true)));
   env.set('/',  
-    BFnEnv(checkArityThenApply(constructReducableNumberOperation((a, b) => a / b, 1), 1, true))
+    BFnEnv(
+      checkArityThenApply('/',
+        (vs: Value[]) => {
+          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 1;
+          if (id === false) throw new Error("/: This error should never be reachable.");
+          return constructReducableNumberOperation((acc, elem) => acc / elem, id)(vs.slice(1));
+        },
+        2, true
+      )
+    )
   );
 
   env.set('string-append',  BFnEnv(constructReducableStringOperation((a, b) => a.concat(b), '')));
   
   env.set('pi', NFnEnv(Math.PI));
   
-  env.set('sin', BFnEnv(constructSingletonNumberOperation(x => Math.sin(x))));
-  env.set('cos', BFnEnv(constructSingletonNumberOperation(x => Math.cos(x))));
+  env.set('sin', BFnEnv(constructSingletonNumberOperation('sin', x => Math.sin(x))));
+  env.set('cos', BFnEnv(constructSingletonNumberOperation('cos', x => Math.cos(x))));
 
   env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
   env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
@@ -43,9 +64,11 @@ export const builtinEnv = (): Env => {
 }
 
 const constructSingletonNumberOperation = (
+  opName: string,
   op: (x: number) => number,
 ): ((vs: Value[]) => ExprResult) => {
   return checkArityThenApply(
+    opName,
     (vs: Value[]) => {
       const nums = checkIfIsNumbers(vs);
       if (vs.length !== 1)
@@ -108,6 +131,14 @@ const checkIfIsNumbers = (vs: Value[]): number[] | false => {
   return nums;
 }
 
+const maybeGetElemNumber = (v: Value): number | false => {
+  if (! (v.type === 'NonFunction'))
+    return false;
+  if (typeof v.value !== 'number')
+    return false;
+  return v.value;
+}
+
 const checkIfIsStrings = (vs: Value[]): string[] | false => {
   const strings: string[] = []
   for (let v of vs) {
@@ -122,6 +153,7 @@ const checkIfIsStrings = (vs: Value[]): string[] | false => {
 }
 
 const checkArityThenApply = (
+  opName: string,
   f: ((vs: Value[]) => ExprResult),
   arity: number,
   allowUnlimited: boolean,
@@ -131,8 +163,10 @@ const checkArityThenApply = (
   let gate = max ? max : arity;
 
   return (vs: Value[]) => {
-    if (vs.length < arity) return ValErr('Arity mismatch');
-    if ((! allowUnlimited) && vs.length > gate) return ValErr('Arity mismatch');
+    if (vs.length < arity)
+      return ValErr(`${ opName }: expects at least ${ arity } argument${ (arity === 1) ? '' : 's' }, but found only ${ vs.length }`);
+    if ((! allowUnlimited) && (vs.length > gate))
+      return ValErr(`${ opName }: expects only ${ arity } argument${ (arity === 1) ? '' : 's' }, but found ${ vs.length }`);
 
     return f(vs);
   }
