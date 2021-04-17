@@ -287,7 +287,7 @@ export const ValErr = (err: string, e?: Expr): ValueError => {
 }
 
 export const BindingErr = (
-  err: 'Repeated definition of the same name',
+  err: string,
   d: Definition): BindingError => {
   return {
     bindingError: err,
