@@ -83,7 +83,7 @@ export const parseSexp = (sexp: SExp): TopLevel => {
 
       } else {
 
-        return ExprErr('No function name after open paren', sexps);
+        return ExprErr('function call: expected a function after the open parenthesis, but found a part', sexps);
 
       }
     case 'String':
