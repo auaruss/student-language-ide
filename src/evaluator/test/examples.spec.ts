@@ -30,6 +30,7 @@ import {
 
 import { tokenize } from '../tokenize';
 import { read } from '../read';
+import { ParseError } from '@angular/compiler';
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *
@@ -1399,6 +1400,44 @@ tIO('(define f +)',
 );
 
 tIO('(- 0 0)', '0\n');
+
+// cond tests
+
+tIO(
+`(cond [(string=? "hello" "goodbye") 1]
+       [(string=? "hello" "hello") 2])`,
+`2
+`
+);
+
+tIO(`(cond [(string=? "hello" "goodbye") 1]
+[(string=? "hello" "hellow") 2])`,
+`cond: all question results were false
+`)
+
+// Identifier required at the function call position, so this should be a parsing error.
+t('((+) 1 2)', undefined, undefined,
+  [ExprErr('function call: expected a function after the open parenthesis, but found a part', read('(+)'))]
+);
+
+t('((λ (x) (+ 2 x)) 2)');
+
+// How keywords are restricted from being used as var names in BSL.
+tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword');
+tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword');
+
+
+// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
+tIO(`
+(define (format-month m f)
+  (cond [(string=? "long" f) m]
+        [(string=? "short" f) (substring m 0 3)]))
+
+(define (month format-month) (format-month "November" "long"))`,
+`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)])).
+function call: expected a function after the open parenthesis, but found a variable
+`)
+
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
