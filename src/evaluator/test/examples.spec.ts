@@ -11,13 +11,10 @@ import {
   BooleanTok, BooleanAtom, BooleanExpr,
   TokErr, ReadErr, DefnErr, ExprErr, ValErr,
   CP, OP, SPACE, OSP, CSP, OBP, CBP, NL,
-  SExps, VarDefn, FnDefn, Call, Bind, CommentTok
+  SExps, VarDefn, FnDefn, Call, CommentTok
 } from '../constructors';
 
-import {
-  TopLevel, Definition, Expr, ReadError,
-  TokenType, TokenError, Token, SExp, ExprResult, Result
-} from '../types';
+import { TokenType } from '../types';
 
 import { 
   checkExpectSameNum, checkExpectSameId, checkExpectSameString, 
@@ -27,10 +24,8 @@ import {
   checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3, checkFailureTrueIsNotFalse
 } from './examples';
 
-
 import { tokenize } from '../tokenize';
 import { read } from '../read';
-import { ParseError } from '@angular/compiler';
 
 /*****************************************************************************
  *                        Test cases for correctness.                        *

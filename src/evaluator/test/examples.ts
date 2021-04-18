@@ -13,10 +13,10 @@
 
 
  import { 
-  NumTok, IdTok, StringTok, BooleanTok, CommentTok,
-  NumAtom, IdAtom, StringAtom, BooleanAtom, SExps,
+  NumTok, IdTok, StringTok, BooleanTok,
+  NumAtom, IdAtom, StringAtom, BooleanAtom,
   NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
-  NFn, Bind, MakeCheckExpect, MakeCheckSuccess, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, FnDefn, MakeCond
+  NFn, Bind, MakeCheckExpect, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, FnDefn, MakeCond
 } from './../constructors';
 
 // ----------------------------------------------------------------------------

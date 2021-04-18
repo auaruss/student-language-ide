@@ -11,20 +11,18 @@ import { isCheckError, isValue, isValueArray, isTokenError } from './predicates'
  'use strict';
 
 import {
-  TopLevel, Definition, Expr, ExprResult,
-  Env, ValueError, DefinitionResult, Result,
-  Maybe, Value, Check, CheckResult, Just
+  TopLevel, Definition, Expr, ExprResult,Env, DefinitionResult,
+  Result, Maybe, Value, Check, CheckResult
 } from './types';
 
 import {
   Bind, Clos, NFn, ValErr,
-  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, MakeCheckSuccess, MakeCheckFailure, MakeStructureConstructor, MakeStruct
+  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, 
+  MakeCheckSuccess, MakeCheckFailure, MakeStruct
 } from './constructors';
 
-import { isDefinition, isExpr, isCheck, isExprError, isValueError, isDefinitionError } from './predicates';
-
+import { isDefinition, isCheck, isExprError, isValueError, isDefinitionError } from './predicates';
 import { parse } from './parse';
-
 import { builtinEnv } from './env';
 
 /**

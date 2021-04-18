@@ -1,4 +1,3 @@
-import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from './constructors';
 /**
  * @fileoverview This file holds the built in environment for the Beginning Student Language.
  * 
@@ -7,13 +6,9 @@ import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from 
 
 'use strict';
 
-import {
-  ExprResult, Env, Just, Maybe, Value, StructType
-} from './types';
-
-import {
-BFn, NFn, ValErr, MakeJust, 
-} from './constructors';
+import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from './constructors';
+import { ExprResult, Env, Just, Maybe, Value, StructType } from './types';
+import { BFn, NFn, ValErr, MakeJust } from './constructors';
 
 export const builtinEnv = (): Env => {
   let env = new Map<String, Maybe<ExprResult>>();

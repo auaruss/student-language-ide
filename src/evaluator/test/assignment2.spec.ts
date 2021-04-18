@@ -1,30 +1,20 @@
-import { Closure } from '../types';
+/**
+ * @fileoverview A2 from C211 at IU made into tests for our evaluator.
+ * 
+ * @author Alice Russell
+ */
+
 'use strict';
 
 import { t, tIO } from './test-harness';
 
 import {
-  Tok,
-  NumTok, NumAtom, NumExpr, NFn,
-  StringTok, StringAtom, StringExpr,
-  IdTok, IdAtom, IdExpr,
-  BooleanTok, BooleanAtom, BooleanExpr,
-  TokErr, ReadErr, DefnErr, ExprErr, ValErr,
-  CP, OP, SPACE, OSP, CSP, OBP, CBP, NL,
-  SExps, VarDefn, FnDefn, Call, CommentTok, Clos, Bind, Spaces
+  Tok, NumTok, NumAtom, NumExpr, NFn,
+  IdTok, IdAtom, IdExpr, CP, OP, SPACE,  NL,
+  SExps, VarDefn, FnDefn, Call, CommentTok, Bind
 } from '../constructors';
 
-import {
-  TopLevel, Definition, Expr, ReadError,
-  TokenType, TokenError, Token, SExp, ExprResult, Result
-} from '../types';
-
-import { tokenize                     } from '../tokenize';
-import { read,     readTokens         } from '../read';
-import { parse,    parseSexps         } from '../parse';
-import { evaluate, evaluateTopLevels } from '../eval';
-import { print,    printResults       } from '../print';
-
+import { TokenType } from '../types';
 
 t(
 `; Exercise 1.

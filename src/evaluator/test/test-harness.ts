@@ -9,28 +9,26 @@
  */
 
 import {
-  isBinding, isClos, isBindingError, isValueError,
+  isBinding, isValueError,
   isValue, isExprError, isReadError, isTokenError,
 } from './../predicates';
 
 import {
-  TopLevel, Definition, Expr, ReadError,
-  TokenType, TokenError, Token, SExp, ExprResult, Result, Binding,
-  Value, ValueError, ExprError
+  TopLevel, Expr, ReadError, TokenError, 
+  Token, SExp, Result, Binding, Value, ValueError, ExprError
 } from '../types';
 
 import { checkExpect } from './check-expect';
 
 
-import { goodbyeVal, helloVal, sGoodbyeBind, xTenBind, tenVal, tGoodByeBind, negZeroTok, negThirteenAtom, negOneTok, negThirteenTok, oneTok, zeroTok, sHelloBind, xNullBind } from './examples';
+import { goodbyeVal, helloVal, sGoodbyeBind, xTenBind, tenVal, tGoodByeBind, negZeroTok, negOneTok, negThirteenTok, oneTok, zeroTok, sHelloBind, xNullBind } from './examples';
 
 
-import { tokenize                     } from '../tokenize';
-import { read,     readTokens         } from '../read';
-import { parse,    parseSexps         } from '../parse';
-import { evaluate, evaluateTopLevels } from '../eval';
-import { print,    printResults       } from '../print';
-import { ɵdevModeEqual } from '@angular/core';
+import { tokenize } from '../tokenize';
+import { readTokens } from '../read';
+import { parseSexps } from '../parse';
+import { evaluateTopLevels } from '../eval';
+import { printResults } from '../print';
 
 /**
  * The testing harness for if you just need to give the input and output strings.

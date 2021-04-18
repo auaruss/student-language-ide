@@ -12,15 +12,11 @@ import { MakeCond, MakeIf } from './constructors';
 import { SExp, TopLevel, Definition, Check, Expr, Cond } from './types';
 
 import {
-  StringExpr, NumExpr, IdExpr, BooleanExpr,
-  ExprErr, Call, DefnErr, FnDefn, VarDefn, SExps,
-  MakeCheckExpect,
-  MakeCheckError
+  StringExpr, NumExpr, IdExpr, BooleanExpr, ExprErr, Call,
+  DefnErr, FnDefn, VarDefn, SExps, MakeCheckExpect, MakeCheckError
 } from './constructors';
 
-import {
-  isReadError, isExpr, isExprArray, isCheckError
-} from './predicates';
+import { isReadError, isExpr, isExprArray } from './predicates';
 
 import { read } from './read';
 

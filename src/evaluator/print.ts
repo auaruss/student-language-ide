@@ -1,4 +1,3 @@
-import { BindingErr } from './constructors';
 import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError, isExpr } from './predicates';
 import {
   DefinitionResult, ExprResult, Result, Binding, BindingError,
