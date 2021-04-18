@@ -16,32 +16,9 @@ export const builtinEnv = (): Env => {
   const posnType: StructType = MakeStructType('posn', ['x', 'y']);
 
   env.set('+',  BFnEnv(checkArityThenApply('+', constructReducableNumberOperation((acc, elem) => acc + elem, 0), 2, true)));
-  env.set('-', 
-    BFnEnv(
-      checkArityThenApply('-',
-        (vs: Value[]) => {
-          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 0;
-          if (id === false) throw new Error("-: This error should never be reachable.");
-          if (vs.length === 1) return constructReducableNumberOperation((acc, elem) => acc, -id)(vs);
-          return constructReducableNumberOperation((acc, elem) => acc - elem, id)(vs.slice(1));
-        },
-        1, true
-      )
-    )
-  );
+  env.set('-',  BFnEnv(checkArityThenApply('-', constructReducableNumberOperation((acc, elem) => acc - elem, 0, true, true), 1, true)))
   env.set('*',  BFnEnv(checkArityThenApply('*', constructReducableNumberOperation((acc, elem) => acc * elem, 1), 2, true)));
-  env.set('/',  
-    BFnEnv(
-      checkArityThenApply('/',
-        (vs: Value[]) => {
-          const id = maybeGetElemNumber(vs[0]) ? maybeGetElemNumber(vs[0]) : 1;
-          if (id === false) throw new Error("/: This error should never be reachable.");
-          return constructReducableNumberOperation((acc, elem) => acc / elem, id)(vs.slice(1));
-        },
-        2, true
-      )
-    )
-  );
+  env.set('/',  BFnEnv(checkArityThenApply('/', constructReducableNumberOperation((acc, elem) => acc / elem, 0, true), 2, true)));
 
   env.set('string-append',  BFnEnv(constructReducableStringOperation((a, b) => a.concat(b), '')));
   
@@ -77,7 +54,9 @@ const constructSingletonNumberOperation = (
 
 const constructReducableNumberOperation = (
   op: (a: number, b: number) => number,
-  id: number
+  id: number,
+  idIsIndex?: boolean,
+  subtraction?: boolean
 ): ((vs: Value[]) => ExprResult) => {
   return (vs: Value[]) => {
     const nums: number[] | false = checkIfIsNumbers(vs);
@@ -85,7 +64,16 @@ const constructReducableNumberOperation = (
     if (nums === false) {
       return ValErr('Not a number');
     }
+
+    if (subtraction && nums.length === 1) return NFn(-nums[0]);
     
+    if (idIsIndex)
+      return NFn(
+        nums.slice(0, id)
+            .concat(nums.slice(id + 1))
+            .reduce(op, nums[id])
+      );
+
     return NFn(nums.reduce(op, id));
   };
 }
