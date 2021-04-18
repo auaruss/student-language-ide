@@ -1433,11 +1433,17 @@ tIO(`
   (cond [(string=? "long" f) m]
         [(string=? "short" f) (substring m 0 3)]))
 
-(define (month format-month) (format-month "November" "long"))`,
+(define (format-november format-month) (format-month "November" "long"))`,
 `Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)])).
 function call: expected a function after the open parenthesis, but found a variable
-`)
+`);
 
+
+tIO(`(define (f make-posn) make-posn)
+(f 10)`,
+`Defined (f make-posn) to be make-posn.
+10
+`);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
