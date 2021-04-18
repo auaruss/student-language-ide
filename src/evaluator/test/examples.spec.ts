@@ -1440,6 +1440,35 @@ tIO(`(define (f make-posn) make-posn)
 10
 `);
 
+tIO(`(add1 1)`,
+`2
+`);
+
+tIO(`(string-append "" "hello " "world" "")`,
+`"hello world"
+`
+);
+
+tIO(`(string=? "January" "January" "January")
+(string=? "January" "January")
+(string=? "January" "February" "January")
+(string=? "January" "February")
+`,
+`#true
+#true
+#false
+#false
+`);
+
+tIO('true false',
+`#true
+#false
+`);
+
+tIO('(floor 1.55555)',
+`1
+`);
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
