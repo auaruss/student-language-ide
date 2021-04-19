@@ -72,10 +72,7 @@ export type ReadError
 // ----------------------------------------------------------------------------
 
 export type TopLevel
-  = Definition | Expr | Check;
-
-export type Definition
-  = DefinitionError | {
+  = TopLevelError | Expr | {
     type: 'define-constant',
     name:  string,
     body: Expr
@@ -84,8 +81,22 @@ export type Definition
     name: string,
     params: string[]
     body: Expr
+  } | {
+    type: 'define-struct',
+    name: string,
+    fields: string[]
+  } | {
+    type: 'check-expect',
+    actual: Expr,
+    expected: Expr
+  } | {
+    type: 'check-within'
+    actual: Expr,
+    expected: Expr,
+    margin: number
+  } | {
+    type: 'check-error'
   };
-
 
 export type Expr
   = ExprError | {
@@ -95,7 +106,7 @@ export type Expr
     type: 'Num',
     const: number
   } | {
-    type: 'Id',
+    type: 'Id', // typeOfExpression: 'VariableUsage'
     const: string
   } | {
     type: 'Bool',
@@ -104,30 +115,26 @@ export type Expr
     type: 'Call',
     op: string,
     args: Expr[],
-  } | If | Cond;
-
-export type If
-  = {
+  } | {
     type: 'if',
     predicate: Expr,
     consequent: Expr,
     alternative: Expr
-  };
-
-export type Cond
-  = {
+  } | {
     type: 'cond',
     clauses: [Expr, Expr][]
-  }
-
-export type Check
-  = CheckError | {
-    type: 'check-expect',
-    actual: Expr,
-    expected: Expr
+  } | {
+    type: 'and',
+    arguments: Expr[]
+  } | {
+    type: 'or',
+    arguments: Expr[]
+  } | {
+    type: 'TemplatePlaceholder',
+    sexp: SExp
   };
 
-export type DefinitionError
+export type TopLevelError
   = ReadError | {
     defnError: string,
     sexps: SExp[]
@@ -139,25 +146,14 @@ export type ExprError
     sexps: SExp[]
   };
 
-export type CheckError
-  = ReadError | {
-    checkError: string,
-    sexps: SExp[]
-  };
-
 // ----------------------------------------------------------------------------
 
 export type Result
-  = DefinitionResult | ExprResult | CheckResult;
-
-export type DefinitionResult
-  = BindingError | Binding;
-
-export type ExprResult
-  = ValueError | Value;
-
-export type CheckResult
-  = {
+  = ResultError | ExprResult | {
+    type: 'define',
+    defined: string,
+    toBe: ExprResult | null
+  } | {
     type: 'check-success'
   } | {
     type: 'check-failure',
@@ -166,24 +162,11 @@ export type CheckResult
   } | { 
     type: 'check-expected-error',
     expected: ValueError
-  } | CheckError;
-
-export type Nothing
- = { type: 'nothing' };
-
-export type Just<T>
- = { type: 'just', thing: T};
-
-export type Maybe<T>
- = Nothing | Just<T>;
-
-export type Binding
-  = {
-    type: 'define',
-    defined: string,
-    toBe: ExprResult | null
   };
 
+export type ExprResult
+  = ValueError | Value;
+ 
 export type Value
   = {
     type: 'NonFunction', // rename to Atomic
@@ -210,16 +193,25 @@ export type Value
     struct: StructType
   };
 
+export type Nothing
+  = { type: 'nothing' };
+ 
+export type Just<T>
+  = { type: 'just', thing: T};
+ 
+export type Maybe<T>
+  = Nothing | Just<T>;
+
 export type StructType
   = {
     name: string,
     fields: string[]
   };
 
-export type BindingError
- = DefinitionError | {
+export type ResultError
+ = TopLevelError | {
    bindingError: string,
-   definition: Definition
+   definition: TopLevel
  }; // ...
 
 export type ValueError
