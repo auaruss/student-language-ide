@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor } from './constructors';
+import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor, MakeStructurePredicate } from './constructors';
 import { ExprResult, Env, Just, Maybe, Value, StructType, Expr } from './types';
 import { BFn, NFn, ValErr, MakeJust } from './constructors';
 
@@ -38,7 +38,7 @@ export const builtinEnv = (): Env => {
   env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
   env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
   env.set('posn-y', MakeJust(MakeStructureAccessor(posnType, 1)));
-  env.set('posn?', MakeJust(MakeStructureConstructor(posnType)));
+  env.set('posn?', MakeJust(MakeStructurePredicate(posnType)));
 
   env.set('and', and());
   env.set('or', or());
@@ -57,23 +57,23 @@ export const builtinEnv = (): Env => {
 // Environment function values.
 
 const plus = (): Just<ExprResult> => {
-  return BFnEnv(checkArityThenApply('+', constructReducableNumberOperation((acc, elem) => acc + elem, 0), 2, true));
+  return BFnEnv(checkArityThenApply('+', constructReducibleNumberOperation((acc, elem) => acc + elem, 0), 2, true));
 }
 
 const minus = (): Just<ExprResult> => {
-  return BFnEnv(checkArityThenApply('-', constructReducableNumberOperation((acc, elem) => acc - elem, 0, true, true), 1, true));
+  return BFnEnv(checkArityThenApply('-', constructReducibleNumberOperation((acc, elem) => acc - elem, 0, true, true), 1, true));
 }
 
 const multiply = (): Just<ExprResult> => {
-  return BFnEnv(checkArityThenApply('*', constructReducableNumberOperation((acc, elem) => acc * elem, 1), 2, true));
+  return BFnEnv(checkArityThenApply('*', constructReducibleNumberOperation((acc, elem) => acc * elem, 1), 2, true));
 }
 
 const divide = (): Just<ExprResult> => {
-  return BFnEnv(checkArityThenApply('/', constructReducableNumberOperation((acc, elem) => acc / elem, 0, true), 2, true));
+  return BFnEnv(checkArityThenApply('/', constructReducibleNumberOperation((acc, elem) => acc / elem, 0, true), 2, true));
 }
 
 const stringAppend = (): Just<ExprResult> => {
-  return BFnEnv(constructReducableStringOperation((a, b) => a.concat(b), ''));
+  return BFnEnv(constructReducibleStringOperation((a, b) => a.concat(b), ''));
 }
 
 const stringEquals = (): Just<ExprResult> => {
@@ -83,7 +83,7 @@ const stringEquals = (): Just<ExprResult> => {
       (vs: Value[]) => {
         const first = vs[0]
         if (first.type === 'NonFunction' && typeof first.value === 'string') 
-          return constructReducableStringOperation((acc, elem) => acc && (elem === first.value), true)(vs)
+          return constructReducibleStringOperation((acc, elem) => acc && (elem === first.value), true)(vs)
         throw new Error('impossible line reached, bug in string=?');
       },
       2,
@@ -158,7 +158,7 @@ const and = (): Just<ExprResult> => {
   return BFnEnv(
     checkArityThenApply(
       'and',
-      constructReducableBooleanOperation((acc, elem) => acc && elem, true),
+      constructReducibleBooleanOperation((acc, elem) => acc && elem, true),
       2, true
     )
   );
@@ -168,7 +168,7 @@ const or = (): Just<ExprResult> => {
   return BFnEnv(
     checkArityThenApply(
       'or',
-      constructReducableBooleanOperation((acc, elem) => acc || elem, false),
+      constructReducibleBooleanOperation((acc, elem) => acc || elem, false),
       2, true
     )
   );
@@ -324,7 +324,7 @@ const constructSingletonBooleanOperation = (
   );
 }
 
-const constructReducableNumberOperation = (
+const constructReducibleNumberOperation = (
   op: (a: any, b: number) => any,
   id: any,
   idIsIndex?: boolean,
@@ -350,7 +350,7 @@ const constructReducableNumberOperation = (
   };
 }
 
-const constructReducableStringOperation = (
+const constructReducibleStringOperation = (
   op: (a: any, b: string) => any,
   id: any
 ): ((vs: Value[]) => ExprResult) => {
@@ -365,7 +365,7 @@ const constructReducableStringOperation = (
   };
 }
 
-const constructReducableBooleanOperation = (
+const constructReducibleBooleanOperation = (
   op: (a: any, b: boolean) => any,
   id: any
 ): ((vs: Value[]) => ExprResult) => {
