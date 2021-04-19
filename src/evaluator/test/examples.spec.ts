@@ -1341,15 +1341,17 @@ tIO('(posn-x (make-posn 2 3))', '2');
 tIO('(posn-x (make-posn 2 3))', '3');
 
 tIO('(make-posn (+ 2 "hello") 2)',
- '+: expects a number as 2nd argument, given "hello"'
+`+: expects a number as 2nd argument, given "hello"
+`
 );
 
+// Fixing this test requires making error reporting into a side channel.
 tIO(`(define p (make-posn (+ 2 "hello") 3))
 (posn-y p)
 `,
 `+: expects a number as 2nd argument, given "hello"
-p: this variable is not defined`
-);
+p: this variable is not defined
+`);
 
 
 t('(define (f x) (if x))'); // This is parse error at 'if'. Fix the parser.
@@ -1357,7 +1359,8 @@ t('(define (f x) (if x))'); // This is parse error at 'if'. Fix the parser.
 t('(define x 10) (define x 20)');
 
 tIO('(posn-x (make-color 15 15 15 15))',
-'posn-x cannot be applied to a make-color');
+`posn-x: expects a posn, given (make-color 15 15 15 15)
+`);
 
 t('(cond ["#t" "hello"] [else "goodbye"])');
 
@@ -1429,7 +1432,7 @@ tIO(`
         [(string=? "short" f) (substring m 0 3)]))
 
 (define (format-november format-month) (format-month "November" "long"))`,
-`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)])).
+`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
 function call: expected a function after the open parenthesis, but found a variable
 `);
 
@@ -1552,6 +1555,20 @@ tIO(`(not true)
 not: expects only 1 argument, but found 2
 not: expected either #true or #false; given "one"
 `);
+
+tIO(`(posn? (make-posn 2 2))`,
+`#true
+`);
+
+tIO(`(posn? 10)`,
+`#false
+`);
+
+tIO(`
+(define (process-posn p) 
+  (... (posn-x p) ... (posn-y p) ...))
+`,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).`);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
