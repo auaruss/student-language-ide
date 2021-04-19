@@ -74,7 +74,7 @@ export type ReadError
 export type TopLevel
   = TopLevelError | Expr | {
     type: 'define-constant',
-    name:  string,
+    name: string,
     body: Expr
   } | {
     type: 'define-function',
