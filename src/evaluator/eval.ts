@@ -16,7 +16,7 @@ import {
 } from './types';
 
 import {
-  Bind, Clos, NFn, ValErr,
+  Bind, Clos, MakeAtomic, ValErr,
   MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, 
   MakeCheckSuccess, MakeCheckFailure, MakeStruct
 } from './constructors';
@@ -138,7 +138,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
     case 'String':
     case 'Num':
     case 'Bool':
-      return NFn(e.const);
+      return MakeAtomic(e.const);
     case 'Id':
       let x = getVal(e.const, env);
       if (!x) {
@@ -237,7 +237,7 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
     case 'StructurePredicate':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
       if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
-      return NFn(op.struct === args[0].struct);
+      return MakeAtomic(op.struct === args[0].struct);
   }
 
 }

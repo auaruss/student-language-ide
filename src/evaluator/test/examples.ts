@@ -15,8 +15,8 @@
  import { 
   NumTok, IdTok, StringTok, BooleanTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom,
-  NumExpr, IdExpr, StringExpr, BooleanExpr, Call,
-  NFn, Bind, MakeCheckExpect, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, FnDefn, MakeCond
+  MakeNumberExpr, MakeVariableUsageExpr, MakeStringExpr, MakeBooleanExpr, MakeCall,
+  MakeAtomic, Bind, MakeCheckExpect, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, MakeFunctionDefinition, MakeCond
 } from './../constructors';
 
 // ----------------------------------------------------------------------------
@@ -71,21 +71,21 @@ export const falseAtom = BooleanAtom('#f');
 // | Expr examples                                                            |
 // ----------------------------------------------------------------------------
 
-export const negThirteenExpr = NumExpr(-13);
-export const negOneExpr = NumExpr(-1);
-export const negZeroExpr = NumExpr(-0);
-export const zeroExpr = NumExpr(0);
-export const oneExpr = NumExpr(1);
-export const thirteenExpr = NumExpr(13);
+export const negThirteenExpr = MakeNumberExpr(-13);
+export const negOneExpr = MakeNumberExpr(-1);
+export const negZeroExpr = MakeNumberExpr(-0);
+export const zeroExpr = MakeNumberExpr(0);
+export const oneExpr = MakeNumberExpr(1);
+export const thirteenExpr = MakeNumberExpr(13);
 
-export const helloIdExpr = IdExpr('hello');
-export const goodbyeIdExpr = IdExpr('goodbye');
+export const helloIdExpr = MakeVariableUsageExpr('hello');
+export const goodbyeIdExpr = MakeVariableUsageExpr('goodbye');
 
-export const helloStringExpr = StringExpr('hello');
-export const goodbyeStringExpr = StringExpr('goodbye');
+export const helloStringExpr = MakeStringExpr('hello');
+export const goodbyeStringExpr = MakeStringExpr('goodbye');
 
-export const trueExpr = BooleanExpr(true);
-export const falseExpr = BooleanExpr(false);
+export const trueExpr = MakeBooleanExpr(true);
+export const falseExpr = MakeBooleanExpr(false);
 
 // ----------------------------------------------------------------------------
 // | If/Cond examples                                                         |
@@ -95,23 +95,23 @@ export const basicIf1 = MakeIf(trueExpr, helloStringExpr, goodbyeStringExpr);
 export const basicIf2 = MakeIf(falseExpr, helloStringExpr, goodbyeStringExpr);
 export const factorialIf
   = MakeIf(
-      Call('=', [IdExpr('n'), NumExpr(0)]),
-      NumExpr(1),
-      Call('*', [
-        IdExpr('n'),
-        Call('!', [Call('-', [IdExpr('n'), NumExpr(1)])])
+      MakeCall('=', [MakeVariableUsageExpr('n'), MakeNumberExpr(0)]),
+      MakeNumberExpr(1),
+      MakeCall('*', [
+        MakeVariableUsageExpr('n'),
+        MakeCall('!', [MakeCall('-', [MakeVariableUsageExpr('n'), MakeNumberExpr(1)])])
       ])
     );
 
 export const factorialCond
   = MakeCond(
       [
-        [Call('=', [IdExpr('n'), NumExpr(0)]), NumExpr(1)],
+        [MakeCall('=', [MakeVariableUsageExpr('n'), MakeNumberExpr(0)]), MakeNumberExpr(1)],
         [
-          IdExpr('else'), 
-          Call('*', [
-            IdExpr('n'),
-            Call('!', [Call('-', [IdExpr('n'), NumExpr(1)])])
+          MakeVariableUsageExpr('else'), 
+          MakeCall('*', [
+            MakeVariableUsageExpr('n'),
+            MakeCall('!', [MakeCall('-', [MakeVariableUsageExpr('n'), MakeNumberExpr(1)])])
           ])
         ]
       ]
@@ -121,8 +121,8 @@ export const factorialCond
 // | Definition examples                                                      |
 // ----------------------------------------------------------------------------
 
-export const factorialIfDefn = FnDefn('!', ['n'], factorialIf);
-export const factorialCondDefn = FnDefn('!', ['n'], factorialCond);
+export const factorialIfDefn = MakeFunctionDefinition('!', ['n'], factorialIf);
+export const factorialCondDefn = MakeFunctionDefinition('!', ['n'], factorialCond);
 
 // ----------------------------------------------------------------------------
 // | Definition Error examples                                                |
@@ -183,19 +183,19 @@ export const checkExpectDiffType3
 // ----------------------------------------------------------------------------
 
 
-export const negThirteenVal = NFn(-13);
-export const negOneVal = NFn(-1);
-export const negZeroVal = NFn(-0);
-export const zeroVal = NFn(0);
-export const oneVal = NFn(1);
-export const tenVal = NFn(10);
-export const thirteenVal = NFn(13);
+export const negThirteenVal = MakeAtomic(-13);
+export const negOneVal = MakeAtomic(-1);
+export const negZeroVal = MakeAtomic(-0);
+export const zeroVal = MakeAtomic(0);
+export const oneVal = MakeAtomic(1);
+export const tenVal = MakeAtomic(10);
+export const thirteenVal = MakeAtomic(13);
 
-export const helloVal = NFn('hello');
-export const goodbyeVal = NFn('goodbye');
+export const helloVal = MakeAtomic('hello');
+export const goodbyeVal = MakeAtomic('goodbye');
 
-export const trueVal = NFn(true);
-export const falseVal = NFn(false);
+export const trueVal = MakeAtomic(true);
+export const falseVal = MakeAtomic(false);
 
 
 export const xTenBind = Bind('x', tenVal);

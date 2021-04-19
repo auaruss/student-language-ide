@@ -95,48 +95,50 @@ export type TopLevel
     expected: Expr,
     margin: number
   } | {
-    type: 'check-error'
+    type: 'check-error',
+    expression: Expr,
+    expectedRrrorMessage?: string
   };
 
 export type Expr
   = ExprError | {
-    type: 'String',
+    typeOfExpression: 'String',
     const: string
   } | {
-    type: 'Num',
+    typeOfExpression: 'Number',
     const: number
   } | {
-    type: 'Id', // typeOfExpression: 'VariableUsage'
+    typeOfExpression: 'VariableUsage', // typeOfExpression: 'VariableUsage'
     const: string
   } | {
-    type: 'Bool',
+    typeOfExpression: 'Boolean',
     const: boolean
   } | {
-    type: 'Call',
+    typeOfExpression: 'Call',
     op: string,
     args: Expr[],
   } | {
-    type: 'if',
+    typeOfExpression: 'if',
     predicate: Expr,
     consequent: Expr,
     alternative: Expr
   } | {
-    type: 'cond',
+    typeOfExpression: 'cond',
     clauses: [Expr, Expr][]
   } | {
-    type: 'and',
+    typeOfExpression: 'and',
     arguments: Expr[]
   } | {
-    type: 'or',
+    typeOfExpression: 'or',
     arguments: Expr[]
   } | {
-    type: 'TemplatePlaceholder',
+    typeOfExpression: 'TemplatePlaceholder',
     sexp: SExp
   };
 
 export type TopLevelError
   = ReadError | {
-    defnError: string,
+    topLevelError: string,
     sexps: SExp[]
   };
 
@@ -169,7 +171,7 @@ export type ExprResult
  
 export type Value
   = {
-    type: 'NonFunction', // rename to Atomic
+    type: 'Atomic',
     value: string | number | boolean
   } | {
     type: 'BuiltinFunction',
@@ -185,12 +187,18 @@ export type Value
     type: 'StructureConstructor',
     struct: StructType
   } | {
-    type: 'StructureAccessor', // if applying to a struct, check that the two struct types are equal with ===
+    type: 'StructureAccessor',
     struct: StructType,
     index: number
   } | {
     type: 'StructurePredicate',
     struct: StructType
+  };
+
+export type StructType
+  = {
+    name: string,
+    fields: string[]
   };
 
 export type Nothing
@@ -202,29 +210,23 @@ export type Just<T>
 export type Maybe<T>
   = Nothing | Just<T>;
 
-export type StructType
+export type Closure
   = {
-    name: string,
-    fields: string[]
+    args: string[],
+    env: Env,
+    body: Expr
   };
 
 export type ResultError
  = TopLevelError | {
    bindingError: string,
    definition: TopLevel
- }; // ...
+ };
 
 export type ValueError
    = ExprError | {
     valueError: string,
-    expr?: Expr // put identifier for expr in this thing
-  }; // maybe subdivide into type error?
-
-export type Closure
-  = {
-    args: string[],
-    env: Env,
-    body: Expr
+    expr?: Expr
   };
 
 

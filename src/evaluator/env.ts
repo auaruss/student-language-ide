@@ -8,7 +8,7 @@
 
 import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor, MakeStructurePredicate } from './constructors';
 import { ExprResult, Env, Just, Maybe, Value, StructType, Expr } from './types';
-import { BFn, NFn, ValErr, MakeJust } from './constructors';
+import { MakeBuiltinFunction, MakeAtomic, ValErr, MakeJust } from './constructors';
 
 export const builtinEnv = (): Env => {
   let env = new Map<String, Maybe<ExprResult>>();
@@ -104,10 +104,10 @@ const substring = (): Just<ExprResult> => {
         if (! nums) return ValErr('substring: expects one to two numbers as 2nd and possibly 3rd arguments');
 
         if (nums[0] > str.length) return ValErr('substring: starting index is out of range');
-        if (nums.length === 1) return NFn(str.slice(nums[0]));
+        if (nums.length === 1) return MakeAtomic(str.slice(nums[0]));
 
         if (nums[1] > str.length) return ValErr('substring: ending index is out of range');
-        return NFn(str.slice(nums[0], nums[1]));
+        return MakeAtomic(str.slice(nums[0], nums[1]));
       },
       2, false, 3
     )
@@ -143,7 +143,7 @@ const modulo = (): Just<ExprResult> => {
         if (nums[1] === 0)
           return ValErr('modulo: undefined for 0');
 
-        return NFn(nums[0] % nums[1]); 
+        return MakeAtomic(nums[0] % nums[1]); 
       }, 2, false
     )
   );
@@ -186,11 +186,11 @@ const lessThan = (): Just<ExprResult> => {
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
-        if (! (currentNum < num)) return NFn(false);
+        if (! (currentNum < num)) return MakeAtomic(false);
         currentNum = num;
       }
 
-      return NFn(true);
+      return MakeAtomic(true);
     }, 
     2, true
   ));
@@ -204,11 +204,11 @@ const lessThanEq = (): Just<ExprResult> => {
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
-        if (! (currentNum <= num)) return NFn(false);
+        if (! (currentNum <= num)) return MakeAtomic(false);
         currentNum = num;
       }
       
-      return NFn(true);
+      return MakeAtomic(true);
     }, 
     2, true
   ));
@@ -222,11 +222,11 @@ const eq = (): Just<ExprResult> => {
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
-        if (! (currentNum === num)) return NFn(false);
+        if (! (currentNum === num)) return MakeAtomic(false);
         currentNum = num;
       }
       
-      return NFn(true);
+      return MakeAtomic(true);
     }, 
     2, true
   ));
@@ -240,11 +240,11 @@ const greaterThanEq = (): Just<ExprResult> => {
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
-        if (! (currentNum >= num)) return NFn(false);
+        if (! (currentNum >= num)) return MakeAtomic(false);
         currentNum = num;
       }
       
-      return NFn(true);
+      return MakeAtomic(true);
     }, 
     2, true
   ));
@@ -258,11 +258,11 @@ const greaterThan = (): Just<ExprResult> => {
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
-        if (! (currentNum > num)) return NFn(false);
+        if (! (currentNum > num)) return MakeAtomic(false);
         currentNum = num;
       }
       
-      return NFn(true);
+      return MakeAtomic(true);
     }, 
     2, true
   ));
@@ -284,7 +284,7 @@ const constructSingletonNumberOperation = (
       if (vs.length !== 1)
         throw new Error('Impossible arity mismatch; fix constructSingletonNumberOperation bug');
       const num: number = nums[0];
-      return NFn(op(num));
+      return MakeAtomic(op(num));
     },
     1, false
   );
@@ -301,7 +301,7 @@ const constructSingletonStringOperation = (
       if (vs.length !== 1)
         throw new Error('Impossible arity mismatch; fix constructSingletonStringOperation bug');
       const str: string = strs[0];
-      return NFn(op(str));
+      return MakeAtomic(op(str));
     },
     1, false
   );
@@ -318,7 +318,7 @@ const constructSingletonBooleanOperation = (
       if (vs.length !== 1)
         throw new Error('Impossible arity mismatch; fix constructSingletonBooleanOperation bug');
       const boolean: boolean = booleans[0];
-      return NFn(op(boolean));
+      return MakeAtomic(op(boolean));
     },
     1, false
   );
@@ -337,16 +337,16 @@ const constructReducibleNumberOperation = (
       return ValErr('Not a number');
     }
 
-    if (subtraction && nums.length === 1) return NFn(-nums[0]);
+    if (subtraction && nums.length === 1) return MakeAtomic(-nums[0]);
     
     if (idIsIndex)
-      return NFn(
+      return MakeAtomic(
         nums.slice(0, id)
             .concat(nums.slice(id + 1))
             .reduce(op, nums[id])
       );
 
-    return NFn(nums.reduce(op, id));
+    return MakeAtomic(nums.reduce(op, id));
   };
 }
 
@@ -361,7 +361,7 @@ const constructReducibleStringOperation = (
       return ValErr('Not a string');
     }
     
-    return NFn(strings.reduce(op, id));
+    return MakeAtomic(strings.reduce(op, id));
   };
 }
 
@@ -376,17 +376,17 @@ const constructReducibleBooleanOperation = (
       return ValErr('Not a boolean');
     }
     
-    return NFn(booleans.reduce(op, id));
+    return MakeAtomic(booleans.reduce(op, id));
   };
 }
 
 
 const BFnEnv = ( v: ((vs: Value[]) => ExprResult)): Just<ExprResult> => {
-  return MakeJust(BFn(v));
+  return MakeJust(MakeBuiltinFunction(v));
 }
 
 const NFnEnv = (v: string | boolean | number): Just<ExprResult> => {
-  return MakeJust(NFn(v));
+  return MakeJust(MakeAtomic(v));
 }
 
 const checkIfIsNumbers = (vs: Value[]): number[] | false => {

@@ -1,8 +1,8 @@
 import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError, isExpr } from './predicates';
 import {
-  DefinitionResult, ExprResult, Result, Binding, BindingError,
-  ValueError, TokenError, ReadError, Token, SExp, Definition, Expr,
-  Value, DefinitionError, ExprError, TokenType, CheckResult, If, Cond
+  DefinitionResult, ExprResult, Result, Binding, ResultError,
+  ValueError, TokenError, ReadError, Token, SExp, TopLevel, Expr,
+  Value, TopLevelError, ExprError, TokenType, CheckResult, If, Cond
 } from './types';
 
 import { evaluate } from './eval';
@@ -79,7 +79,7 @@ const printValue = (v: Value): string => {
   }
 }
 
-const printBindingError = (be: BindingError): string => {
+const printBindingError = (be: ResultError): string => {
   if (isTokenError(be)) {
     return printTokenError(be);
   } else if (isReadError(be)) {
@@ -118,7 +118,7 @@ const printReadError = (re: ReadError): string => {
   }
 }
 
-const printDefinitionError = (de: DefinitionError): string => {
+const printDefinitionError = (de: TopLevelError): string => {
   if (isReadError(de)) return printReadError(de);
   return `Definition Error: ${de.defnError} in (${printSexps(de.sexps)})`; 
 }
@@ -158,7 +158,7 @@ const printSexps = (sexps: SExp[]): string => {
   ).trim();
 }
 
-const printDefinition = (d: Definition): string => {
+const printDefinition = (d: TopLevel): string => {
   if (isDefinitionError(d)) return printDefinitionError(d);
   else if (d.type === 'define-constant')
     return '(define' + ' ' + d.name + ' ' + printExpr(d.body) + ')';

@@ -1,9 +1,9 @@
 import {
   Token, TokenError,
   SExp, ReadError,
-  TopLevel, Definition, Expr, DefinitionError, ExprError,
+  TopLevel, TopLevel, Expr, TopLevelError, ExprError,
   Value, Result, DefinitionResult, ExprResult, 
-  Binding, BindingError, Closure, Env, Check, ValueError, CheckError
+  Binding, ResultError, Closure, Env, Check, ValueError, CheckError
 } from './types';
 
 export const isToken = (x: any): x is Token => {
@@ -65,7 +65,7 @@ export const isDefOrExpr = (x: any): x is TopLevel => {
 }
 
 
-export const isDefinition = (x: any): x is Definition => {
+export const isDefinition = (x: any): x is TopLevel => {
   return (x && typeof x === 'object'
     && (   x.type === 'define-constant' 
        || (   x.type === 'define-function'
@@ -120,7 +120,7 @@ export const isCheck = (x: any): x is Check => {
   );
 }
 
-export const isDefinitionError = (x: any): x is DefinitionError => {
+export const isDefinitionError = (x: any): x is TopLevelError => {
   return (x && typeof x === 'object'
     && typeof x.defnError === 'string'
     && Array.isArray(x.sexps)
@@ -200,7 +200,7 @@ export const isValueError = (x: any): x is ValueError => {
   || isExprError(x);
 }
 
-export const isBindingError = (x: any): x is BindingError => {
+export const isBindingError = (x: any): x is ResultError => {
   return (x && typeof x === 'object'
     && typeof x.bindingError === 'string'
     && isDefinition(x.definition))

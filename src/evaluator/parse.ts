@@ -12,8 +12,8 @@ import { MakeCond, MakeIf } from './constructors';
 import { SExp, TopLevel, TopLevel, Check, Expr, Cond } from './types';
 
 import {
-  StringExpr, NumExpr, IdExpr, BooleanExpr, ExprErr, Call,
-  DefnErr, FnDefn, VarDefn, SExps, MakeCheckExpect, MakeCheckError
+  MakeStringExpr, MakeNumberExpr, MakeVariableUsageExpr, MakeBooleanExpr, ExprErr, MakeCall,
+  DefnErr, MakeFunctionDefinition, MakeVariableDefinition, SExps, MakeCheckExpect, MakeCheckError
 } from './constructors';
 
 import { isReadError, isExpr, isExprArray } from './predicates';
@@ -74,7 +74,7 @@ export const parseSexp = (sexp: SExp): TopLevel => {
         let parseRest = parseSexps(sexps.slice(1));
 
         if (isExprArray(parseRest))
-          return Call(firstSexp.sexp, parseRest);
+          return MakeCall(firstSexp.sexp, parseRest);
         return ExprErr('Defn inside Expr', sexps);
 
       } else {
@@ -83,14 +83,14 @@ export const parseSexp = (sexp: SExp): TopLevel => {
 
       }
     case 'String':
-      return StringExpr(sexp.sexp)
+      return MakeStringExpr(sexp.sexp)
     case 'Num':
-      return NumExpr(sexp.sexp);
+      return MakeNumberExpr(sexp.sexp);
     case 'Id':
       
-      return IdExpr(sexp.sexp);
+      return MakeVariableUsageExpr(sexp.sexp);
     case 'Bool':
-      return BooleanExpr(sexp.sexp);  
+      return MakeBooleanExpr(sexp.sexp);  
   }
 }
 
@@ -151,7 +151,7 @@ export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]):
                   }
                 }
           
-                return FnDefn(functionNameSExp.sexp, functionArgs, body);
+                return MakeFunctionDefinition(functionNameSExp.sexp, functionArgs, body);
               case 'String':
               case 'Num':
               case 'Bool':
@@ -159,7 +159,7 @@ export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]):
             }
           }
         case 'Id':
-          return VarDefn(varOrHeader.sexp, body);
+          return MakeVariableDefinition(varOrHeader.sexp, body);
         case 'Num':
           case 'String':
         case 'Bool':

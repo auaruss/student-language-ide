@@ -8,9 +8,9 @@
 import {
   TokenType, Token, TokenError,
   SExp, ReadError, Expr, ExprResult,
-  ExprError, DefinitionError, Env, Definition,
-  ReadResult, ValueError, BindingError, Binding, Value,
-  Nothing, Just, Check, CheckError, CheckResult, StructType, If, Cond
+  ExprError, TopLevelError, Env, TopLevel,
+  ReadResult, ValueError, ResultError, Value,
+  Nothing, Just, StructType, Result
 } from './types';
 
 // ----------------------------------------------------------------------------
@@ -52,6 +52,24 @@ export const IdAtom      = (v: string): SExp => { return Atom('Id',             
 export const StringAtom  = (v: string): SExp => { return Atom('String',         v);  }
 export const BooleanAtom = (v: string): SExp => { return Atom('Bool', whichBool(v)); }
 
+/**
+ * Converts a boolean string in BSL into a boolean.
+ * @param t token
+ */
+ const whichBool = (s: string): boolean => {
+  switch (s) {
+    case '#T':
+    case '#t':
+    case '#true':
+       return true;
+    case '#F':
+    case '#f':
+    case '#false':
+      return false;
+  }
+  return false;
+}
+
 export const SExps = (...args: SExp[]): SExp => {
   return {
     type: 'SExp Array',
@@ -81,10 +99,10 @@ export const ReadErr = (
 }
 
 // ----------------------------------------------------------------------------
-// | Definition constructors                                                  |
+// | Top Level constructors                                                   |
 // ----------------------------------------------------------------------------
 
-export const VarDefn = (name: string, body: Expr): Definition => {
+export const MakeVariableDefinition = (name: string, body: Expr): TopLevel => {
   return {
     type: 'define-constant',
     name: name,
@@ -92,11 +110,11 @@ export const VarDefn = (name: string, body: Expr): Definition => {
   };
 }
 
-export const FnDefn = (
+export const MakeFunctionDefinition = (
   name: string,
   params: string[],
   body: Expr
-): Definition => {
+): TopLevel => {
   return {
     type: 'define-function',
     name: name,
@@ -105,33 +123,112 @@ export const FnDefn = (
   };
 }
 
+export const MakeStructureDefinition = (
+  name: string,
+  fields: string[]
+): TopLevel => {
+  return {
+    type: 'define-struct',
+    name: name,
+    fields: fields
+  };
+}
+
+export const MakeCheckExpect = (actual: Expr, expected: Expr): TopLevel => {
+  return {
+    type: 'check-expect',
+    actual: actual,
+    expected: expected
+  };
+}
+
+export const MakeCheckError = (
+  expression: Expr,
+  expectedRrrorMessage?: string
+): TopLevel => {
+  return expectedRrrorMessage ? {
+    type: 'check-error',
+    expression: expression,
+    expectedRrrorMessage: expectedRrrorMessage
+  } : {
+    type: 'check-error',
+    expression: expression,
+  };
+}
 
 // ----------------------------------------------------------------------------
 // | Expr constructors                                                        |
 // ----------------------------------------------------------------------------
 
-export const PrimitiveExpr = (t:'String'|'Num'|'Id'|'Bool',
+export const MakePrimitiveExpr = (t:'String'|'Number'|'VariableUsage'|'Boolean',
               v: string|number|boolean): Expr => {
-  if ((t === 'String' || t === 'Id') && (typeof v === 'string')) {
-    return { type:  t, const: v };
-  } else if (t === 'Num' && (typeof v === 'number')) {
-    return { type:  t, const: v };
-  } else if (t === 'Bool' && (typeof v === 'boolean')) {
-    return { type:  t, const: v };
+  if ((t === 'String' || t === 'VariableUsage') && (typeof v === 'string')) {
+    return { typeOfExpression:  t, const: v };
+  } else if (t === 'Number' && (typeof v === 'number')) {
+    return { typeOfExpression:  t, const: v };
+  } else if (t === 'Boolean' && (typeof v === 'boolean')) {
+    return { typeOfExpression:  t, const: v };
   }
   throw new Error('Mismatch in primitive Expr type/value');
 }
 
-export const NumExpr     = (v: number):  Expr => { return PrimitiveExpr('Num',    v);  }
-export const IdExpr      = (v: string):  Expr => { return PrimitiveExpr('Id',     v);  }
-export const StringExpr  = (v: string):  Expr => { return PrimitiveExpr('String', v);  }
-export const BooleanExpr = (v: boolean): Expr => { return PrimitiveExpr('Bool',   v); }
+export const MakeNumberExpr = (v: number):  Expr => { return MakePrimitiveExpr('Number',    v);  }
+export const MakeVariableUsageExpr = (v: string):  Expr => { return MakePrimitiveExpr('VariableUsage',     v);  }
+export const MakeStringExpr  = (v: string):  Expr => { return MakePrimitiveExpr('String', v);  }
+export const MakeBooleanExpr = (v: boolean): Expr => { return MakePrimitiveExpr('Boolean',   v); }
 
-export const Call = (op: string, args: Expr[]): Expr => {
+export const MakeCall = (op: string, args: Expr[]): Expr => {
   return {
-    type: 'Call',
+    typeOfExpression: 'Call',
     op: op,
     args: args
+  };
+}
+
+export const MakeIf = (p: Expr, c: Expr, a: Expr): Expr => {
+  return {
+    typeOfExpression: 'if',
+    predicate: p,
+    consequent: c,
+    alternative: a
+  };
+}
+
+export const MakeCond = (clauses: [Expr, Expr][]): Expr => {
+  return {
+    typeOfExpression: 'cond',
+    clauses: clauses
+  };
+}
+
+export const MakeAnd = (args: Expr[]): Expr => {
+  return {
+    typeOfExpression: 'and',
+    arguments: args
+  };
+}
+
+export const MakeOr = (args: Expr[]): Expr => {
+  return {
+    typeOfExpression: 'and',
+    arguments: args
+  };
+}
+
+export const MakeTemplatePlaceholder = (sexp: SExp): Expr => {
+  return {
+    typeOfExpression: 'TemplatePlaceholder',
+    sexp: sexp
+  };
+}
+
+export const TopLevelErr = (
+  topLevelError: string,
+  sexps: SExp[]
+): TopLevelError => {
+  return {
+    topLevelError: topLevelError,
+    sexps: sexps
   };
 }
 
@@ -141,74 +238,50 @@ export const ExprErr = (e: string,
   return { exprError: e, sexps: v };
 }
 
-export const DefnErr = (e: string, v: SExp[]): DefinitionError => {
-    return { defnError: e, sexps: v };
-} 
-
-// ----------------------------------------------------------------------------
-// | If/Cond constructors                                                     |
-// ----------------------------------------------------------------------------
-
-export const MakeIf = (p: Expr, c: Expr, a: Expr): If => {
-  return {
-    type: 'if',
-    predicate: p,
-    consequent: c,
-    alternative: a
-  };
-}
-
-export const MakeCond = (clauses: [Expr, Expr][]): Cond => {
-  return {
-    type: 'cond',
-    clauses: clauses
-  };
-}
-
-// ----------------------------------------------------------------------------
-// | Check constructors                                                       |
-// ----------------------------------------------------------------------------
-
-export const MakeCheckExpect = (actual: Expr, expected: Expr): Check => {
-  return {
-    type: 'check-expect',
-    actual: actual,
-    expected: expected
-  };
-}
-
-export const MakeCheckError = (err: string, sexps: SExp[]): CheckError => {
-  return {
-    checkError: err,
-    sexps: sexps
-  };
-}
 
 // ----------------------------------------------------------------------------
 // | Result constructors                                                      |
 // ----------------------------------------------------------------------------
 
-export const MakeNothing = (): Nothing => {
-  return { type: 'nothing' };
-}
-
-export function MakeJust<T>(t: T): Just<T> {
-  return { type: 'just', thing: t };
-}
-
-export const Bind = (d: string, v: ExprResult | null): Binding => {
+export const Bind = (d: string, v: ExprResult | null): Result => {
   return {
     type: 'define',
     defined: d,
     toBe: v
-  }
+  };
 }
 
-export const NFn = (v: string|number|boolean): Value => {
-  return { type: 'NonFunction', value: v };
+export const MakeCheckSuccess = (): Result => {
+  return {
+    type: 'check-success'
+  };
 }
 
-export const BFn = (v: ((vs: Value[]) => ExprResult)): Value => {
+export const MakeCheckFailure = (actual: ExprResult, expected: Value): Result => {
+  return {
+    type: 'check-failure',
+    actual: actual,
+    expected: expected
+  };
+}
+
+export const MakeCheckExpectedError = (expected: ValueError): Result => {
+  return { 
+    type: 'check-expected-error',
+    expected: expected
+  };
+}
+
+// ----------------------------------------------------------------------------
+// | ExprResult constructors                                                  |
+// ----------------------------------------------------------------------------
+
+
+export const MakeAtomic = (v: string|number|boolean): Value => {
+  return { type: 'Atomic', value: v };
+}
+
+export const MakeBuiltinFunction = (v: ((vs: Value[]) => ExprResult)): Value => {
   return { type: 'BuiltinFunction', value: v };
 }
 
@@ -217,7 +290,7 @@ export const MakeStruct = (s: StructType, v: ExprResult[]): Value => {
     type: 'Struct',
     struct: s,
     values: v
-  }
+  };
 }
 
 export const MakeStructureConstructor = (st: StructType): Value => {
@@ -249,6 +322,14 @@ export const MakeStructType = (name: string, fields: string[]): StructType => {
   };
 }
 
+export const MakeNothing = (): Nothing => {
+  return { type: 'nothing' };
+}
+
+export function MakeJust<T>(t: T): Just<T> {
+  return { type: 'just', thing: t };
+}
+
 export function Clos(a: string[], e: Env, b: Expr): Value {
   return {
     type: 'Closure',
@@ -260,57 +341,18 @@ export function Clos(a: string[], e: Env, b: Expr): Value {
   };
 }
 
-export const MakeCheckSuccess = (): CheckResult => {
-  return {
-    type: 'check-success'
-  };
-}
-
-export const MakeCheckFailure = (actual: ExprResult, expected: Value): CheckResult => {
-  return {
-    type: 'check-failure',
-    actual: actual,
-    expected: expected
-  };
-}
-
-export const MakeCheckExpectedError = (expected: ValueError): CheckResult => {
-  return { 
-    type: 'check-expected-error',
-    expected: expected
-  };
-}
-
-export const ValErr = (err: string, e?: Expr): ValueError => {
-  if (! e) return { valueError: err, expr: undefined };
-  return { valueError: err, expr: e };
-}
-
-export const BindingErr = (
+export const ResultErr = (
   err: string,
-  d: Definition): BindingError => {
+  d: TopLevel): ResultError => {
   return {
     bindingError: err,
     definition: d
   };
 }
 
-/**
- * Converts a boolean string in BSL into a boolean.
- * @param t token
- */
-const whichBool = (s: string): boolean => {
-  switch (s) {
-    case '#T':
-    case '#t':
-    case '#true':
-       return true;
-    case '#F':
-    case '#f':
-    case '#false':
-      return false;
-  }
-  return false;
+export const ValErr = (err: string, e?: Expr): ValueError => {
+  if (! e) return { valueError: err, expr: undefined };
+  return { valueError: err, expr: e };
 }
 
 export const CP: Token    = Tok(TokenType.CloseParen,        ')');
