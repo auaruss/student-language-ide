@@ -26,29 +26,28 @@ export const builtinEnv = (): Env => {
 
   env.set('string-append', stringAppend());
   env.set('string=?', stringEquals());
-  // env.set('substring');
+  env.set('substring', substring());
   
   env.set('sin', sin());
   env.set('cos', cos());
   env.set('add1', addOne());
   env.set('floor', floor());
-  // env.set('modulo');
-  // env.set('abs');
+  env.set('modulo', modulo());
+  env.set('abs', absoluteVal());
 
   env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
   env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
   env.set('posn-y', MakeJust(MakeStructureAccessor(posnType, 1)));
   env.set('posn?', MakeJust(MakeStructureConstructor(posnType)));
 
-
-  // env.set('and');
-  // env.set('or');
-  // env.set('<');
-  // env.set('<=');
-  // env.set('number=?');
-  // env.set('>');
-  // env.set('>=');
-
+  env.set('and', and());
+  env.set('or', or());
+  env.set('not', not());
+  env.set('<', lessThan());
+  env.set('<=', lessThanEq());
+  env.set('=', eq());
+  env.set('>=', greaterThanEq());
+  env.set('>', greaterThan());
 
   return env;
 }
@@ -87,11 +86,34 @@ const stringEquals = (): Just<ExprResult> => {
           return constructReducableStringOperation((acc, elem) => acc && (elem === first.value), true)(vs)
         throw new Error('impossible line reached, bug in string=?');
       },
-      2, 
+      2,
       true
     )
   );
 }
+
+const substring = (): Just<ExprResult> => {
+  return BFnEnv(
+    checkArityThenApply('substring',
+      (vs: Value[]) => {
+        const strs = checkIfIsStrings([vs[0]]);
+        if (! strs) return ValErr('substring: expects a string as 1st argument');
+        const str = strs[0];
+
+        const nums = checkIfIsNumbers(vs.slice(1));
+        if (! nums) return ValErr('substring: expects one to two numbers as 2nd and possibly 3rd arguments');
+
+        if (nums[0] > str.length) return ValErr('substring: starting index is out of range');
+        if (nums.length === 1) return NFn(str.slice(nums[0]));
+
+        if (nums[1] > str.length) return ValErr('substring: ending index is out of range');
+        return NFn(str.slice(nums[0], nums[1]));
+      },
+      2, false, 3
+    )
+  );
+}
+
 
 const sin = (): Just<ExprResult> => {
   return BFnEnv(constructSingletonNumberOperation('sin', x => Math.sin(x)));
@@ -109,6 +131,143 @@ const floor = (): Just<ExprResult> => {
   return BFnEnv(constructSingletonNumberOperation('floor', x => Math.floor(x)));
 }
 
+const modulo = (): Just<ExprResult> => {
+  return BFnEnv(
+    checkArityThenApply(
+      'modulo',
+      (vs: Value[]) => {
+        const nums = checkIfIsNumbers(vs);
+
+        if (! nums) return ValErr('modulo: all arguments must be numbers');
+
+        if (nums[1] === 0)
+          return ValErr('modulo: undefined for 0');
+
+        return NFn(nums[0] % nums[1]); 
+      }, 2, false
+    )
+  );
+}
+
+const absoluteVal = (): Just<ExprResult> => {
+  return BFnEnv(constructSingletonNumberOperation('abs', x => Math.abs(x)));
+}
+
+
+const and = (): Just<ExprResult> => {
+  return BFnEnv(
+    checkArityThenApply(
+      'and',
+      constructReducableBooleanOperation((acc, elem) => acc && elem, true),
+      2, true
+    )
+  );
+}
+
+const or = (): Just<ExprResult> => {
+  return BFnEnv(
+    checkArityThenApply(
+      'or',
+      constructReducableBooleanOperation((acc, elem) => acc || elem, false),
+      2, true
+    )
+  );
+}
+
+const not = (): Just<ExprResult> => {
+  return BFnEnv(constructSingletonBooleanOperation('not', b => !b));
+}
+
+const lessThan = (): Just<ExprResult> => {
+  return BFnEnv(checkArityThenApply('<',
+    (vs: Value[]) => {
+      let nums = checkIfIsNumbers(vs);
+      if (! nums) return ValErr('<: all arguments to < must be numbers');
+
+      let currentNum = nums[0];
+      for (let num of nums.slice(1)) {
+        if (! (currentNum < num)) return NFn(false);
+        currentNum = num;
+      }
+
+      return NFn(true);
+    }, 
+    2, true
+  ));
+}
+
+const lessThanEq = (): Just<ExprResult> => {
+  return BFnEnv(checkArityThenApply('<=',
+    (vs: Value[]) => {
+      let nums = checkIfIsNumbers(vs);
+      if (! nums) return ValErr('<=: all arguments to <= must be numbers');
+
+      let currentNum = nums[0];
+      for (let num of nums.slice(1)) {
+        if (! (currentNum <= num)) return NFn(false);
+        currentNum = num;
+      }
+      
+      return NFn(true);
+    }, 
+    2, true
+  ));
+}
+
+const eq = (): Just<ExprResult> => {
+  return BFnEnv(checkArityThenApply('=',
+    (vs: Value[]) => {
+      let nums = checkIfIsNumbers(vs);
+      if (! nums) return ValErr('=: all arguments to = must be numbers');
+
+      let currentNum = nums[0];
+      for (let num of nums.slice(1)) {
+        if (! (currentNum === num)) return NFn(false);
+        currentNum = num;
+      }
+      
+      return NFn(true);
+    }, 
+    2, true
+  ));
+}
+
+const greaterThanEq = (): Just<ExprResult> => {
+  return BFnEnv(checkArityThenApply('>=',
+    (vs: Value[]) => {
+      let nums = checkIfIsNumbers(vs);
+      if (! nums) return ValErr('>=: all arguments to >= must be numbers');
+
+      let currentNum = nums[0];
+      for (let num of nums.slice(1)) {
+        if (! (currentNum >= num)) return NFn(false);
+        currentNum = num;
+      }
+      
+      return NFn(true);
+    }, 
+    2, true
+  ));
+}
+
+const greaterThan = (): Just<ExprResult> => {
+  return BFnEnv(checkArityThenApply('>',
+    (vs: Value[]) => {
+      let nums = checkIfIsNumbers(vs);
+      if (! nums) return ValErr('>: all arguments to > must be numbers');
+
+      let currentNum = nums[0];
+      for (let num of nums.slice(1)) {
+        if (! (currentNum > num)) return NFn(false);
+        currentNum = num;
+      }
+      
+      return NFn(true);
+    }, 
+    2, true
+  ));
+}
+
 // ----------------------------------------------------------------------------
 
 
@@ -116,7 +275,7 @@ const floor = (): Just<ExprResult> => {
 
 const constructSingletonNumberOperation = (
   opName: string,
-  op: (x: number) => number,
+  op: (x: number) => string|number|boolean,
 ): ((vs: Value[]) => ExprResult) => {
   return checkArityThenApply(
     opName,
@@ -124,7 +283,7 @@ const constructSingletonNumberOperation = (
       const nums = checkIfIsNumbers(vs);
       if (vs.length !== 1)
         throw new Error('Impossible arity mismatch; fix constructSingletonNumberOperation bug');
-      const num = nums[0];
+      const num: number = nums[0];
       return NFn(op(num));
     },
     1, false
@@ -133,7 +292,7 @@ const constructSingletonNumberOperation = (
 
 const constructSingletonStringOperation = (
   opName: string,
-  op: (x: string) => string,
+  op: (x: string) => string|number|boolean,
 ): ((vs: Value[]) => ExprResult) => {
   return checkArityThenApply(
     opName,
@@ -141,8 +300,25 @@ const constructSingletonStringOperation = (
       const strs = checkIfIsStrings(vs);
       if (vs.length !== 1)
         throw new Error('Impossible arity mismatch; fix constructSingletonStringOperation bug');
-      const str = strs[0];
+      const str: string = strs[0];
       return NFn(op(str));
+    },
+    1, false
+  );
+}
+
+const constructSingletonBooleanOperation = (
+  opName: string,
+  op: (x: boolean) => string|number|boolean,
+): ((vs: Value[]) => ExprResult) => {
+  return checkArityThenApply(
+    opName,
+    (vs: Value[]) => {
+      const booleans = checkIfIsBooleans(vs);
+      if (vs.length !== 1)
+        throw new Error('Impossible arity mismatch; fix constructSingletonBooleanOperation bug');
+      const boolean: boolean = booleans[0];
+      return NFn(op(boolean));
     },
     1, false
   );
@@ -189,6 +365,22 @@ const constructReducableStringOperation = (
   };
 }
 
+const constructReducableBooleanOperation = (
+  op: (a: any, b: boolean) => any,
+  id: any
+): ((vs: Value[]) => ExprResult) => {
+  return (vs: Value[]) => {
+    const booleans: boolean[] | false = checkIfIsBooleans(vs);
+    
+    if (booleans === false) {
+      return ValErr('Not a boolean');
+    }
+    
+    return NFn(booleans.reduce(op, id));
+  };
+}
+
+
 const BFnEnv = ( v: ((vs: Value[]) => ExprResult)): Just<ExprResult> => {
   return MakeJust(BFn(v));
 }
@@ -210,14 +402,6 @@ const checkIfIsNumbers = (vs: Value[]): number[] | false => {
   return nums;
 }
 
-const maybeGetElemNumber = (v: Value): number | false => {
-  if (! (v.type === 'NonFunction'))
-    return false;
-  if (typeof v.value !== 'number')
-    return false;
-  return v.value;
-}
-
 const checkIfIsStrings = (vs: Value[]): string[] | false => {
   const strings: string[] = []
   for (let v of vs) {
@@ -229,6 +413,19 @@ const checkIfIsStrings = (vs: Value[]): string[] | false => {
   }
 
   return strings;
+}
+
+const checkIfIsBooleans = (vs: Value[]): boolean[] | false => {
+  const booleans: boolean[] = []
+  for (let v of vs) {
+    if (! (v.type === 'NonFunction'))
+      return false;
+    if (typeof v.value !== 'boolean')
+      return false;
+    booleans.push(v.value);
+  }
+
+  return booleans;
 }
 
 const checkArityThenApply = (
