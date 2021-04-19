@@ -93,7 +93,7 @@ export type TopLevel
     type: 'check-within'
     actual: Expr,
     expected: Expr,
-    margin: number
+    margin: Expr
   } | {
     type: 'check-error',
     expression: Expr,
