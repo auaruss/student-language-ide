@@ -1469,6 +1469,90 @@ tIO('(floor 1.55555)',
 `1
 `);
 
+tIO(`(modulo 5 2)
+(modulo -5 2)
+(modulo 0 1)
+(modulo 0 0)
+(modulo 2 -7)
+(modulo 2 7)
+(modulo 135 17)`,
+`1
+1
+0
+modulo: undefined for 0
+-5
+2
+16
+`
+);
+
+tIO(`(substring "hello world" 2)
+(substring "hello world" 2 4)
+(substring "hello" 5 5)
+(substring "hello" 25)
+(substring "hello" 5 25)`,
+`"llo world"
+"ll"
+""
+substring: starting index is out of range
+  starting index: 25
+  valid range: [0, 5]
+  string: "hello"
+substring: ending index is out of range
+  ending index: 25
+  starting index: 5
+  valid range: [0, 5]
+  string: "hello"
+`);
+
+tIO(`(abs -1 -2)
+(abs -13)
+(abs 0)
+(abs 100)`,
+`abs: expects only 1 argument, but found 2
+13
+0
+100
+`);
+
+tIO(`(and true)
+(and true true)
+(and true true true)
+(and true false true)
+(and true false "hello")
+(and true "hello" false)`,
+`and: expects at least 2 arguments, but found only 1
+#true
+#true
+#false
+#false
+and: question result is not true or false: "hello"
+`);
+
+tIO(`(or false)
+(or false false)
+(or false true true)
+(or false false true)
+(or false true "hello")
+(or false "hello" true)`,
+`or: expects at least 2 arguments, but found only 1
+#false
+#true
+#true
+#true
+or: question result is not true or false: "hello"
+`);
+
+tIO(`(not true)
+(not false)
+(not true true)
+(not "One")`,
+`#false
+#true
+not: expects only 1 argument, but found 2
+not: expected either #true or #false; given "one"
+`);
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
