@@ -98,28 +98,25 @@ const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
     if (defnVal === undefined) {
       throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
     } else {
-      let sndarg: Maybe<ExprResult>;
+      let sndarg: ExprResult;
       switch (d.type) {
         case 'define-function':
-          sndarg = MakeJust(Clos(d.params, env, d.body));
+          sndarg = Clos(d.params, env, d.body);
           break;
         case 'define-constant':
-          const v = evaluateExpr(d.body, env);
-          if (isValueError(v))
-            return BindingErr('Assigned an erroneous value to ' + d.name, d);
-          else switch (v.type) {
-              case 'BuiltinFunction':
-              case 'Closure':
-              case 'StructureAccessor':
-              case 'StructureConstructor':
-              case 'StructurePredicate':
-                return BindingErr('expected a function call, but there is no open parenthesis before this function', d);
-            }
-          sndarg = MakeJust(evaluateExpr(d.body, env));
+          sndarg = evaluateExpr(d.body, env);
+          if (!isValueError(sndarg)) switch (sndarg.type) {
+            case 'BuiltinFunction':
+            case 'Closure':
+            case 'StructureAccessor':
+            case 'StructureConstructor':
+            case 'StructurePredicate':
+              return BindingErr('expected a function call, but there is no open parenthesis before this function', d);
+          }
       }
       if (defnVal.type === 'nothing') {
-        mutateEnv(d.name, sndarg, env);
-        return Bind(d.name, sndarg.thing);
+        mutateEnv(d.name, MakeJust(sndarg), env);
+        return Bind(d.name, sndarg);
       } else {
         return BindingErr('Repeated definition of the same name', d);
       }

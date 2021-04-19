@@ -9,7 +9,7 @@ import { MakeCond, MakeIf } from './constructors';
 
 'use strict';
 
-import { SExp, TopLevel, Definition, Check, Expr, Cond } from './types';
+import { SExp, TopLevel, TopLevel, Check, Expr, Cond } from './types';
 
 import {
   StringExpr, NumExpr, IdExpr, BooleanExpr, ExprErr, Call,
@@ -87,6 +87,7 @@ export const parseSexp = (sexp: SExp): TopLevel => {
     case 'Num':
       return NumExpr(sexp.sexp);
     case 'Id':
+      
       return IdExpr(sexp.sexp);
     case 'Bool':
       return BooleanExpr(sexp.sexp);  
@@ -99,18 +100,19 @@ export const parseSexp = (sexp: SExp): TopLevel => {
  * @param sexps array of s-expressions determined to be either a definition or an error
  * @returns a top level definition or definition error
  */
-export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]): Definition => {
+export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]): TopLevel => {
   if (sexps.length === 0) {
     return DefnErr('A definition requires two parts, but found none', [d, ...sexps]);
   } else if (sexps.length === 1) {
     return DefnErr('A definition requires two parts, but found one', [d, ...sexps]);
   } else if (sexps.length === 2) {
+    //disallow keywords here in headers and variables
+
     let varOrHeader = sexps[0], body = parseSexp(sexps[1]);
     if (isExpr(body)) {
-      if (isReadError(varOrHeader)) {
-        sexps.unshift(d);
-        return DefnErr('Expected a variable name, or a function header', sexps);
-      } else switch (varOrHeader.type) {
+      if (isReadError(varOrHeader)) 
+        return DefnErr('Expected a variable name, or a function header', [d, ...sexps]);
+      switch (varOrHeader.type) {
         case 'SExp Array':
           let header = varOrHeader.sexp;
           if (header.length === 0) {
