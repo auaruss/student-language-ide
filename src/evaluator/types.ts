@@ -108,7 +108,7 @@ export type Expr
     typeOfExpression: 'Number',
     const: number
   } | {
-    typeOfExpression: 'VariableUsage', // typeOfExpression: 'VariableUsage'
+    typeOfExpression: 'VariableUsage',
     const: string
   } | {
     typeOfExpression: 'Boolean',
