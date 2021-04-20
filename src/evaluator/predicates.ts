@@ -1,9 +1,8 @@
 import {
   Token, TokenError,
   SExp, ReadError,
-  TopLevel, TopLevel, Expr, TopLevelError, ExprError,
-  Value, Result, DefinitionResult, ExprResult, 
-  Binding, ResultError, Closure, Env, Check, ValueError, CheckError
+  TopLevel, Expr, TopLevelError, ExprError,
+  Value, Result, ExprResult, ResultError, Closure, Env, ValueError, StructType
 } from './types';
 
 export const isToken = (x: any): x is Token => {
@@ -60,98 +59,128 @@ export const isReadError = (x: any): x is ReadError => {
 
 // ----------------------------------------------------------------------------
 
-export const isDefOrExpr = (x: any): x is TopLevel => {
-  return isDefinition(x) || isExpr(x);
-}
-
-
-export const isDefinition = (x: any): x is TopLevel => {
+export const isTopLevel = (x: any): x is TopLevel => {
   return (x && typeof x === 'object'
-    && (   x.type === 'define-constant' 
-       || (   x.type === 'define-function'
-           && x.params && x.params.every((_: any) => typeof _ === 'string')))
-    && isExpr(x.body)) || isDefinitionError(x);
+  && ((
+    x.type === 'define-constant'
+    && typeof x.name === 'string'
+    && isExpr(x.body)
+  ) || (
+    x.type === 'define-function'
+    && typeof x.name === 'string'
+    && Array.isArray(x.params)
+    && x.params.every(s => typeof s === 'string')
+    && isExpr(x.body)
+  ) || (
+    x.type === 'define-struct'
+    && typeof x.name === 'string'
+    && Array.isArray(x.fields)
+    && x.fields.every(s => typeof s === 'string')
+  ) || (
+    x.type === 'check-expect'
+    && isExpr(x.actual)
+    && isExpr(x.expected)
+  ) || (
+    x.type === 'check-within'
+    && isExpr(x.actual)
+    && isExpr(x.expected)
+    && isExpr(x.margin)
+  ) || (
+    x.type === 'check-error'
+    && isExpr(x.expression)
+  ) || (
+    x.type === 'check-error'
+    && isExpr(x.expression)
+    && typeof x.expectedErrorMessage === 'string'
+  ))) || isExpr(x) || isTopLevelError(x);
 }
 
 export const isExpr = (x: any): x is Expr => {
   return (x && typeof x === 'object'
-  && x.type ||
-  (
-    x.type === 'String'
+  && ((
+    x.typeOfExpression === 'String'
     && typeof x.const === 'string'
-  )
-  || (
-    x.type === 'Num'
+  ) || (
+    x.typeOfExpression === 'Number'
     && typeof x.const === 'number'
-  )
-  || (
-    x.type === 'Id'
+  ) || (
+    x.typeOfExpression === 'VariableUsage'
     && typeof x.const === 'string'
-  )
-  || (
-    x.type === 'Bool'
+  ) || (
+    x.typeOfExpression === 'Boolean'
     && typeof x.const === 'boolean'
-  )
-  || (
-    x.type === 'Call'
+  ) || (
+    x.typeOfExpression === 'Call'
     && typeof x.op === 'string'
     && Array.isArray(x.args)
     && x.args.every(isExpr)
-  )) || isExprError(x);
+  ) || (
+    x.typeOfExpression === 'if'
+    && isExpr(x.predicate)
+    && isExpr(x.consequent)
+    && isExpr(x.alternative)
+  ) || (
+    x.typeOfExpression === 'cond'
+    && Array.isArray(x.clauses)
+    && x.clauses.every(c => {
+      return Array.isArray(c)
+      && c.length === 2
+      && isExpr(c[0])
+      && isExpr(c[1])
+    })
+  ) || (
+    x.typeOfExpression === 'and'
+    && Array.isArray(x.arguments)
+    && x.arguments.every(isExpr)
+  ) || (
+    x.typeOfExpression === 'or'
+    && Array.isArray(x.arguments)
+    && x.arguments.every(isExpr)
+  ) || (
+    x.typeOfExpression === 'TemplatePlaceholder'
+    && isSExp(x.sexp)
+  ))) || isExprError(x);
 }
 
 export const isExprArray = (x: any): x is Expr[] => {
   return Array.isArray(x) && x.every(isExpr);
 }
 
-const isCall = (x: any): boolean => {
-  return x && typeof x === 'object'
-    && typeof x.op === 'string'
-    && Array.isArray(x.args)
-    && x.args.every(isExpr);
-}
-
-
-export const isCheck = (x: any): x is Check => {
+export const isTopLevelError = (x: any): x is TopLevelError => {
   return (x && typeof x === 'object'
-    && x.type === 'check-expect'
-    && isExpr(x.actual)
-    && isExpr(x.expected)
-  );
-}
-
-export const isDefinitionError = (x: any): x is TopLevelError => {
-  return (x && typeof x === 'object'
-    && typeof x.defnError === 'string'
+    && typeof x.topLevelError === 'string'
     && Array.isArray(x.sexps)
-    && x.sexps.every(isSExp))
-    || isReadError(x);
+    && x.sexps.every(isSExp)
+  ) || isReadError(x);
 }
 
 export const isExprError = (x: any): x is ExprError => {
   return (x && typeof x === 'object'
     && typeof x.exprError === 'string'
     && Array.isArray(x.sexps)
-    && x.sexps.every(isSExp))
-    || isReadError(x);
-}
-
-export const isCheckError = (x: any): x is CheckError => {
-  return (x && typeof x === 'object'
-    && typeof x.checkError === 'string'
-    && Array.isArray(x.sexps)
-    && x.sexps.every(isSExp))
-    || isReadError(x);
+    && x.sexps.every(isSExp)
+  ) || isReadError(x);
 }
 
 // ----------------------------------------------------------------------------
 
 export const isResult = (x: any): x is Result => {
-  return isDefinitionResult(x) || isExprResult(x);
-}
-
-export const isDefinitionResult = (x: any): x is DefinitionResult => {
-  return isBinding(x) || isBindingError(x);
+  return (x && typeof x === 'object'
+    && ((
+      x.type === 'define'
+      && typeof x.defined === 'string'
+      && (isExprResult(x.toBe) || x.toBe === null)
+    ) || (
+      x.type === 'check-success'
+    ) || (
+      x.type === 'check-failure'
+      && isExprResult(x.actual)
+      && isValue(x.expected)
+    ) || (
+      x.type === 'check-expected-error'
+      && isValueError(x.expected)
+    )
+  )) || isExprResult(x) || isResultError(x);
 }
 
 export const isExprResult = (x: any): x is ExprResult => {
@@ -159,15 +188,41 @@ export const isExprResult = (x: any): x is ExprResult => {
 }
 
 export const isValue = (x: any): x is Value => {
-  return x && typeof x === 'object'
-    && (( x.type === 'NonFunction'
+  return (x && typeof x === 'object'
+    && ((
+      x.type === 'Atomic'
         && (typeof x.value === 'string'
         ||  typeof x.value === 'number'
-        ||  typeof x.value === 'boolean'))
-      || ( x.type === 'BuiltinFunction'
-        && typeof x.value === 'function' )
-      || ( x.type === 'Closure'
-        && isClos(x.value)));
+        ||  typeof x.value === 'boolean')
+    ) || (
+      x.type === 'BuiltinFunction'
+      && typeof x.value === 'function' 
+    ) || (
+      x.type === 'Closure' && isClos(x.value)
+    ) || (
+      x.type === 'Struct'
+      && isStructType(x.struct)
+      && Array.isArray(x.values)
+      && x.values.every(isExprResult)
+    ) || (
+      x.type === 'StructureConstructor'
+      && isStructType(x.struct)
+    ) || (
+      x.type === 'StructureAccessor'
+      && isStructType(x.struct)
+    ) || (
+      x.type === 'StructurePredicate'
+      && isStructType(x.struct)
+    )
+  ));
+}
+
+export const isStructType = (x: any): x is StructType => {
+  return (x && typeof x === 'object'
+    && typeof x.name === 'string'
+    && Array.isArray(x.fields)
+    && x.fields.every(s => typeof s === 'string')
+  );
 }
 
 export const isValueArray = (x: any): x is Value[] => {
@@ -182,15 +237,15 @@ export const isClos = (x: any): x is Closure => {
     && isExpr(x.body);
 }
 
-export const isBinding = (x: any): x is Binding => {
-  return x && typeof x === 'object'
-    && x.type === 'define'
-    && typeof x.defined === 'string'
-    && (isExprResult(x.toBe) || x.toBe === null);
-}
-
 export const isEnv = (x: any): x is Env => {
   return x instanceof Map;
+}
+
+export const isResultError = (x: any): x is ResultError => {
+  return (x && typeof x === 'object'
+    && typeof x.resultError === 'string'
+    && isTopLevel(x.toplevel)
+  ) || isExprError(x);
 }
 
 export const isValueError = (x: any): x is ValueError => {
@@ -198,11 +253,4 @@ export const isValueError = (x: any): x is ValueError => {
     && typeof x.valueError === 'string'
     && (x.expr === undefined || isExpr(x.expr)))
   || isExprError(x);
-}
-
-export const isBindingError = (x: any): x is ResultError => {
-  return (x && typeof x === 'object'
-    && typeof x.bindingError === 'string'
-    && isDefinition(x.definition))
-  || isDefinitionError(x);
 }
