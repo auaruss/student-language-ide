@@ -343,10 +343,10 @@ export function Clos(a: string[], e: Env, b: Expr): Value {
 
 export const ResultErr = (
   err: string,
-  d: TopLevel): ResultError => {
+  t: TopLevel): ResultError => {
   return {
-    bindingError: err,
-    definition: d
+    resultError: err,
+    toplevel: t
   };
 }
 
