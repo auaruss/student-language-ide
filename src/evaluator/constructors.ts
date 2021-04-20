@@ -142,6 +142,15 @@ export const MakeCheckExpect = (actual: Expr, expected: Expr): TopLevel => {
   };
 }
 
+export const MakeCheckWithin = (actual: Expr, expected: Expr, margin: Expr): TopLevel => {
+  return {
+    type: 'check-within',
+    actual: actual,
+    expected: expected,
+    margin: margin
+  };
+}
+
 export const MakeCheckError = (
   expression: Expr,
   expectedRrrorMessage?: string
