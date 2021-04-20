@@ -219,8 +219,8 @@ export type Closure
 
 export type ResultError
  = TopLevelError | {
-   bindingError: string,
-   definition: TopLevel
+   resultError: string,
+   toplevel: TopLevel
  };
 
 export type ValueError
