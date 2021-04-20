@@ -169,6 +169,8 @@ export const addressDefn = MakeStructureDefinition(
   'address', ['street', 'apartment', 'city', 'zip']
 );
 
+export const posnTemplateDefn = MakeFunctionDefinition('process-posn', ['p'], posnTemplate);
+
 // expected successes
 
 export const checkExpectSameNum

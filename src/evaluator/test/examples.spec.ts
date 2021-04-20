@@ -1,17 +1,18 @@
 'use strict';
 
-import { MakeCheckExpect, MakeCheckSuccess, MakeIf } from '../constructors';
+import { MakeAnd, MakeCheckExpect, MakeCheckSuccess, MakeIf } from '../constructors';
 import { t, tIO } from './test-harness';
 
 import {
   Tok,
-  NumTok, NumAtom, NumExpr, NFn,
-  StringTok, StringAtom, StringExpr,
-  IdTok, IdAtom, IdExpr,
-  BooleanTok, BooleanAtom, BooleanExpr,
-  TokErr, ReadErr, DefnErr, ExprErr, ValErr,
+  NumTok, NumAtom, MakeNumberExpr, MakeAtomic,
+  StringTok, StringAtom, MakeStringExpr,
+  IdTok, IdAtom, MakeVariableUsageExpr,
+  BooleanTok, BooleanAtom, MakeBooleanExpr,
+  TokErr, ReadErr, TopLevelErr, ExprErr, ValErr,
   CP, OP, SPACE, OSP, CSP, OBP, CBP, NL,
-  SExps, VarDefn, FnDefn, Call, CommentTok
+  SExps, MakeVariableDefinition, MakeFunctionDefinition,
+  MakeCall, CommentTok
 } from '../constructors';
 
 import { TokenType } from '../types';
@@ -21,7 +22,7 @@ import {
   checkExpectTrue, checkExpectFalse, checkExpectDiffNum, 
   checkExpectDiffId, checkExpectDiffString,
   checkExpectTrueIsNotFalse, checkExpectDiffType1, 
-  checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3, checkFailureTrueIsNotFalse
+  checkExpectDiffType2, checkExpectDiffType3, checkExpectedErrorDiffId, checkExpectedErrorDiffType1, checkExpectedErrorSameId, checkFailureDiffNum, checkFailureDiffString, checkFailureDiffType2, checkFailureDiffType3, checkFailureTrueIsNotFalse, and1, and2, and3, and4, and5, or1, or2, or3, or4, or5, posnTemplateDefn
 } from './examples';
 
 import { tokenize } from '../tokenize';
@@ -46,48 +47,48 @@ t('()',
 t('123',
   [ NumTok('123') ],
   [ NumAtom(123) ],
-  [ NumExpr(123) ],
-  [ NFn(123) ], 
+  [ MakeNumberExpr(123) ],
+  [ MakeAtomic(123) ], 
   '123\n'
 );
 
 t('-13',
   [ NumTok('-13') ],
   [ NumAtom(-13) ],
-  [ NumExpr(-13) ],
-  [ NFn(-13) ], 
+  [ MakeNumberExpr(-13) ],
+  [ MakeAtomic(-13) ], 
   '-13\n'
 );
 
 t('-0',
   [ NumTok('-0') ],
   [ NumAtom(-0) ],
-  [ NumExpr(-0) ],
-  [ NFn(-0) ], 
+  [ MakeNumberExpr(-0) ],
+  [ MakeAtomic(-0) ], 
   '0\n'
 );
 
 t('"hello"',
   [ StringTok('hello') ],
   [ StringAtom('hello') ],
-  [ StringExpr('hello')],
-  [ NFn('hello') ],
+  [ MakeStringExpr('hello')],
+  [ MakeAtomic('hello') ],
   '"hello"\n'
 );
 
 t('hello',
   [ IdTok('hello') ],
   [ IdAtom('hello') ],
-  [ IdExpr('hello') ],
-  [ ValErr('this variable is not defined', IdExpr('hello') )],
+  [ MakeVariableUsageExpr('hello') ],
+  [ ValErr('this variable is not defined', MakeVariableUsageExpr('hello') )],
   'hello: this variable is not defined\n'
 );
 
 t('#true',
   [ BooleanTok('#true') ],
   [ BooleanAtom('#true') ],
-  [ BooleanExpr(true) ],
-  [ NFn(true)],
+  [ MakeBooleanExpr(true) ],
+  [ MakeAtomic(true)],
   '#true\n'
 );
 
@@ -364,7 +365,7 @@ t('(define bool #t123)',
   ],
 
   [
-    DefnErr('A definition can\'t have more than 3 parts',
+    TopLevelErr('A definition can\'t have more than 3 parts',
     [
       IdAtom('define'),
       IdAtom('bool'),
@@ -452,22 +453,22 @@ t('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))',
   ],
   
   [
-    FnDefn(
+    MakeFunctionDefinition(
       'fact',
       ['n'],
       MakeIf(
-        Call(
+        MakeCall(
           '=',
-          [ IdExpr('n'), NumExpr(0) ]
+          [ MakeVariableUsageExpr('n'), MakeNumberExpr(0) ]
         ),
-        NumExpr(1),
-        Call(
+        MakeNumberExpr(1),
+        MakeCall(
           '*',
           [
-            IdExpr('n'),
-            Call(
+            MakeVariableUsageExpr('n'),
+            MakeCall(
               'fact',
-              [ Call('-', [IdExpr('n'), NumExpr(1)]) ]
+              [ MakeCall('-', [MakeVariableUsageExpr('n'), MakeNumberExpr(1)]) ]
             )
           ]
         )
@@ -1141,8 +1142,8 @@ t(
   ],
 
   [
-    VarDefn('x', NumExpr(10)),
-    MakeCheckExpect(IdExpr('x'), NumExpr(10))
+    MakeVariableDefinition('x', MakeNumberExpr(10)),
+    MakeCheckExpect(MakeVariableUsageExpr('x'), MakeNumberExpr(10))
   ]
 
 );
@@ -1518,12 +1519,19 @@ tIO(`(abs -1 -2)
 100
 `);
 
-tIO(`(and true)
+t(`(and true)
 (and true true)
 (and true true true)
 (and true false true)
 (and true false "hello")
 (and true "hello" false)`,
+  undefined,
+  undefined,
+  [
+    ExprErr('expects at least 2 arguments, but only found 1', read('(and true)')),
+    and1, and2, and3, and4, and5
+  ],
+  undefined,
 `and: expects at least 2 arguments, but found only 1
 #true
 #true
@@ -1532,12 +1540,19 @@ tIO(`(and true)
 and: question result is not true or false: "hello"
 `);
 
-tIO(`(or false)
+t(`(or false)
 (or false false)
 (or false true true)
 (or false false true)
 (or false true "hello")
 (or false "hello" true)`,
+  undefined,
+  undefined,
+  [
+    ExprErr('expects at least 2 arguments, but only found 1', read('(or true)')),
+    or1, or2, or3, or4, or5
+  ],
+  undefined,
 `or: expects at least 2 arguments, but found only 1
 #false
 #true
@@ -1564,11 +1579,25 @@ tIO(`(posn? 10)`,
 `#false
 `);
 
-tIO(`
+t(`
 (define (process-posn p) 
   (... (posn-x p) ... (posn-y p) ...))
 `,
-`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).`);
+  undefined,
+  undefined,
+  [ posnTemplateDefn ],
+  undefined,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+`);
+
+tIO(`
+(define (process-posn p) 
+  (... (posn-x p) ... (posn-y p) ...))
+(process-posn (make-posn 1 2))
+`,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+...: expected a finished expression, but found a template
+`)
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
@@ -1620,8 +1649,8 @@ t('(+ 2 3',
 t('(+ 2 3)',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '3'), CP],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(3)) ],
-  [ Call('+', [NumExpr(2), NumExpr(3)]) ],
-  [ NFn(5) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(3)]) ],
+  [ MakeAtomic(5) ],
   '5\n'
 );
 
@@ -1640,8 +1669,8 @@ t('(+ 2 4',
 t('(+ 2 4)',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)) ],
-  [ Call('+', [NumExpr(2), NumExpr(4)]) ],
-  [ NFn(6) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]) ],
+  [ MakeAtomic(6) ],
   '6\n'
 );
 
@@ -1650,8 +1679,8 @@ t('(+ 2 4)',
 t('(+ 2 4) (+',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+')],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
-  [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
-  [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
+  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
   '6\n'
   + 'Read Error: No Closing Paren for (+\n'
 );
@@ -1661,8 +1690,8 @@ t('(+ 2 4) (+',
 t('(+ 2 4) (+ 4',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4')],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')])],
-  [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
-  [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
+  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
   '6\n'
   + 'Read Error: No Closing Paren for (+ 4\n'
 );
@@ -1672,8 +1701,8 @@ t('(+ 2 4) (+ 4',
 t('(+ 2 4) (+ 4 7',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7')],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')])],
-  [ Call('+', [NumExpr(2), NumExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
-  [ NFn(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
+  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
   '6\n'
   + 'Read Error: No Closing Paren for (+ 4 7\n'
 );
@@ -1681,8 +1710,8 @@ t('(+ 2 4) (+ 4 7',
 t('(+ 2 4) (+ 4 7)',
   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7'), CP],
   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), SExps(IdAtom('+'), NumAtom(4), NumAtom(7))],
-  [ Call('+', [NumExpr(2), NumExpr(4)]), Call('+', [NumExpr(4), NumExpr(7)]) ],
-  [ NFn(6), NFn(11) ],
+  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), MakeCall('+', [MakeNumberExpr(4), MakeNumberExpr(7)]) ],
+  [ MakeAtomic(6), MakeAtomic(11) ],
   '6\n' +
   '11\n'
 );
