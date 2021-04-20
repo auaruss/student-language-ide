@@ -1,5 +1,6 @@
 'use strict';
 
+import { read } from '../read';
 /**
  * @fileoverview Holds many useful examples of our types in types.ts primarily for the purposes of testing
  * 
@@ -16,7 +17,10 @@
   NumTok, IdTok, StringTok, BooleanTok,
   NumAtom, IdAtom, StringAtom, BooleanAtom,
   MakeNumberExpr, MakeVariableUsageExpr, MakeStringExpr, MakeBooleanExpr, MakeCall,
-  MakeAtomic, Bind, MakeCheckExpect, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, MakeFunctionDefinition, MakeCond
+  MakeAtomic, Bind, MakeCheckExpect, ValErr, MakeCheckExpectedError, MakeCheckFailure, MakeIf, MakeFunctionDefinition, MakeCond, MakeVariableDefinition, MakeStructureDefinition, MakeCheckWithin, MakeCheckError, MakeAnd,
+  MakeOr,
+  MakeTemplatePlaceholder,
+  SExps
 } from './../constructors';
 
 // ----------------------------------------------------------------------------
@@ -87,10 +91,6 @@ export const goodbyeStringExpr = MakeStringExpr('goodbye');
 export const trueExpr = MakeBooleanExpr(true);
 export const falseExpr = MakeBooleanExpr(false);
 
-// ----------------------------------------------------------------------------
-// | If/Cond examples                                                         |
-// ----------------------------------------------------------------------------
-
 export const basicIf1 = MakeIf(trueExpr, helloStringExpr, goodbyeStringExpr);
 export const basicIf2 = MakeIf(falseExpr, helloStringExpr, goodbyeStringExpr);
 export const factorialIf
@@ -117,20 +117,57 @@ export const factorialCond
       ]
     );
 
+export const and1
+  = MakeAnd([trueExpr, trueExpr]);
+
+export const and2
+  = MakeAnd([trueExpr, trueExpr, trueExpr]);
+
+export const and3
+  = MakeAnd([trueExpr, falseExpr, trueExpr]);
+
+export const and4
+  = MakeAnd([trueExpr, falseExpr, helloStringExpr]);
+
+export const and5
+  = MakeAnd([trueExpr, helloStringExpr,  falseExpr]);
+
+export const or1
+  = MakeOr([falseExpr, falseExpr]);
+
+export const or2
+  = MakeOr([falseExpr, trueExpr, trueExpr]);
+
+export const or3
+  = MakeOr([falseExpr, falseExpr, trueExpr]);
+
+export const or4
+  = MakeOr([falseExpr, trueExpr, helloStringExpr]);
+
+export const or5
+  = MakeOr([falseExpr, helloStringExpr, trueExpr]);
+
+export const templatePlaceholder1
+  = MakeTemplatePlaceholder(IdAtom('...'));
+
+export const posnTemplate
+  = MakeTemplatePlaceholder(
+    SExps(...read('(... (posn-x p) ... (posn-y p) ...)'))
+  );
+
 // ----------------------------------------------------------------------------
-// | Definition examples                                                      |
+// | TopLevel examples                                                        |
 // ----------------------------------------------------------------------------
+
+export const negThirteenDefn = MakeVariableDefinition('x', negThirteenExpr);
+export const trueDefn = MakeVariableDefinition('bool', trueExpr);
 
 export const factorialIfDefn = MakeFunctionDefinition('!', ['n'], factorialIf);
 export const factorialCondDefn = MakeFunctionDefinition('!', ['n'], factorialCond);
 
-// ----------------------------------------------------------------------------
-// | Definition Error examples                                                |
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// | Check Expect examples                                                    |
-// ----------------------------------------------------------------------------
+export const addressDefn = MakeStructureDefinition(
+  'address', ['street', 'apartment', 'city', 'zip']
+);
 
 // expected successes
 
@@ -173,6 +210,24 @@ export const checkExpectDiffType2
 export const checkExpectDiffType3
   = MakeCheckExpect(trueExpr, goodbyeStringExpr);
 
+
+export const checkWithinZeroNegThirteen
+  = MakeCheckWithin(negThirteenExpr, negThirteenExpr, zeroExpr);
+  
+export const checkWithinOneNegThirteen
+  = MakeCheckWithin(negThirteenExpr, negThirteenExpr, oneExpr);
+
+export const checkWithinTrueTrue
+  = MakeCheckWithin(trueExpr, trueExpr, zeroExpr);
+
+export const badCheckWithin
+  = MakeCheckWithin(trueExpr, trueExpr, trueExpr);
+
+export const checkErrorWithoutMessage
+  = MakeCheckError(trueExpr);
+
+export const checkErrorWithMessage
+  = MakeCheckError(trueExpr, 'shouldnt error');
 
 // ----------------------------------------------------------------------------
 // | Expr Error examples                                                      |
