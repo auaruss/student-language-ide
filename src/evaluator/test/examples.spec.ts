@@ -1607,7 +1607,7 @@ tIO('(define (hi bye) (f 2 2))',
 `f: this function is not defined
 `);
 
-// Neither of these are parsing errors.
+// Neither of these appear to be parsing errors in BSL. Should we change that?
 tIO(`(define (hi bye) (+))
 (pi)`,
 `Defined (hi bye) to be (+).
