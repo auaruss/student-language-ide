@@ -1633,6 +1633,26 @@ function call: expected a function after the open parenthesis, but found somethi
 function call: expected a function after the open parenthesis, but found a part
 `);
 
+tIO(`(define (f .) .)`,
+`read-syntax: illegal use of \`.\`
+`);
+
+// Note: This is an intentional difference from how DrRacket BSL behaves.
+tIO(`(define (f check-expect) check-expect)
+(define (f check-error) check-error)
+(define (f check-within) check-within)
+(define (f check-random) check-random)
+(define (f check-satisfied) check-satisfied)
+(define (f check-member-of) check-member-of)
+(define (f check-range) check-range)`,
+`define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+`)
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
