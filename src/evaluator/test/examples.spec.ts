@@ -1597,7 +1597,41 @@ tIO(`
 `,
 `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
 ...: expected a finished expression, but found a template
-`)
+`);
+
+tIO('(define (hi bye) rye)',
+`rye: this variable is not defined
+`);
+
+tIO('(define (hi bye) (f 2 2))',
+`f: this function is not defined
+`);
+
+// Neither of these are parsing errors.
+tIO(`(define (hi bye) (+))
+(pi)`,
+`Defined (hi bye) to be (+).
+function call: expected a function after the open parenthesis, but received #i3.141592653589793
+`);
+
+// This is a parsing error.
+tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
+`function call: expected a function after the open parenthesis, but found a part
+`);
+
+tIO(`((#) 2 3)`,
+`read-syntax: bad syntax \`#)\`
+`);
+
+tIO(`("string")
+(id)
+(#t)
+((+ 2 2) 2 2)`,
+`function call: expected a function after the open parenthesis, but found a string
+id: this function is not defined
+function call: expected a function after the open parenthesis, but found something else
+function call: expected a function after the open parenthesis, but found a part
+`);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
