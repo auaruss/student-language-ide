@@ -1,4 +1,5 @@
-import { MakeCond, MakeIf } from './constructors';
+import { IdAtom, MakeBooleanExpr, MakeCond, MakeIf, MakeNumberExpr, MakeStringExpr, MakeVariableUsageExpr, TopLevelErr, MakeTemplatePlaceholder, SExps } from './constructors';
+import { isReadError } from './predicates';
 /**
  * @fileoverview An AST parser for the student languages.
  *               Generally, produces types from the third section of types.ts given types
@@ -9,16 +10,16 @@ import { MakeCond, MakeIf } from './constructors';
 
 'use strict';
 
-import { SExp, TopLevel, TopLevel, Check, Expr, Cond } from './types';
-
-import {
-  MakeStringExpr, MakeNumberExpr, MakeVariableUsageExpr, MakeBooleanExpr, ExprErr, MakeCall,
-  DefnErr, MakeFunctionDefinition, MakeVariableDefinition, SExps, MakeCheckExpect, MakeCheckError
-} from './constructors';
-
-import { isReadError, isExpr, isExprArray } from './predicates';
-
 import { read } from './read';
+import { SExp, TopLevel, TopLevelError } from './types';
+
+
+const KEYWORDS = [
+  'define', 'define-struct',
+  'if', 'cond', 'λ', 'lambda', 'and', 'or',
+  '..', '...', '....', '.....', '......'
+  ,
+];
 
 /**
  * Given a program, parses the string into a set of definitions and expressions.
@@ -26,224 +27,93 @@ import { read } from './read';
  * @returns a list of top level syntactical objects
  */
 export const parse = (exp: string): TopLevel[] => {
-  return parseSexps(read(exp));
+  return parseTopLevels(read(exp));
 }
 
-/**
- * Given a program's read s-expression form, parses it into a set of definitions and expressions.
- * @param sexps program to be parsed
- * @returns a list of top level syntactical objects
- */
-export const parseSexps = (sexps: SExp[]): TopLevel[] => {
-  return sexps.map(sexps => parseSexp(sexps));
+export const parseTopLevels = (sexps: SExp[]): TopLevel[] => {
+  let names: string[] = [];
+
+  return sexps.map(parseTopLevel);
 }
 
-/**
- * Parses a single s-expression into a top level syntactical object.
- * @param sexp a single s-expression from the reader
- * @returns a single top level syntactical object
- */
-export const parseSexp = (sexp: SExp): TopLevel => {
-  if (isReadError(sexp)) { 
-    return sexp;
-  } else switch (sexp.type) {
-    case 'SExp Array':
-      let sexps = sexp.sexp;
-      if (sexps.length === 0)  return ExprErr('Empty Expr', [ SExps() ]);
+export const parseTopLevel = (sexp: SExp): TopLevel => {
+  if (isReadError(sexp)) return sexp;
 
-      let firstSexp = sexps[0];
-
-      if (isReadError(firstSexp) || Array.isArray(firstSexp)) {
-
-        return ExprErr('No function name after open paren', sexps);
-
-      } else if (firstSexp.type === 'Id') {
-
-        if (firstSexp.sexp === 'define') {
-          return parseDefinition({type: 'Id', sexp: 'define'}, sexps.slice(1));
-        } else if (firstSexp.sexp === 'check-expect') {
-          return parseCheck({type: 'Id', sexp: 'check-expect'}, sexps.slice(1));
-        } else if (firstSexp.sexp === 'if') {
-          return parseIf({type: 'Id', sexp: 'if'}, sexps.slice(1));
-        } else if (firstSexp.sexp === 'cond') {
-          return parseCond({type: 'Id', sexp: 'cond'}, sexps.slice(1));
-        }
-
-        if (sexps.length === 1) return ExprErr('Function call with no arguments', sexps);
-
-        let parseRest = parseSexps(sexps.slice(1));
-
-        if (isExprArray(parseRest))
-          return MakeCall(firstSexp.sexp, parseRest);
-        return ExprErr('Defn inside Expr', sexps);
-
-      } else {
-
-        return ExprErr('function call: expected a function after the open parenthesis, but found a part', sexps);
-
-      }
+  switch (sexp.type) {
     case 'String':
-      return MakeStringExpr(sexp.sexp)
+      return MakeStringExpr(sexp.sexp);
+
     case 'Num':
       return MakeNumberExpr(sexp.sexp);
-    case 'Id':
-      
-      return MakeVariableUsageExpr(sexp.sexp);
+
     case 'Bool':
-      return MakeBooleanExpr(sexp.sexp);  
+      return MakeBooleanExpr(sexp.sexp);
+
+    case 'Id':
+      let maybeValidId = checkValidIdentifier(sexp.sexp);
+      if (! maybeValidId)
+        return maybeValidId;
+      if (sexp.sexp === '...') return MakeTemplatePlaceholder(sexp);
+      return MakeVariableUsageExpr(sexp.sexp);
+
+    case 'SExp Array':
+      return parseList(sexp.sexp);
   }
 }
 
-/**
- * Parses some SExps into a Definition.
- * @param d definition identifier
- * @param sexps array of s-expressions determined to be either a definition or an error
- * @returns a top level definition or definition error
- */
-export const parseDefinition = (d: {type: 'Id', sexp: 'define'}, sexps: SExp[]): TopLevel => {
-  if (sexps.length === 0) {
-    return DefnErr('A definition requires two parts, but found none', [d, ...sexps]);
-  } else if (sexps.length === 1) {
-    return DefnErr('A definition requires two parts, but found one', [d, ...sexps]);
-  } else if (sexps.length === 2) {
-    //disallow keywords here in headers and variables
+export const checkValidIdentifier = (s: string): TopLevelError | true => {
+  if (KEYWORDS.includes(s))
+    return TopLevelErr(
+      `${ s }: Expected an open parenthesis before ${ s }, but found none`,
+      [ IdAtom(s) ]
+    );
 
-    let varOrHeader = sexps[0], body = parseSexp(sexps[1]);
-    if (isExpr(body)) {
-      if (isReadError(varOrHeader)) 
-        return DefnErr('Expected a variable name, or a function header', [d, ...sexps]);
-      switch (varOrHeader.type) {
-        case 'SExp Array':
-          let header = varOrHeader.sexp;
-          if (header.length === 0) {
-            sexps.unshift(d);
-            return DefnErr(
-              'Expected a function header with parameters in parentheses, received nothing in parentheses',
-              sexps
-            );
-          } else if (header.length === 1) {
-            sexps.unshift(d);
-            return DefnErr(
-              'Expected a function header with parameters in parentheses, received a function name with no parameters',
-              sexps
-            );
-          } else {
-            let functionNameSExp = header[0];
-            let functionArgsSExp = header.slice(1);
+  return true;
+}
 
-            if (isReadError(functionNameSExp)) {
-              return DefnErr('Invalid expression passed where function name was expected', [d, ...sexps]);
-            } else switch (functionNameSExp.type) {
-              case 'SExp Array':
-                return DefnErr('Invalid expression passed where function name was expected', [d, ...sexps]);
-              case 'Id':
-                let functionArgs: string[] = [];
 
-                for (let s of functionArgsSExp) {
-                  if (isReadError(s)) { 
-                    return DefnErr('Invalid expression passed where function argument was expected', [d, ...sexps]);
-                  } else if (Array.isArray(s)) {
-                    return DefnErr('Invalid expression passed where function argument was expected', [d, ...sexps]);
-                  } else if (s.type === 'Id') {
-                    functionArgs.push(s.sexp);
-                  } else {
-                    return DefnErr('Invalid expression passed where function argument was expected', [d, ...sexps]);
-                  }
-                }
-          
-                return MakeFunctionDefinition(functionNameSExp.sexp, functionArgs, body);
-              case 'String':
-              case 'Num':
-              case 'Bool':
-                return DefnErr('Invalid expression passed where function name was expected', [d, ...sexps]);
-            }
-          }
-        case 'Id':
-          return MakeVariableDefinition(varOrHeader.sexp, body);
-        case 'Num':
-          case 'String':
-        case 'Bool':
-          return DefnErr('Expected a variable name, or a function header', [d, ...sexps]);
-      }
-    } else {
-      return DefnErr('Cannot have a definition as the body of a definition', [d, ...sexps]);
-    }
-  } else {
-    return DefnErr('A definition can\'t have more than 3 parts', [d, ...sexps]);
+export const parseList = (sexps: SExp[]): TopLevel => {
+  if (sexps.length === 0)
+    return TopLevelErr('function call: expected a function after the open parenthesis, but nothing\'s there', sexps)
+  
+  if (isReadError(sexps[0])) return sexps[0]; // should we change this now?
+  
+  switch (sexps[0].type) {
+    case 'String':
+    case 'Num':
+    case 'Bool':
+      return TopLevelErr(`function call: expected a function after the open parenthesis, but found a ${sexps[0].type}`, sexps);
+    case 'Id':
+      if (KEYWORDS.includes(sexps[0].sexp))
+        return parseBuiltinExpression(sexps[0].sexp, sexps.slice(1));
+      return parseCall(sexps[0].sexp, sexps.slice(1));
+
+    case 'SExp Array':
+      return TopLevelErr(`function call: expected a function after the open parenthesis, but found a part`, sexps);
   }
 }
 
-const parseCheck = (c: {type: 'Id', sexp: 'check-expect'}, sexps: SExp[]): Check => {
-  if (sexps.length === 0) {
-    return MakeCheckError('A check-expect requires two expressions, but found none', [c, ...sexps]);
-  } else if (sexps.length === 1) {
-    return MakeCheckError('A check-expect requires two expressions, but found one', [c, ...sexps]);
-  } else if (sexps.length === 2) {
-    const maybeExprs = sexps.map(parseSexp);
-    if (! isExpr(sexps[0]))
-      return MakeCheckError('First part of check-expect must be an expression.',  [c, ...sexps]);
-    if (! isExpr(sexps[1]))
-      return MakeCheckError('Second part of check-expect must be an expression.',  [c, ...sexps]);
-    
-    if (! isExprArray(maybeExprs)) {
-      throw new Error('Somehow, parseCheck and isExprArray disagree on whether this check-expect is an Expr array.');
-    } else {
-      return MakeCheckExpect(maybeExprs[0], maybeExprs[1]);
-    }
-
-  } else {
-    return MakeCheckError('A check-expect can\'t have more than 3 parts.', [c, ...sexps]);
+const parseBuiltinExpression = (keyword: string, sexps: SExp[]): TopLevel => {
+  switch (keyword) {
+    case '..':
+    case '...':
+    case '....':
+    case '.....':
+    case '......':
+      return MakeTemplatePlaceholder(SExps(IdAtom(keyword), ...sexps));
+    case 'define':
+      parseVariableDefinition
+      parseFunctionDefinition
+    case 'if':
+      parseIf
+    case 'and':
+      parseAnd
+    case 'or':
+      parseOr
+    case 
   }
 }
 
-const parseIf = (i: {type: 'Id', sexp: 'if'}, sexps: SExp[]): Expr => {
-  if (sexps.length === 0) {
-    return ExprErr('An if requires three expressions, but found none', [i, ...sexps]);
-  } else if (sexps.length === 1) {
-    return ExprErr('An if requires three expressions, but found one', [i, ...sexps]);
-  } else if (sexps.length === 2) {
-    return ExprErr('An if requires three expressions, but found two', [i, ...sexps]);
-  } else if (sexps.length === 3) {
+const parseCall = (fname: string, sexps: SExp[]): TopLevel => {
 
-    const maybeExprs = sexps.map(parseSexp);
-
-    if (! isExpr(sexps[0]))
-      return ExprErr('First argument to if must be an expression.',  [i, ...sexps]);
-    if (! isExpr(sexps[1]))
-      return ExprErr('Second argument to if must be an expression.',  [i, ...sexps]);
-    if (! isExpr(sexps[1]))
-      return ExprErr('Third argument to if must be an expression.',  [i, ...sexps]);
-
-    if (! isExprArray(maybeExprs)) {
-      throw new Error('Somehow, parseIf and isExprArray disagree on whether these are is an Exprs.');
-    } else {
-      return MakeIf(maybeExprs[0], maybeExprs[1], maybeExprs[2]);
-    }
-  } else {
-    return ExprErr('if cannot take more than three expressions.', [i, ...sexps]);
-  }
-}
-
-const parseCond = (c: {type: 'Id', sexp: 'cond'}, sexps: SExp[]): Expr => {
-  let clauses: [Expr, Expr][] = [];
-
-  for (let s of sexps) {
-    if (isReadError(s))
-      return ExprErr('All arguments to cond must be clauses.',  [c, ...sexps]);
-    if (s.type !== 'SExp Array')
-      return ExprErr('All arguments to cond must be clauses.',  [c, ...sexps]);
-    if (s.sexp.length !== 2)
-      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
-    const pred = parseSexp(s.sexp[0]);
-    const conseq = parseSexp(s.sexp[1]);
-
-    if (! isExpr(pred))
-      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
-    if (! isExpr(conseq))
-      return ExprErr('All clauses must have exactly 2 expressions.',  [c, ...sexps]);
-    
-    clauses.push([pred, conseq]);
-  }
-
-  return MakeCond(clauses);
 }
