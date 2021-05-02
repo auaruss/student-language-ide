@@ -1611,12 +1611,12 @@ tIO('(define (hi bye) (f 2 2))',
 tIO(`(define (hi bye) (+))
 (pi)`,
 `Defined (hi bye) to be (+).
-function call: expected a function after the open parenthesis, but received #i3.141592653589793
+function call: expected a function after the open parenthesis, but found a variable
 `);
 
 // This is a parsing error.
 tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
-`function call: expected a function after the open parenthesis, but found a part
+`function call: expected a function after the open parenthesis, but found (+ 2 2)
 `);
 
 tIO(`((#) 2 3)`,
@@ -1651,7 +1651,88 @@ define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword
-`)
+`);
+
+tIO(
+`(define (f x)
+  (cond [x 1]
+        [... 2]))
+(f true)
+(f false)`,
+`Defined (f x) to be (cond [true 1] [... 2]).
+1
+template error...
+`
+);
+
+tIO(`(+ + *)`,
+`+: expected a function call, but there is no open parenthesis before this function`
+);
+
+tIO(`(define f (+ sin cos))`,
+`sin: expected a function call, but there is no open parenthesis before this function
+`);
+
+tIO(`(+ + *)`,
+`+: expected a function call, but there is no open parenthesis before this function
+`);
+
+tIO(`define
+(define "string")
+(define "string" 1)
+(define 1)
+(define 1 1)
+(define #t)
+(define #t 1)`,
+`define: expected an open parenthesis before define, but found none
+define: expected a variable name, or a function name and its variables (in parentheses), but found a string
+define: expected a variable name, or a function name and its variables (in parentheses), but found a string
+define: expected a variable name, or a function name and its variables (in parentheses), but found a number
+define: expected a variable name, or a function name and its variables (in parentheses), but found a number
+define: expected a variable name, or a function name and its variables (in parentheses), but found something else
+define: expected a variable name, or a function name and its variables (in parentheses), but found something else
+`
+);
+
+tIO(`define-struct
+(define-struct "posn" [x y])
+(define-struct 1 [x y])
+(define-struct #t [x y])
+(define-struct (f x) [x y])
+`,
+`define-struct: expected an open parenthesis before define-struct, but found none
+define-struct: expected the structure name after define-struct, but found a string
+define-struct: expected the structure name after define-struct, but found a number
+define-struct: expected the structure name after define-struct, but found something else
+define-struct: expected the structure name after define-struct, but found a part
+`);
+
+tIO(`if
+(if "true" 1 2)
+(if 1 1 2)
+(if #t 1 2)
+(if (make-posn 2 2) 1 2)
+(if true)
+(if true 1 1 1)
+(if true 1 1 1 1 1)
+(if (check-expect 1 1) 1 2)
+(if (define x 10) 1 2)
+(if (define-struct posn [x y]) 1 2)
+(if (check-within 1 1 1) 1 2)
+(if (check-error (error "hello")) 1 2)`,
+
+`if: expected an open parenthesis before if, but found none
+if: question result is not true or false: "true"
+if: question result is not true or false: 1
+1
+if: question result is not true or false: (make-posn 2 2)
+if: expected a question and two answers, but found only 1 part
+if: expected a question and two answers, but found 4 parts
+if: expected a question and two answers, but found 6 parts
+check-expect: found a test that is not at the top level
+define: found a definition that is not at the top level
+define-struct: found a definition that is not at the top level
+`);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
