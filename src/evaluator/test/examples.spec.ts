@@ -1661,7 +1661,7 @@ tIO(
 (f false)`,
 `Defined (f x) to be (cond [true 1] [... 2]).
 1
-template error...
+...: expected a finished expression, but found a template
 `
 );
 
@@ -1678,6 +1678,7 @@ tIO(`(+ + *)`,
 `);
 
 tIO(`define
+(define)
 (define "string")
 (define "string" 1)
 (define 1)
@@ -1685,6 +1686,7 @@ tIO(`define
 (define #t)
 (define #t 1)`,
 `define: expected an open parenthesis before define, but found none
+define: expected a variable name, or a function name and its variables (in parentheses), but nothing's there
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a number
@@ -1695,12 +1697,14 @@ define: expected a variable name, or a function name and its variables (in paren
 );
 
 tIO(`define-struct
+(define-struct)
 (define-struct "posn" [x y])
 (define-struct 1 [x y])
 (define-struct #t [x y])
 (define-struct (f x) [x y])
 `,
 `define-struct: expected an open parenthesis before define-struct, but found none
+define-struct: expected the structure name after define-struct, but nothing's there
 define-struct: expected the structure name after define-struct, but found a string
 define-struct: expected the structure name after define-struct, but found a number
 define-struct: expected the structure name after define-struct, but found something else
@@ -1708,6 +1712,7 @@ define-struct: expected the structure name after define-struct, but found a part
 `);
 
 tIO(`if
+(if)
 (if "true" 1 2)
 (if 1 1 2)
 (if #t 1 2)
@@ -1722,6 +1727,7 @@ tIO(`if
 (if (check-error (error "hello")) 1 2)`,
 
 `if: expected an open parenthesis before if, but found none
+if: expected a question and two answers, but nothing's there
 if: question result is not true or false: "true"
 if: question result is not true or false: 1
 1
@@ -1732,6 +1738,13 @@ if: expected a question and two answers, but found 6 parts
 check-expect: found a test that is not at the top level
 define: found a definition that is not at the top level
 define-struct: found a definition that is not at the top level
+check-within: found a test that is not at the top level
+check-error: found a test that is not at the top level
+`);
+
+tIO(`cond`,
+`cond: expected an open parenthesis before cond, but found none
+cond: expected a clause after cond, but nothing's there
 `);
 
 /*****************************************************************************
