@@ -1775,7 +1775,9 @@ tIO(`and
 (and #t 2)
 (and #f 2)
 (and (define x 1) true)
-(and (check-expect 1 1) true)`,
+(and (check-expect 1 1) true)
+(and true (check-expect 1 1))
+(and true (x))`,
 `and: expected an open parenthesis before and, but found none
 and: expects at least 2 arguments, but found none
 and: expects at least 2 arguments, but found only 1
@@ -1784,7 +1786,50 @@ and: question result is not true or false: 2
 #false
 define: found a definition that is not at the top level
 check-expect: found a test that is not at the top level
-`)
+check-expect: found a test that is not at the top level
+x: this function is not defined
+`);
+
+tIO(`or
+(or)
+(or 1)
+(or 1 2)
+(or #t 2)
+(or #f 2)
+(or (define x 1) true)
+(or (check-expect 1 1) true)
+(or true (check-expect 1 1))
+(or true (x))
+`,
+`or: expected an open parenthesis before or, but found none
+or: expects at least 2 arguments, but found none
+or: expects at least 2 arguments, but found only 1
+or: question result is not true or false: 1
+#true
+or: question result is not true or false: 2
+define: found a definition that is not at the top level
+check-expect: found a test that is not at the top level
+check-expect: found a test that is not at the top level
+x: this function is not defined
+`);
+
+tIO(`..
+...
+....
+.....
+......
+(.. 1)
+(define x (.. 1 2))
+(define (f x) (.. 1 2))`,
+`..: expected a finished expression, but found a template
+...: expected a finished expression, but found a template
+....: expected a finished expression, but found a template
+.....: expected a finished expression, but found a template
+......: expected a finished expression, but found a template
+..: expected a finished expression, but found a template
+..: expected a finished expression, but found a template
+Defined (f x) to be (.. 1 2).
+`);
 
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
