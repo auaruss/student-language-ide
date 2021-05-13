@@ -1742,9 +1742,30 @@ check-within: found a test that is not at the top level
 check-error: found a test that is not at the top level
 `);
 
-tIO(`cond`,
+tIO(`cond
+(cond)
+(cond 1)
+(cond "1")
+(cond #t)
+(cond [true 1] 1)
+(cond [true 1] [1 0])
+(cond (#t 1) ())
+(cond [(define (f x) x) 1] [1 0])
+(cond [(define x 1) 1] [1 0])
+(cond [(check-expect 1 1) 1] [1 0])
+(cond [true 1 1])
+`,
 `cond: expected an open parenthesis before cond, but found none
 cond: expected a clause after cond, but nothing's there
+cond: expected a clause with a question and an answer, but found a number
+cond: expected a clause with a question and an answer, but found a string
+cond: expected a clause with a question and an answer, but found a boolean
+cond: expected a clause with a question and an answer, but found a number
+1
+cond: expected a clause with a question and an answer, but found an empty part
+define: found a definition that is not at the top level
+define: found a definition that is not at the top level
+cond: expected a clause with a question and an answer, but found a clause with 3 parts
 `);
 
 /*****************************************************************************
