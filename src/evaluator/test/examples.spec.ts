@@ -1820,7 +1820,8 @@ tIO(`..
 ......
 (.. 1)
 (define x (.. 1 2))
-(define (f x) (.. 1 2))`,
+(define (f x) (.. 1 2))
+(define (f x) (..))`,
 `..: expected a finished expression, but found a template
 ...: expected a finished expression, but found a template
 ....: expected a finished expression, but found a template
@@ -1829,6 +1830,25 @@ tIO(`..
 ..: expected a finished expression, but found a template
 ..: expected a finished expression, but found a template
 Defined (f x) to be (.. 1 2).
+Defined (f x) to be (..).
+`);
+
+tIO(`check-expect
+(check-expect)
+(check-expect 1)
+(check-expect 1 1 1)
+(check-expect (define x 10) 1)
+(check-expect (check-expect 1 1) 1)
+(check-expect #t 1)
+(check-expect 1 1)`,
+`check-expect: expects 2 arguments, but found none
+check-expect: expects 2 arguments, but found none
+check-expect: expects 2 arguments, but found only 1
+check-expect: expects only 2 arguments, but found 3
+define: found a definition that is not at the top level
+check-expect: found a test that is not at the top level
+check-expect: Actual value #true differs from 1, the expected value.
+🎉
 `);
 
 /*****************************************************************************
