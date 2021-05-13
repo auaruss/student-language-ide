@@ -236,6 +236,9 @@ export type ValueError
  */
 export type Env = Map<String, Maybe<ExprResult>>;
 
-
+export type ParseEnv
+  = Map<String, 
+    [() => TopLevel, (sexps: SExp[]) => TopLevel]
+  >;
 
 // Every templated part should be a field in the errors
