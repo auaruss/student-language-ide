@@ -1768,6 +1768,24 @@ define: found a definition that is not at the top level
 cond: expected a clause with a question and an answer, but found a clause with 3 parts
 `);
 
+tIO(`and
+(and)
+(and 1)
+(and 1 2)
+(and #t 2)
+(and #f 2)
+(and (define x 1) true)
+(and (check-expect 1 1) true)`,
+`and: expected an open parenthesis before and, but found none
+and: expects at least 2 arguments, but found none
+and: expects at least 2 arguments, but found only 1
+and: question result is not true or false: 1
+and: question result is not true or false: 2
+#false
+define: found a definition that is not at the top level
+check-expect: found a test that is not at the top level
+`)
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
