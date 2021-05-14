@@ -1679,6 +1679,9 @@ tIO(`(+ + *)`,
 
 tIO(`define
 (define)
+(define x)
+(define (f x))
+(define (f 1 2))
 (define "string")
 (define "string" 1)
 (define 1)
@@ -1687,6 +1690,9 @@ tIO(`define
 (define #t 1)`,
 `define: expected an open parenthesis before define, but found none
 define: expected a variable name, or a function name and its variables (in parentheses), but nothing's there
+define: expected an expression after the variable name x, but nothing's there
+define: expected an expression for the function body, but nothing's there
+define: expected a variable, but found a number
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a number
