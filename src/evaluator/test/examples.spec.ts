@@ -1851,6 +1851,26 @@ check-expect: Actual value #true differs from 1, the expected value.
 🎉
 `);
 
+tIO(`check-within
+(check-within)
+(check-within 1)
+(check-within 1 1)
+(check-within (define x 10) 1)
+(check-within (check-expect 1 1) 1)
+(check-within #t 1)
+(check-within #t 1 1)
+(check-within 1 1 1)`,
+`check-within: expects 3 arguments, but found none
+check-within: expects 3 arguments, but found none
+check-within: expects 3 arguments, but found only 1
+check-within: expects 3 arguments, but found only 2
+define: found a definition that is not at the top level
+check-expect: found a test that is not at the top level
+check-within: expects 3 arguments, but found only 2
+Actual value #true is not within 1 of expected value 1.
+🎉
+`);
+
 /*****************************************************************************
  *                   Test cases for live editing behavior.                   *
  *                                                                           *
