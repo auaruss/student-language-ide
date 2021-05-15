@@ -1682,25 +1682,36 @@ tIO(`define
 (define x)
 (define (f x))
 (define (f 1 2))
+(define () 2 3)
+(define (f) 2 3)
+(define f 2 3)
+(define (f x) 2 3)
 (define "string")
 (define "string" 1)
 (define 1)
 (define 1 1)
 (define #t)
-(define #t 1)`,
+(define #t 1)
+(define (#t 1))
+(define ((f x) 1))`,
 `define: expected an open parenthesis before define, but found none
 define: expected a variable name, or a function name and its variables (in parentheses), but nothing's there
 define: expected an expression after the variable name x, but nothing's there
 define: expected an expression for the function body, but nothing's there
 define: expected a variable, but found a number
+define: expected a name for the function, but nothing's there
+define: expected at least one variable after the function name, but found none
+define: expected only one expression after the variable name f, but found 1 extra part
+define: expected only one expression for the function body, but found 1 extra part
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a string
 define: expected a variable name, or a function name and its variables (in parentheses), but found a number
 define: expected a variable name, or a function name and its variables (in parentheses), but found a number
 define: expected a variable name, or a function name and its variables (in parentheses), but found something else
 define: expected a variable name, or a function name and its variables (in parentheses), but found something else
-`
-);
+define: expected the name of the function, but found a boolean
+define: expected the name of the function, but found a part
+`);
 
 tIO(`define-struct
 (define-struct)
