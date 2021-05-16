@@ -1719,6 +1719,14 @@ tIO(`define-struct
 (define-struct 1 [x y])
 (define-struct #t [x y])
 (define-struct (f x) [x y])
+(define-struct posn)
+(define-struct posn 1 2 3)
+(define-struct posn (x y) 2 3)
+(define-struct posn "x")
+(define-struct posn 1)
+(define-struct posn #t)
+(define-struct posn (x 1) 1)
+(define-struct posn (x (x y)))
 `,
 `define-struct: expected an open parenthesis before define-struct, but found none
 define-struct: expected the structure name after define-struct, but nothing's there
@@ -1726,6 +1734,14 @@ define-struct: expected the structure name after define-struct, but found a stri
 define-struct: expected the structure name after define-struct, but found a number
 define-struct: expected the structure name after define-struct, but found something else
 define-struct: expected the structure name after define-struct, but found a part
+define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected nothing after the field names, but found 2 extra parts
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
+define-struct: expected a field name, but found a number
+define-struct: expected a field name, but found a part
 `);
 
 tIO(`if
