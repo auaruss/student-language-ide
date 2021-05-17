@@ -9,9 +9,10 @@
 import { t, tIO } from './test-harness';
 
 import {
-  Tok, NumTok, NumAtom, NumExpr, NFn,
-  IdTok, IdAtom, IdExpr, CP, OP, SPACE,  NL,
-  SExps, VarDefn, FnDefn, Call, CommentTok, Bind
+  Tok, NumTok, NumAtom, MakeNumberExpr, MakeAtomic,
+  IdTok, IdAtom, MakeVariableUsageExpr, CP, OP, SPACE, NL,
+  SExps, MakeVariableDefinition,MakeFunctionDefinition,
+  MakeCall, CommentTok, Bind
 } from '../constructors';
 
 import { TokenType } from '../types';
@@ -43,13 +44,13 @@ t(
   ],
 
   [
-    VarDefn('init-speed', NumExpr(1.5)),
-    VarDefn('init-angle', Call('*', [NumExpr(0.3), IdExpr('pi')]))
+    MakeVariableDefinition('init-speed', MakeNumberExpr(1.5)),
+    MakeVariableDefinition('init-angle', MakeCall('*', [MakeNumberExpr(0.3), MakeVariableUsageExpr('pi')]))
   ],
 
   [
-    Bind('init-speed', NFn(1.5)),
-    Bind('init-angle', NFn(0.3 * Math.PI))
+    Bind('init-speed', MakeAtomic(1.5)),
+    Bind('init-angle', MakeAtomic(0.3 * Math.PI))
   ],
 
 `Defined init-speed to be 1.5.
@@ -118,17 +119,17 @@ t(
     ],
   
     [
-      VarDefn('init-speed', NumExpr(1.5)),
-      VarDefn('init-angle', Call('*', [NumExpr(0.3), IdExpr('pi')])),
-      VarDefn('init-x-vel', Call('*',  [IdExpr('init-speed'), Call('cos', [IdExpr('init-angle')])])),
-      VarDefn('init-y-vel', Call('*',  [IdExpr('init-speed'), Call('sin', [IdExpr('init-angle')])]))
+      MakeVariableDefinition('init-speed', MakeNumberExpr(1.5)),
+      MakeVariableDefinition('init-angle', MakeCall('*', [MakeNumberExpr(0.3), MakeVariableUsageExpr('pi')])),
+      MakeVariableDefinition('init-x-vel', MakeCall('*',  [MakeVariableUsageExpr('init-speed'), MakeCall('cos', [MakeVariableUsageExpr('init-angle')])])),
+      MakeVariableDefinition('init-y-vel', MakeCall('*',  [MakeVariableUsageExpr('init-speed'), MakeCall('sin', [MakeVariableUsageExpr('init-angle')])]))
     ],
   
     [
-      Bind('init-speed', NFn(1.5)),
-      Bind('init-angle', NFn(0.3 * Math.PI)),
-      Bind('init-x-vel', NFn(1.5 * Math.cos(0.3 * Math.PI))),
-      Bind('init-y-vel', NFn(1.5 * Math.sin(0.3 * Math.PI)))
+      Bind('init-speed', MakeAtomic(1.5)),
+      Bind('init-angle', MakeAtomic(0.3 * Math.PI)),
+      Bind('init-x-vel', MakeAtomic(1.5 * Math.cos(0.3 * Math.PI))),
+      Bind('init-y-vel', MakeAtomic(1.5 * Math.sin(0.3 * Math.PI)))
     ],
   
 `Defined init-speed to be 1.5.
@@ -239,27 +240,27 @@ t(
       ],
     
       [
-        VarDefn('init-speed', NumExpr(1.5)),
-        VarDefn('init-angle', Call('*', [NumExpr(0.3), IdExpr('pi')])),
-        VarDefn('init-x-vel', Call('*',  [IdExpr('init-speed'), Call('cos', [IdExpr('init-angle')])])),
-        VarDefn('init-y-vel', Call('*',  [IdExpr('init-speed'), Call('sin', [IdExpr('init-angle')])])),
-        FnDefn(
+        MakeVariableDefinition('init-speed', MakeNumberExpr(1.5)),
+        MakeVariableDefinition('init-angle', MakeCall('*', [MakeNumberExpr(0.3), MakeVariableUsageExpr('pi')])),
+        MakeVariableDefinition('init-x-vel', MakeCall('*',  [MakeVariableUsageExpr('init-speed'), MakeCall('cos', [MakeVariableUsageExpr('init-angle')])])),
+        MakeVariableDefinition('init-y-vel', MakeCall('*',  [MakeVariableUsageExpr('init-speed'), MakeCall('sin', [MakeVariableUsageExpr('init-angle')])])),
+        MakeFunctionDefinition(
           'y-pos',
           ['t'],
-          Call('-',
+          MakeCall('-',
             [
-              Call('*', [IdExpr('init-y-vel'), IdExpr('t')]),
-              Call('*', [NumExpr(0.5), NumExpr(0.003), IdExpr('t'), IdExpr('t')])
+              MakeCall('*', [MakeVariableUsageExpr('init-y-vel'), MakeVariableUsageExpr('t')]),
+              MakeCall('*', [MakeNumberExpr(0.5), MakeNumberExpr(0.003), MakeVariableUsageExpr('t'), MakeVariableUsageExpr('t')])
             ]
           )
         )
       ],
     
       [
-        Bind('init-speed', NFn(1.5)),
-        Bind('init-angle', NFn(0.3 * Math.PI)),
-        Bind('init-x-vel', NFn(1.5 * Math.cos(0.3 * Math.PI))),
-        Bind('init-y-vel', NFn(1.5 * Math.sin(0.3 * Math.PI))),
+        Bind('init-speed', MakeAtomic(1.5)),
+        Bind('init-angle', MakeAtomic(0.3 * Math.PI)),
+        Bind('init-x-vel', MakeAtomic(1.5 * Math.cos(0.3 * Math.PI))),
+        Bind('init-y-vel', MakeAtomic(1.5 * Math.sin(0.3 * Math.PI))),
         Bind('y-pos', null)
       ],
     
