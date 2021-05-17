@@ -14,6 +14,15 @@ import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError } from '.
 import { read } from './read';
 import { Expr, ParseEnv, SExp, TopLevel, TopLevelError } from './types';
 
+
+/**
+ * Contains a mapping of built in keywords (strings) their implemented behaviors.
+ * These behaviors are stored as a two-function 2-tuple.
+ * The first element takes no arguments and is what to do when the keyword is found at the top level
+ * without parenthesis.
+ * The second element takes an array of S-Expressions and is the behavior for when an S-Expression array
+ * starts with a keyword, and the rest of the S-Expression is passed as the argument to the function.
+ */
 const parseEnv: ParseEnv
   = new Map<
     String, 
@@ -355,7 +364,7 @@ parseEnv.set('check-within', [
 ]);
 
 /**
- * Given a program, parses the string into a set of definitions and expressions.
+ * Given a program, parses the string into a set of top level syntactical objects
  * @param exp program to be parsed
  * @returns a list of top level syntactical objects
  */
@@ -363,10 +372,20 @@ export const parse = (exp: string): TopLevel[] => {
   return parseTopLevels(read(exp));
 }
 
+/**
+ * Given a program, parses the S-Expressions into a set of top level syntactical objects
+ * @param sexps program to be parsed
+ * @returns a list of top level syntactical objects
+ */
 export const parseTopLevels = (sexps: SExp[]): TopLevel[] => {
   return sexps.map(parseTopLevel);
 }
 
+/**
+ * Parses an expression specifically not at the top level (nested within something).
+ * @param sexp nested expression
+ * @returns A properly formed expression or an error explaining why this S-Expression must be at the top level
+ */
 export const parseExpression = (sexp: SExp): Expr | TopLevelError => {
   const maybeExpr = parseTopLevel(sexp)
 
@@ -388,9 +407,28 @@ export const parseExpression = (sexp: SExp): Expr | TopLevelError => {
     }
   }
 
+
+  // Work on this during meeting
+  // Discovered that keyword behavior is different for keywords
+  // e.g. (define define 1)
+  // has an error different in character than (+ define 1)
+  if (maybeExpr.typeOfExpression === 'VariableUsage' && parseEnv.has(maybeExpr.const)) {
+    let noParenFn = parseEnv.get(maybeExpr.const);
+    if (noParenFn) {
+      let noParenResult = noParenFn[0]();
+      if (isExpr(noParenResult)) return noParenResult;
+      return TopLevelErr('', []);
+    }
+  }
+
   return maybeExpr;
 }
 
+/**
+ * Parses an S-Expression at the top level of the program.
+ * @param sexp S-Expression to be parsed
+ * @returns A top level syntactical object
+ */
 export const parseTopLevel = (sexp: SExp): TopLevel => {
   if (isReadError(sexp)) return sexp;
 
@@ -415,6 +453,11 @@ export const parseTopLevel = (sexp: SExp): TopLevel => {
   }
 }
 
+/**
+ * Parses an S-Expression array.
+ * @param sexps An S-Expression array at the top level
+ * @returns A top level syntactical object
+ */
 export const parseList = (sexps: SExp[]): TopLevel => {
   if (sexps.length === 0)
     return TopLevelErr('function call: expected a function after the open parenthesis, but nothing\'s there', sexps)
@@ -437,8 +480,12 @@ export const parseList = (sexps: SExp[]): TopLevel => {
   }
 }
 
-// call parseTopLevel recursively then build a call...
-// complain if we get a non-expr toplevel
+/**
+ * Parses an S-Expression array that doesn't start with a keyword.
+ * @param fname function name
+ * @param sexps function argument S-Expressions
+ * @returns A parsed call or error explaining why the call was invalid
+ */
 const parseCall = (fname: string, sexps: SExp[]): Expr | TopLevelError => {
   const parsedArgs: Expr[] = []
 
