@@ -9,26 +9,26 @@
  */
 
 import {
-  isBinding, isValueError,
-  isValue, isExprError, isReadError, isTokenError,
+  isValueError, isExprError, isReadError, isTokenError, isResultError
 } from './../predicates';
 
 import {
   TopLevel, Expr, ReadError, TokenError, 
-  Token, SExp, Result, Binding, Value, ValueError, ExprError
+  Token, SExp, Result, Value, ValueError, ExprError, ResultError, ExprResult
 } from '../types';
 
 import { checkExpect } from './check-expect';
 
 
-import { goodbyeVal, helloVal, sGoodbyeBind, xTenBind, tenVal, tGoodByeBind, negZeroTok, negOneTok, negThirteenTok, oneTok, zeroTok, sHelloBind, xNullBind } from './examples';
+import { goodbyeVal, helloVal, tenVal, negZeroTok, negOneTok, negThirteenTok, oneTok, zeroTok } from './examples';
 
 
 import { tokenize } from '../tokenize';
 import { readTokens } from '../read';
-import { parseSexps } from '../parse';
+import { parseTopLevels } from '../parse';
 import { evaluateTopLevels } from '../eval';
 import { printResults } from '../print';
+import { convertUpdateArguments } from '@angular/compiler/src/compiler_util/expression_converter';
 
 /**
  * The testing harness for if you just need to give the input and output strings.
@@ -94,7 +94,7 @@ export const t  = (
 
     if (sexps) {
       try {
-        let d = parseSexps(sexps);
+        let d = parseTopLevels(sexps);
         if (toplevels) {
           let def: TopLevel[] = toplevels;
           it('should parse correctly', () => {
@@ -122,22 +122,34 @@ export const t  = (
             it('should evaluate correctly', () => {
 
               for (let i = 0; i < vals.length; i++) {
-                let d = doe[i];
-                let v = vals[i];
+                let actual = doe[i];
+                let expected = vals[i];
 
-                if (isBinding(d)) {
-                  if (isBinding(v)) {
-                    expect(matchingBindings(d, v)).toBeTruthy();
-                  } else {
-                    fail('Expected a binding, but evaluator returned a non-binding.');
-                  }
-                } else {
-                  if (isBinding(v)) {
-                    fail('Expected a non-binding, but evaluator returned a binding.');
-                  } else {
-                    expect(d).toEqual(v);
-                  }
-                }
+                if (isValueError(actual))
+                  expect(isValueError(expected) && matchingValueErrors(actual, expected)).toBeTruthy();
+                
+                else if (isResultError(actual))
+                  expect(isResultError(expected) && matchingResultErrors(actual, expected)).toBeTruthy();
+
+                else if (actual.type === 'define')
+                  expect(
+                    (! (isValueError(expected) || isResultError(expected)))
+                    && expected.type === 'define'
+                    && actual.defined === expected.defined
+                    && actual.toBe !== null
+                    &&(
+                      expected.toBe === null
+                      || (matchingExprResults(actual.toBe, expected.toBe))
+                    )
+                  ).toBeTruthy();
+
+                else if (isValueError(expected) || isResultError(expected))
+                    fail('expected value is an error, but actual value is not');
+
+                else if (expected.type === 'define')
+                    fail('expected value is a binding, but actual value is not');
+
+                else expect(actual).toEqual(expected);
               }
 
             });
@@ -291,23 +303,66 @@ const matchingReadErrors = (actual: ReadError, expected: ReadError): boolean => 
  * @returns whether two exprs are equal
  */
 const matchingExprs = (actual: Expr, expected: Expr): boolean => {
-  if (isExprError(expected)) {
+  if (isExprError(expected))
     return isExprError(actual) && (matchingExprErrors(actual, expected));
-  } else if (expected.type === 'Call') {
-    if (isExprError(actual) || actual.type !== 'Call') return false;
-    if (expected.op !== actual.op) return false;
-    if (expected.args.length !== actual.args.length) return false;
-    for (let i = 0; i < expected.args.length; i++) {
-      if (! matchingExprs(actual.args[i], expected.args[i]))
+  if (isExprError(actual)) return false;
+
+  switch (expected.typeOfExpression) {
+    case 'Boolean':
+    case 'Number':
+    case 'String':
+    case 'VariableUsage':
+      return (
+        actual.typeOfExpression === expected.typeOfExpression
+        && actual.const === expected.const
+      );
+  
+    case 'Call':
+      return (
+        actual.typeOfExpression === expected.typeOfExpression
+        && actual.op === expected.op
+        && actual.args === expected.args
+      );
+
+    case 'TemplatePlaceholder':
+      return (
+        actual.typeOfExpression === expected.typeOfExpression
+        && matchingSexps(actual.sexp, expected.sexp)
+      );
+
+    case 'and':
+    case 'or':
+      if (actual.typeOfExpression !== expected.typeOfExpression)
         return false;
-    }
-    return true;
-  } else if (expected.type ==='cond') {
-    return true; // TEMP
-  } else if (expected.type === 'if') {
-    return true; // TEMP
-  }else {
-    return (! isExprError(actual)) && expected.type === actual.type && expected.const === actual.const;
+      if (actual.arguments.length !== expected.arguments.length)
+        return false;
+      
+      for (let i = 0; i < expected.arguments.length; i++)
+        if (! matchingExprs(actual.arguments[i], expected.arguments[i]))
+          return false;
+      
+      return true;
+
+    case 'cond':
+      if (actual.typeOfExpression !== expected.typeOfExpression)
+        return false;
+      if (actual.clauses.length !== expected.clauses.length)
+        return false;
+
+      for (let i = 0; i < expected.clauses.length; i++)
+        if (! (matchingExprs(actual.clauses[i][0], expected.clauses[i][0])
+            && matchingExprs(actual.clauses[i][1], expected.clauses[i][1])))
+          return false;
+        
+      return true;
+
+    case 'if':
+      return (
+        expected.typeOfExpression === actual.typeOfExpression
+        && matchingExprs(expected.predicate, actual.predicate)
+        && matchingExprs(expected.consequent, actual.consequent)
+        && matchingExprs(expected.alternative, actual.alternative)
+      );
   }
 }
 
@@ -336,8 +391,8 @@ const matchingExprErrors = (actual: ExprError, expected: ExprError): boolean => 
  * @returns whether two values are equal
  */
 const matchingValues = (actual: Value, expected: Value): boolean => {
-  if (expected.type === 'NonFunction') {
-    return actual.type === 'NonFunction' && expected.value === actual.value;
+  if (expected.type === 'Atomic') {
+    return actual.type === 'Atomic' && expected.value === actual.value;
   } else if (expected.type === 'BuiltinFunction') {
     return actual.type === 'BuiltinFunction';
   } else {
@@ -370,31 +425,21 @@ const matchingValueErrors = (actual: ValueError, expected: ValueError): boolean 
 }
 
 /**
- * Determines whether two bindings match, allowing the developer to provide null
- * in a binding for convenience.
- * @param actual binding returned from a function
- * @param expected binding provided to the testing suite by a developer to test
- * @returns whether two bindings are considered to match to the testing framework
+ * Determines if two result errors are equal.
+ * @param actual actual result error produced by a function
+ * @param expected test result error expected to be equal 
+ * @returns whether two result errors are equal
  */
-const matchingBindings = (actual: Binding, expected: Binding): boolean => {
-  if (actual.defined === expected.defined) {
-    if (actual.toBe === null) throw new Error("Null is not allowed to be returned from the evaluator in a Binding's toBe field.");
-    if (expected.toBe === null) return true;
-    
-    let actualToBe = actual.toBe;
-    let expectedToBe = expected.toBe;
-
-    return (
-      isValueError(expectedToBe)
-      ? isValueError(actualToBe) && matchingValueErrors(actualToBe, expectedToBe)
-      : isValue(actualToBe) && matchingValues(actualToBe, expectedToBe)
-    );
-
-  } else return false;
+const matchingResultErrors = (actual: ResultError, expected: ResultError): boolean => {
+  return true;
 }
 
-checkExpect(matchingBindings(xTenBind, xTenBind), true);
-checkExpect(matchingBindings(xTenBind, xNullBind), true);
-checkExpect(matchingBindings(xTenBind, sHelloBind), false);
-checkExpect(matchingBindings(sHelloBind, sGoodbyeBind), false);
-checkExpect(matchingBindings(sGoodbyeBind, tGoodByeBind), false);
+/**
+ * Determines if two expression results are equal.
+ * @param actual actual expression result produced by a function
+ * @param expected test expression result expected to be equal 
+ * @returns whether two expression results are equal
+ */
+ const matchingExprResults = (actual: ExprResult, expected: ExprResult): boolean => {
+  return true;
+}
