@@ -82,7 +82,7 @@ const stringEquals = (): Just<ExprResult> => {
       'string=?', 
       (vs: Value[]) => {
         const first = vs[0]
-        if (first.type === 'NonFunction' && typeof first.value === 'string') 
+        if (first.type === 'Atomic' && typeof first.value === 'string') 
           return constructReducibleStringOperation((acc, elem) => acc && (elem === first.value), true)(vs)
         throw new Error('impossible line reached, bug in string=?');
       },
@@ -392,7 +392,7 @@ const NFnEnv = (v: string | boolean | number): Just<ExprResult> => {
 const checkIfIsNumbers = (vs: Value[]): number[] | false => {
   const nums: number[] = []
   for (let v of vs) {
-    if (! (v.type === 'NonFunction'))
+    if (! (v.type === 'Atomic'))
       return false;
     if (typeof v.value !== 'number')
       return false;
@@ -405,7 +405,7 @@ const checkIfIsNumbers = (vs: Value[]): number[] | false => {
 const checkIfIsStrings = (vs: Value[]): string[] | false => {
   const strings: string[] = []
   for (let v of vs) {
-    if (! (v.type === 'NonFunction'))
+    if (! (v.type === 'Atomic'))
       return false;
     if (typeof v.value !== 'string')
       return false;
@@ -418,7 +418,7 @@ const checkIfIsStrings = (vs: Value[]): string[] | false => {
 const checkIfIsBooleans = (vs: Value[]): boolean[] | false => {
   const booleans: boolean[] = []
   for (let v of vs) {
-    if (! (v.type === 'NonFunction'))
+    if (! (v.type === 'Atomic'))
       return false;
     if (typeof v.value !== 'boolean')
       return false;

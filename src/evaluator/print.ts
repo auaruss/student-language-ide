@@ -1,8 +1,8 @@
-import { isTokenError, isBindingError, isDefinitionError, isDefinitionResult, isReadError, isValueError, isExprError, isExprResult, isCheckError, isExpr } from './predicates';
+import { isTokenError, isReadError, isValueError, isExprError, isExprResult, isResultError, isTopLevelError } from './predicates';
 import {
-  DefinitionResult, ExprResult, Result, Binding, ResultError,
-  ValueError, TokenError, ReadError, Token, SExp, TopLevel, Expr,
-  Value, TopLevelError, ExprError, TokenType, CheckResult, If, Cond
+  ExprResult, Result, ResultError, ValueError, TokenError, 
+  ReadError, Token, SExp, TopLevel, Expr,
+  Value, TopLevelError, ExprError, TokenType
 } from './types';
 
 import { evaluate } from './eval';
@@ -24,45 +24,35 @@ export const printResults = (rs: Result[]): string => {
 }
 
 const printResult = (r: Result): string => {
-  if (isDefinitionResult(r)) {
-    return printDefinitionResult(r);
-  } else if (isExprResult(r)) {
+  if (isResultError(r))
+    return printResultError(r);
+  if (isExprResult(r))
     return printExprResult(r);
-  } else {
-    return printCheckResult(r);
+  
+  switch (r.type) {
+    case 'define':
+    case 'check-success':
+    case 'check-failure':
+    case 'check-expected-error':
+      // TODO
+      return '';
   }
 }
 
-const printDefinitionResult = (dr: DefinitionResult): string => {
-  if (isBindingError(dr)) {
-    return printBindingError(dr);
-  } else {
-    return printBinding(dr);
-  }
+const printResultError = (re: ResultError): string => {
+  // TODO
+  return '';
 }
-
 
 const printExprResult = (er: ExprResult): string => {
-  if (isValueError(er)) {
+  if (isValueError(er))
     return printValueError(er);
-  } else {
+  else 
     return printValue(er);
-  }
-}
-
-const printBinding = (b: Binding): string => {
-    if (b.toBe) {
-	if (!(isValueError(b.toBe)) && b.toBe.type === 'Closure') {
-	    let c = b.toBe.value;
-	    return `Defined (${b.defined} ${c.args.join(" ")}) to be ${printExpr(c.body)}.`;
-	}
-	return `Defined ${b.defined} to be ${printExprResult(b.toBe)}.`;
-    }
-    else return `Defined ${b.defined}.`;
 }
 
 const printValue = (v: Value): string => {
-  if (v.type === 'NonFunction') {
+  if (v.type === 'Atomic') {
     if (v.value === true) return "#true";
     if (v.value === false) return "#false";
     if (typeof v.value === 'string') return `"${v.value}"`
@@ -79,31 +69,18 @@ const printValue = (v: Value): string => {
   }
 }
 
-const printBindingError = (be: ResultError): string => {
-  if (isTokenError(be)) {
-    return printTokenError(be);
-  } else if (isReadError(be)) {
-    return printReadError(be);
-  } else if (isDefinitionError(be)) {
-    return printDefinitionError(be);
-  } else {
-    return `Binding Error: ${be.bindingError} in ${printDefinition(be.definition)}`;
-  }
-}
-
 const printValueError = (ve: ValueError): string => {
-  if (isTokenError(ve)) {
+  if (isTokenError(ve))
     return printTokenError(ve);
-  } else if (isReadError(ve)) {
+  if (isReadError(ve))
     return printReadError(ve);
-  } else if (isExprError(ve)) {
+  if (isExprError(ve))
     return printExprError(ve);
-  } else {
+  else 
     return `${ ve.expr
                ? printExpr(ve.expr) + ': '
                : ''
             }${ve.valueError}`;
-  }
 }
 
 const printTokenError = (te: TokenError): string => {
@@ -118,9 +95,9 @@ const printReadError = (re: ReadError): string => {
   }
 }
 
-const printDefinitionError = (de: TopLevelError): string => {
-  if (isReadError(de)) return printReadError(de);
-  return `Definition Error: ${de.defnError} in (${printSexps(de.sexps)})`; 
+const printTopLevelError = (te: TopLevelError): string => {
+  if (isReadError(te)) return printReadError(te);
+  return `TopLevel Error: ${te.topLevelError} in (${printSexps(te.sexps)})`; 
 }
 
 const printExprError = (ee: ExprError): string => {
@@ -158,43 +135,49 @@ const printSexps = (sexps: SExp[]): string => {
   ).trim();
 }
 
-const printDefinition = (d: TopLevel): string => {
-  if (isDefinitionError(d)) return printDefinitionError(d);
-  else if (d.type === 'define-constant')
-    return '(define' + ' ' + d.name + ' ' + printExpr(d.body) + ')';
-  else
-    return (
-      `(define (${d.name} ${ 
-        d.params.reduce(
-          (acc, elem) => acc.concat(elem).concat(' '),
-          ''
-        ).trim()
-      }) ${printExpr(d.body)})`
-    );
-}
-
 const printExpr = (e: Expr): string => {
   if (isExprError(e)) return printExprError(e);
-  else if (e.type === 'Call')
-    return (
-      `(${e.op} ${
-        e.args.reduce(
-          (acc, elem) => acc + printExpr(elem) + ' ',
-          ''
-        ).trim()})`
-    );
-  else if (e.type === 'cond') return printCond(e);
-  else if (e.type === 'if') return printIf(e);
-  else return e.const.toString();
+
+  switch (e.typeOfExpression) {
+    case 'String': break;
+    case 'Number': break;
+    case 'VariableUsage': break;
+    case 'Boolean': break;
+    case 'Call':
+      return (
+        `(${e.op} ${
+          e.args.reduce(
+            (acc, elem) => acc + printExpr(elem) + ' ',
+            ''
+          ).trim()})`
+      );
+    case 'if':
+      return printIf(e);
+    case 'cond': 
+      return printCond(e);
+    case 'and': break;
+    case 'or': break;
+    case 'TemplatePlaceholder': break;
+  }
+
+  return '';
 }
 
-const printIf = (i: If): string => {
+const printIf = (i: {
+  typeOfExpression: 'if',
+  predicate: Expr,
+  consequent: Expr,
+  alternative: Expr
+}): string => {
   return ( 
 `(if ${ printExpr(i.predicate) } ${ printExpr(i.consequent) } ${ printExpr(i.alternative) })`
   );
 }
 
-const printCond = (c: Cond): string => {
+const printCond = (c: {
+  typeOfExpression: 'cond',
+  clauses: [Expr, Expr][]
+}): string => {
   let clauses = '';
   
   for (let clause of c.clauses) {
@@ -202,20 +185,4 @@ const printCond = (c: Cond): string => {
   }
 
   return `(cond ${clauses})`
-}
-
-const printCheckResult = (c: CheckResult): string => {
-  if (isCheckError(c)) {
-    return '';
-  } else if (c.type === 'check-success') {
-    return '🎉';
-  } else if (c.type === 'check-failure') {
-    if (isValueError(c.actual)) {
-      return printValueError(c.actual);
-    } else {
-      return `Actual value ${ printExprResult(c.actual) } differs from ${ printExprResult(c.expected) }, the expected value.`
-    }
-  } else {
-    return printValueError(c.expected);
-  }
 }
