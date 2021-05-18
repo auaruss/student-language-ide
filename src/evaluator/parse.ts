@@ -10,7 +10,7 @@ import { MakeVariableDefinition, MakeStructureDefinition } from './constructors'
 'use strict';
 
 import { IdAtom, MakeBooleanExpr, MakeCond, MakeIf, MakeNumberExpr, MakeStringExpr, MakeVariableUsageExpr, TopLevelErr, MakeTemplatePlaceholder, SExps, MakeFunctionDefinition, MakeAnd, MakeOr, MakeCheckExpect, MakeCheckWithin, MakeCall } from './constructors';
-import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError } from './predicates';
+import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError, isExprArray } from './predicates';
 import { read } from './read';
 import { Expr, ParseEnv, SExp, TopLevel, TopLevelError } from './types';
 
@@ -180,7 +180,7 @@ parseEnv.set('if', [
     
     const maybeExprs = sexps.map(parseExpression);
 
-    if (maybeExprs.every(isExpr))
+    if (isExprArray(maybeExprs))
       return MakeIf(maybeExprs[0], maybeExprs[1], maybeExprs[2]);
 
     // returns the first error encountered
@@ -232,7 +232,6 @@ parseEnv.set('cond', [
   }
 ]);
 
-
 parseEnv.set('and', [
   () => TopLevelErr('and: expected an open parenthesis before and, but found none', []),
   (sexps: SExp[]) => {
@@ -243,7 +242,7 @@ parseEnv.set('and', [
 
     const maybeExprs = sexps.map(parseExpression);
 
-    if (maybeExprs.every(isExpr))
+    if (isExprArray(maybeExprs))
       return MakeAnd(maybeExprs);
 
     // returns the first error encountered
@@ -261,7 +260,7 @@ parseEnv.set('or', [
 
     const maybeExprs = sexps.map(parseExpression);
 
-    if (maybeExprs.every(isExpr))
+    if (isExprArray(maybeExprs))
       return MakeOr(maybeExprs);
 
     // returns the first error encountered
@@ -335,7 +334,7 @@ parseEnv.set('check-expect', [
     
     const maybeExprs = sexps.map(parseExpression);
 
-    if (maybeExprs.every(isExpr))
+    if (isExprArray(maybeExprs))
       return MakeCheckExpect(maybeExprs[0], maybeExprs[1]);
 
     // returns the first error encountered
@@ -355,7 +354,7 @@ parseEnv.set('check-within', [
     
       const maybeExprs = sexps.map(parseExpression);
 
-      if (maybeExprs.every(isExpr))
+      if (isExprArray(maybeExprs))
         return MakeCheckWithin(maybeExprs[0], maybeExprs[1], maybeExprs[2]);
   
       // returns the first error encountered
