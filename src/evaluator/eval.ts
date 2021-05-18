@@ -1,5 +1,4 @@
-import { xNullBind } from './test/examples';
-import { isCheckError, isValue, isValueArray, isTokenError } from './predicates';
+import { isValue, isValueArray, isTopLevelError, isExpr, isExprResult, isTopLevel } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -11,17 +10,17 @@ import { isCheckError, isValue, isValueArray, isTokenError } from './predicates'
  'use strict';
 
 import {
-  TopLevel, Definition, Expr, ExprResult,Env, DefinitionResult,
-  Result, Maybe, Value, Check, CheckResult
+  TopLevel, Expr, ExprResult,Env,
+  Result, Maybe, Value,
 } from './types';
 
 import {
   Bind, Clos, MakeAtomic, ValErr,
-  MakeNothing, MakeJust, BindingErr, MakeCheckExpectedError, 
-  MakeCheckSuccess, MakeCheckFailure, MakeStruct
+  MakeNothing, MakeJust, MakeCheckExpectedError, 
+  MakeCheckSuccess, MakeCheckFailure, MakeStruct, ResultErr
 } from './constructors';
 
-import { isDefinition, isCheck, isExprError, isValueError, isDefinitionError } from './predicates';
+import { isExprError, isValueError } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
 
@@ -42,34 +41,66 @@ export const evaluate = (exp: string): Result[] => {
  */
 export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
   let env = builtinEnv();
-  toplevels.filter(isDefinition).forEach(
-    (d: Definition) => { 
-      if (! isDefinitionError(d)) {
-        env = extendEnv(d.name, env)
-      }
+
+  for (const toplevel of toplevels) {
+    if ((! isTopLevelError(toplevel)) 
+        && (! isExpr(toplevel))
+        && (
+          toplevel.type === 'define-constant'
+          || toplevel.type === 'define-function'
+          || toplevel.type === 'define-struct'
+        )) {
+        env = extendEnv(toplevel.name, env);
+    }
+  }
+
+  const evalPass = toplevels.map(
+    e => {
+      return (
+        ((! isTopLevelError(e)) 
+          && (! isExpr(e))
+          && (
+               (e.type === 'check-expect')
+            || (e.type === 'check-within')
+            || (e.type === 'check-error')
+          )
+        ) ? e
+        : evaluateDefOrExpr(e, env)
+      );
     }
   );
 
-  const evalPass = toplevels.map(
-    e => isCheck(e) ? e : evaluateDefOrExpr(e, env)
-  );
-
   return evalPass.map(
-    e => isCheck(e) ? evaluateCheck(e, env): e
+    e => {
+      return (
+        ((! isTopLevelError(e))
+          && isTopLevel(e)
+          && (! isExpr(e))
+        ) ? evaluateCheck(e, env) 
+        : e
+      );
+    }
   );
 }
 
 /**
  * Evaluates a top level syntactical object into a result.
- * @param deforexpr a definition or expression
+ * @param toplevel a definition or expression
  * @param env the environment for the selected student language
  * @returns a result after evaluating the top level syntactical object
  */
-const evaluateDefOrExpr = (deforexpr: Definition | Expr, env: Env): Result => {
-  if (isDefinition(deforexpr)) {
-    return evaluateDefinition(deforexpr, env);
-  } else {
-    const v = evaluateExpr(deforexpr, env);
+const evaluateDefOrExpr = (toplevel: TopLevel, env: Env): Result => {
+  if (isTopLevelError(toplevel)) return toplevel;
+  if (! isExpr(toplevel)
+    && (
+      toplevel.type ==='define-constant'
+    || toplevel.type === 'define-function'
+    || toplevel.type === 'define-struct'
+    )
+  ) {
+    return evaluateDefinition(toplevel, env);
+  } else if (isExpr(toplevel)) {
+    const v = evaluateExpr(toplevel, env);
     if (! isValueError(v))
       switch (v.type) {
         case 'BuiltinFunction':
@@ -77,10 +108,12 @@ const evaluateDefOrExpr = (deforexpr: Definition | Expr, env: Env): Result => {
         case 'StructureAccessor':
         case 'StructureConstructor':
         case 'StructurePredicate':
-          return ValErr('expected a function call, but there is no open parenthesis before this function', deforexpr);
+          return ValErr('expected a function call, but there is no open parenthesis before this function', toplevel);
       }
     return v;
+
   }
+  else return ResultErr('err', toplevel);
 }
 
 /**
@@ -90,39 +123,51 @@ const evaluateDefOrExpr = (deforexpr: Definition | Expr, env: Env): Result => {
  * @param env the environment for the selected student language
  * @returns a definition result, which includes the information intended to print out something human-readable about the definition
  */
-const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
-  if (isDefinitionError(d)) {
-    return d;
+const evaluateDefinition = (d: {
+  type: 'define-constant',
+  name: string,
+  body: Expr
+} | {
+  type: 'define-function',
+  name: string,
+  params: string[]
+  body: Expr
+} | {
+  type: 'define-struct',
+  name: string,
+  fields: string[]
+}, env: Env): Result => {
+  let defnVal = env.get(d.name);
+  if (defnVal === undefined) {
+    throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
   } else {
-    let defnVal = env.get(d.name);
-    if (defnVal === undefined) {
-      throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    let sndarg: ExprResult;
+    switch (d.type) {
+      case 'define-function':
+        sndarg = Clos(d.params, env, d.body);
+        break;
+      case 'define-constant':
+        sndarg = evaluateExpr(d.body, env);
+        if (!isValueError(sndarg)) switch (sndarg.type) {
+          case 'BuiltinFunction':
+          case 'Closure':
+          case 'StructureAccessor':
+          case 'StructureConstructor':
+          case 'StructurePredicate':
+            return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
+        }
+      case 'define-struct':
+        return ValErr('Unimplemented feature');
+    }
+    if (defnVal.type === 'nothing') {
+      mutateEnv(d.name, MakeJust(sndarg), env);
+      return Bind(d.name, sndarg);
     } else {
-      let sndarg: ExprResult;
-      switch (d.type) {
-        case 'define-function':
-          sndarg = Clos(d.params, env, d.body);
-          break;
-        case 'define-constant':
-          sndarg = evaluateExpr(d.body, env);
-          if (!isValueError(sndarg)) switch (sndarg.type) {
-            case 'BuiltinFunction':
-            case 'Closure':
-            case 'StructureAccessor':
-            case 'StructureConstructor':
-            case 'StructurePredicate':
-              return BindingErr('expected a function call, but there is no open parenthesis before this function', d);
-          }
-      }
-      if (defnVal.type === 'nothing') {
-        mutateEnv(d.name, MakeJust(sndarg), env);
-        return Bind(d.name, sndarg);
-      } else {
-        return BindingErr('Repeated definition of the same name', d);
-      }
+      return ResultErr('Repeated definition of the same name', d);
     }
   }
 }
+
 
 /**
  * Evaluates an expression.
@@ -133,13 +178,13 @@ const evaluateDefinition = (d: Definition, env: Env): DefinitionResult => {
 const evaluateExpr = (e: Expr, env: Env): ExprResult => {
   if (isExprError(e)) {
     return e;
-  } else switch (e.type) {
+  } else switch (e.typeOfExpression) {
 
     case 'String':
-    case 'Num':
-    case 'Bool':
+    case 'Number':
+    case 'Boolean':
       return MakeAtomic(e.const);
-    case 'Id':
+    case 'VariableUsage':
       let x = getVal(e.const, env);
       if (!x) {
         return ValErr('this variable is not defined', e);
@@ -152,7 +197,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
     case 'if':
       const pred = evaluateExpr(e.predicate, env);
       if (isValueError(pred)) return pred;
-      if (pred.type !== 'NonFunction' || typeof pred.value !== 'boolean')
+      if (pred.type !== 'Atomic' || typeof pred.value !== 'boolean')
         return ValErr('predicate must be a boolean', e);
       return pred.value ? evaluateExpr(e.consequent, env) : evaluateExpr(e.alternative, env);
 
@@ -160,9 +205,9 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       for (let clause of e.clauses) {
         const pred = evaluateExpr(clause[0], env);
         if (isValueError(pred)) return pred;
-        if (pred.type === 'NonFunction' && pred.value === 'else')
+        if (pred.type === 'Atomic' && pred.value === 'else')
           return evaluateExpr(clause[1], env);
-        if (! (pred.type === 'NonFunction' && typeof pred.value === "boolean"))
+        if (! (pred.type === 'Atomic' && typeof pred.value === "boolean"))
           return ValErr('Expression used as clause predicate in cond must evaluate to a boolean', e);
         if (pred.value) return evaluateExpr(clause[1], env);
       }
@@ -182,6 +227,11 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       }
   
       return apply(op, args, env, e);
+
+    case 'and':
+    case 'or':
+    case 'TemplatePlaceholder':
+      return ValErr('Unimplemented');
   }
 }
 
@@ -203,7 +253,7 @@ const evaluateOperands = (args: Expr[], env: Env): ExprResult[] => {
 
 const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
   switch (op.type) {
-    case 'NonFunction':
+    case 'Atomic':
     case 'Struct':
       return ValErr('Tried to apply a nonfunction as a function', e);
 
@@ -246,60 +296,72 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
  * Tests a Check.
  * @param c Check to be tested
  */
-const evaluateCheck = (c: Check, env: Env): CheckResult => {
-  if (isCheckError(c))
-    return c;
-  else {
-    const expected = evaluateExpr(c.expected, env);
-    if (isValueError(expected)) {
-      return MakeCheckExpectedError(expected);
-    } else switch (expected.type) {
-      // Checking function equality is not allowed.
-      case 'BuiltinFunction':
-      case 'Closure':
-      case 'StructureAccessor':
-      case 'StructureConstructor':
-      case 'StructurePredicate':
-        return MakeCheckExpectedError(
-          ValErr(
-            'expected a function call, but there is no open parenthesis before this function',
-            c.expected
-          )
-        );
-      case 'NonFunction':
-      case 'Struct':
-        const actual = evaluateExpr(c.actual, env);
-        if (isValueError(actual)) {
-          return MakeCheckExpectedError(actual);
-        } else switch (actual.type) {
-          case 'BuiltinFunction':
-          case 'Closure':
-          case 'StructureAccessor':
-          case 'StructureConstructor':
-          case 'StructurePredicate':
-            return MakeCheckExpectedError(
-              ValErr(
-                'expected a function call, but there is no open parenthesis before this function',
-                c.actual
-              )
-            );
-          case 'NonFunction':
-          case 'Struct':
-            if (actualEqualsExpected(actual, expected)) {
-              return MakeCheckSuccess();
-            } else {
-              return MakeCheckFailure(actual, expected);
-            }
-        }
+const evaluateCheck = (c: {
+  type: 'check-expect',
+  actual: Expr,
+  expected: Expr
+} | {
+  type: 'check-within'
+  actual: Expr,
+  expected: Expr,
+  margin: Expr
+} | {
+  type: 'check-error',
+  expression: Expr,
+  expectedRrrorMessage?: string
+}, env: Env): Result => {
+  if (c.type === 'check-within' || c.type === 'check-error')
+    return ValErr('Unimplemented');
 
-    }
+  const expected = evaluateExpr(c.expected, env);
+  if (isValueError(expected)) {
+    return MakeCheckExpectedError(expected);
+  } else switch (expected.type) {
+    // Checking function equality is not allowed.
+    case 'BuiltinFunction':
+    case 'Closure':
+    case 'StructureAccessor':
+    case 'StructureConstructor':
+    case 'StructurePredicate':
+      return MakeCheckExpectedError(
+        ValErr(
+          'expected a function call, but there is no open parenthesis before this function',
+          c.expected
+        )
+      );
+    case 'Atomic':
+    case 'Struct':
+      const actual = evaluateExpr(c.actual, env);
+      if (isValueError(actual)) {
+        return MakeCheckExpectedError(actual);
+      } else switch (actual.type) {
+        case 'BuiltinFunction':
+        case 'Closure':
+        case 'StructureAccessor':
+        case 'StructureConstructor':
+        case 'StructurePredicate':
+          return MakeCheckExpectedError(
+            ValErr(
+              'expected a function call, but there is no open parenthesis before this function',
+              c.actual
+            )
+          );
+        case 'Atomic':
+        case 'Struct':
+          if (actualEqualsExpected(actual, expected)) {
+            return MakeCheckSuccess();
+          } else {
+            return MakeCheckFailure(actual, expected);
+          }
+      }
+
   }
 }
 
 const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
   if (isValue(actual)) {
-    if (expected.type === 'NonFunction') {
-      return actual.type === 'NonFunction' && expected.value === actual.value;
+    if (expected.type === 'Atomic') {
+      return actual.type === 'Atomic' && expected.value === actual.value;
     } else if (expected.type === 'BuiltinFunction') {
       return false;
     } else {
