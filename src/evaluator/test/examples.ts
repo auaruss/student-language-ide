@@ -91,6 +91,10 @@ export const goodbyeStringExpr = MakeStringExpr('goodbye');
 export const trueExpr = MakeBooleanExpr(true);
 export const falseExpr = MakeBooleanExpr(false);
 
+export const trueIdExpr = MakeVariableUsageExpr('true');
+export const falseIdExpr = MakeVariableUsageExpr('false');
+
+
 export const basicIf1 = MakeIf(trueExpr, helloStringExpr, goodbyeStringExpr);
 export const basicIf2 = MakeIf(falseExpr, helloStringExpr, goodbyeStringExpr);
 export const factorialIf
@@ -118,41 +122,41 @@ export const factorialCond
     );
 
 export const and1
-  = MakeAnd([trueExpr, trueExpr]);
+  = MakeAnd([trueIdExpr, trueIdExpr]);
 
 export const and2
-  = MakeAnd([trueExpr, trueExpr, trueExpr]);
+  = MakeAnd([trueIdExpr, trueIdExpr, trueIdExpr]);
 
 export const and3
-  = MakeAnd([trueExpr, falseExpr, trueExpr]);
+  = MakeAnd([trueIdExpr, falseIdExpr, trueIdExpr]);
 
 export const and4
-  = MakeAnd([trueExpr, falseExpr, helloStringExpr]);
+  = MakeAnd([trueIdExpr, falseIdExpr, helloStringExpr]);
 
 export const and5
-  = MakeAnd([trueExpr, helloStringExpr,  falseExpr]);
+  = MakeAnd([trueIdExpr, helloStringExpr,  falseIdExpr]);
 
 export const or1
-  = MakeOr([falseExpr, falseExpr]);
+  = MakeOr([falseIdExpr, falseIdExpr]);
 
 export const or2
-  = MakeOr([falseExpr, trueExpr, trueExpr]);
+  = MakeOr([falseIdExpr, trueIdExpr, trueIdExpr]);
 
 export const or3
-  = MakeOr([falseExpr, falseExpr, trueExpr]);
+  = MakeOr([falseIdExpr, falseIdExpr, trueIdExpr]);
 
 export const or4
-  = MakeOr([falseExpr, trueExpr, helloStringExpr]);
+  = MakeOr([falseIdExpr, trueIdExpr, helloStringExpr]);
 
 export const or5
-  = MakeOr([falseExpr, helloStringExpr, trueExpr]);
+  = MakeOr([falseIdExpr, helloStringExpr, trueIdExpr]);
 
 export const templatePlaceholder1
   = MakeTemplatePlaceholder(IdAtom('...'));
 
 export const posnTemplate
   = MakeTemplatePlaceholder(
-    SExps(...read('(... (posn-x p) ... (posn-y p) ...)'))
+    SExps(...read('... (posn-x p) ... (posn-y p) ...'))
   );
 
 // ----------------------------------------------------------------------------
@@ -169,7 +173,12 @@ export const addressDefn = MakeStructureDefinition(
   'address', ['street', 'apartment', 'city', 'zip']
 );
 
-export const posnTemplateDefn = MakeFunctionDefinition('process-posn', ['p'], posnTemplate);
+export const posnTemplateDefn
+  = MakeFunctionDefinition(
+    'process-posn',
+    ['p'],
+    posnTemplate
+  );
 
 // expected successes
 

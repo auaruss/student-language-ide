@@ -40,9 +40,10 @@ t('', [], [], [], [], '\n');
 t('()',
   [ OP, CP ],
   [ SExps() ],
-  [ ExprErr('Empty Expr', [ SExps() ]) ],
-  [ ExprErr('Empty Expr', [ SExps() ]) ],
-  'Expression Error: Empty Expr in ()\n');
+  [ TopLevelErr('function call: expected a function after the open parenthesis, but nothing\'s there', []) ],
+  [ TopLevelErr('function call: expected a function after the open parenthesis, but nothing\'s there', []) ],
+`function call: expected a function after the open parenthesis, but nothing\'s there
+`);
 
 t('123',
   [ NumTok('123') ],
@@ -365,9 +366,8 @@ t('(define bool #t123)',
   ],
 
   [
-    TopLevelErr('A definition can\'t have more than 3 parts',
+    TopLevelErr('define: expected only one expression after the variable name bool, but found 1 extra part',
     [
-      IdAtom('define'),
       IdAtom('bool'),
       TokErr('#'),
       IdAtom('t123'),
@@ -1416,7 +1416,9 @@ tIO(`(cond [(string=? "hello" "goodbye") 1]
 
 // Identifier required at the function call position, so this should be a parsing error.
 t('((+) 1 2)', undefined, undefined,
-  [ExprErr('function call: expected a function after the open parenthesis, but found a part', read('(+)'))]
+  [
+    TopLevelErr('function call: expected a function after the open parenthesis, but found a part', read('(+) 1 2'))
+  ]
 );
 
 t('((λ (x) (+ 2 x)) 2)');
@@ -1528,7 +1530,7 @@ t(`(and true)
   undefined,
   undefined,
   [
-    ExprErr('expects at least 2 arguments, but only found 1', read('(and true)')),
+    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('true')),
     and1, and2, and3, and4, and5
   ],
   undefined,
@@ -1549,7 +1551,7 @@ t(`(or false)
   undefined,
   undefined,
   [
-    ExprErr('expects at least 2 arguments, but only found 1', read('(or true)')),
+    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('false')),
     or1, or2, or3, or4, or5
   ],
   undefined,
