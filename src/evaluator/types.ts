@@ -97,7 +97,7 @@ export type TopLevel
   } | {
     type: 'check-error',
     expression: Expr,
-    expectedRrrorMessage?: string
+    expectedErrorMessage?: string
   };
 
 export type Expr
