@@ -158,7 +158,7 @@ export const MakeCheckError = (
   return expectedRrrorMessage ? {
     type: 'check-error',
     expression: expression,
-    expectedRrrorMessage: expectedRrrorMessage
+    expectedErrorMessage: expectedRrrorMessage
   } : {
     type: 'check-error',
     expression: expression,
