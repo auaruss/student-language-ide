@@ -1337,9 +1337,9 @@ t('(check-expect #true "goodbye")', undefined, undefined,
 
 tIO('(make-posn 2 3)', '(make-posn 2 3)');
 
-tIO('(posn-x (make-posn 2 3))', '2');
+tIO('(posn-x (make-posn 2 3))', '2\n');
 
-tIO('(posn-x (make-posn 2 3))', '3');
+tIO('(posn-y (make-posn 2 3))', '3\n');
 
 tIO('(make-posn (+ 2 "hello") 2)',
 `+: expects a number as 2nd argument, given "hello"
