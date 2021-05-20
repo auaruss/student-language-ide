@@ -245,7 +245,7 @@ export const isResultError = (x: any): x is ResultError => {
   return (x && typeof x === 'object'
     && typeof x.resultError === 'string'
     && isTopLevel(x.toplevel)
-  ) || isExprError(x);
+  ) || isTopLevelError(x);
 }
 
 export const isValueError = (x: any): x is ValueError => {

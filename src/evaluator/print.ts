@@ -161,7 +161,7 @@ const printExprError = (ee: ExprError): string => {
 
 // ----------------------------------------------------------------------------
 
-const printResult = (r: Result): string => {
+export const printResult = (r: Result): string => {
   if (isResultError(r))
     return printResultError(r);
   if (isExprResult(r))
@@ -226,7 +226,7 @@ const printValue = (v: Value): string => {
   }
 }
 
-const printResultError = (re: ResultError): string => {
+export const printResultError = (re: ResultError): string => {
   if (isTopLevelError(re)) return printTopLevelError(re);
   return `${printTopLevel(re.toplevel)}: ${ re.resultError }`
 }
