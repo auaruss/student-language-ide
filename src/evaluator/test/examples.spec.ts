@@ -1601,9 +1601,13 @@ tIO(`
 ...: expected a finished expression, but found a template
 `);
 
+// Known failing test due to unimplemented parser checking features
+
 tIO('(define (hi bye) rye)',
 `rye: this variable is not defined
 `);
+
+// Known failing test due to unimplemented parser checking features
 
 tIO('(define (hi bye) (f 2 2))',
 `f: this function is not defined
@@ -1874,6 +1878,14 @@ Defined (f x) to be (.. 1 2).
 Defined (f x) to be (..).
 `);
 
+
+t('check-expect', undefined, undefined, [
+  TopLevelErr('check-expect: expects 2 arguments, but found none', []),
+],
+  undefined,
+  'check-expect: expects 2 arguments, but found none'
+);
+
 tIO(`check-expect
 (check-expect)
 (check-expect 1)
@@ -1888,7 +1900,7 @@ check-expect: expects 2 arguments, but found only 1
 check-expect: expects only 2 arguments, but found 3
 define: found a definition that is not at the top level
 check-expect: found a test that is not at the top level
-check-expect: Actual value #true differs from 1, the expected value.
+Actual value #true differs from 1, the expected value.
 🎉
 `);
 
