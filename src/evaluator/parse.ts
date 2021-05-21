@@ -215,7 +215,7 @@ parseEnv.set('cond', [
             const question = parseExpression(sexp.sexp[0]);
             if (! (isExpr(question))) return question;
 
-            const answer = parseExpression(sexp.sexp[0]);
+            const answer = parseExpression(sexp.sexp[1]);
             if (! (isExpr(answer))) return answer;
 
             clauses.push([question, answer]);
@@ -491,7 +491,7 @@ const parseCall = (fname: string, sexps: SExp[]): Expr | TopLevelError => {
   for (const sexp of sexps) {
     const maybeArg = parseExpression(sexp);
 
-    if (! isExpr(maybeArg))
+    if (isTopLevelError(maybeArg) || isExprError(maybeArg) || (! isExpr(maybeArg)))
       return maybeArg;
 
     parsedArgs.push(maybeArg);
