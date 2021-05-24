@@ -1601,14 +1601,16 @@ tIO(`
 ...: expected a finished expression, but found a template
 `);
 
-// Known failing test due to unimplemented parser checking features
-
+/**
+ * @knowntestfail due to unimplemented parser checking features
+ */
 tIO('(define (hi bye) rye)',
 `rye: this variable is not defined
 `);
 
-// Known failing test due to unimplemented parser checking features
-
+/**
+ * @knowntestfail due to unimplemented parser checking features
+ */
 tIO('(define (hi bye) (f 2 2))',
 `f: this function is not defined
 `);
