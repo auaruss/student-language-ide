@@ -28,13 +28,12 @@ import {
 import { tokenize } from '../tokenize';
 import { read } from '../read';
 
-/*****************************************************************************
- *                        Test cases for correctness.                        *
- *                                                                           *
- * These test cases are intended to test the basic behavior of a BSL program *
- * regardless of live editing behavior.                                      *
- *****************************************************************************/
+import { a2Tests } from './assignment2.spec';
+import { a3Tests } from './assignment3.spec';
+import { a4Tests } from './assignment4.spec';
 
+
+const nonDefineStructTests = (): void => {
 t('', [], [], [], [], '\n');
 
 t('()',
@@ -205,6 +204,11 @@ t(
     SExps(IdAtom('define'), IdAtom('x'), NumAtom(10))
   ]
 );
+
+tIO('(define x 10) x',
+`Defined x to be 10.
+10
+`);
 
 t('(123)',
   
@@ -1214,123 +1218,123 @@ t('(check-expect (define x 10) 10)' // does not parse
 );
 
 t('(check-expect -13 -13)', undefined, undefined,
- [
+  [
   checkExpectSameNum
- ],
- [
+  ],
+  [
   MakeCheckSuccess()
- ],
- '🎉\n'
+  ],
+  '🎉\n'
 );
 
 t('(check-expect "hello" "hello")', undefined, undefined,
- [
+  [
   checkExpectSameString
- ],
- [
+  ],
+  [
   MakeCheckSuccess()
- ],
- '🎉\n'
+  ],
+  '🎉\n'
 );
 
 t('(check-expect #true #t)', undefined, undefined,
- [
+  [
   checkExpectTrue
- ],
- [
+  ],
+  [
   MakeCheckSuccess()
- ],
- '🎉\n'
+  ],
+  '🎉\n'
 );
 
 t('(check-expect #f #f)', undefined, undefined,
- [
+  [
   checkExpectFalse
- ],
- [
+  ],
+  [
   MakeCheckSuccess()
- ],
- '🎉\n'
+  ],
+  '🎉\n'
 );
 
 t('(check-expect hello hello)', undefined, undefined,
- [
+  [
   checkExpectSameId
- ],
- [
+  ],
+  [
   checkExpectedErrorSameId
- ],
+  ],
 'hello: this variable is not defined\n'
 );
 
 t('(check-expect -13 1)', undefined, undefined,
- [
+  [
   checkExpectDiffNum
- ],
- [
+  ],
+  [
   checkFailureDiffNum
- ],
- 'Actual value -13 differs from 1, the expected value.\n'
+  ],
+  'Actual value -13 differs from 1, the expected value.\n'
 );
 
 t('(check-expect hello goodbye)', undefined, undefined,
- [
+  [
   checkExpectDiffId
- ],
- [
+  ],
+  [
   checkExpectedErrorDiffId
- ],
- 'goodbye: this variable is not defined\n'
+  ],
+  'goodbye: this variable is not defined\n'
 );
 
 t('(check-expect "hello" "goodbye")', undefined, undefined,
- [
+  [
   checkExpectDiffString
- ],
- [
+  ],
+  [
   checkFailureDiffString
- ],
- 'Actual value "hello" differs from "goodbye", the expected value.\n'
+  ],
+  'Actual value "hello" differs from "goodbye", the expected value.\n'
 );
 
 t('(check-expect #t #f)', undefined, undefined,
- [
+  [
   checkExpectTrueIsNotFalse
- ],
- [
+  ],
+  [
   checkFailureTrueIsNotFalse
- ],
- 'Actual value #true differs from #false, the expected value.\n'
+  ],
+  'Actual value #true differs from #false, the expected value.\n'
 );
 
 t('(check-expect -13 hello)', undefined, undefined,
- [
+  [
   checkExpectDiffType1
- ],
- [
+  ],
+  [
   checkExpectedErrorDiffType1
- ],
- 'hello: this variable is not defined\n'
+  ],
+  'hello: this variable is not defined\n'
 );
 
 t('(check-expect hello "hello")', undefined, undefined,
- [
+  [
   checkExpectDiffType2
- ],
- [
+  ],
+  [
   checkFailureDiffType2
- ],
- 'hello: this variable is not defined\n'
+  ],
+  'hello: this variable is not defined\n'
 );
 
 t('(check-expect #true "goodbye")', undefined, undefined,
- [
+  [
   checkExpectDiffType3
- ],
- [
+  ],
+  [
   checkFailureDiffType3
- ],
- 'Actual value #true differs from "goodbye", the expected value.\n'
+  ],
+  'Actual value #true differs from "goodbye", the expected value.\n'
 );
 
 // Some posn tests
@@ -1404,7 +1408,7 @@ tIO('(- 0 0)', '0\n');
 
 tIO(
 `(cond [(string=? "hello" "goodbye") 1]
-       [(string=? "hello" "hello") 2])`,
+        [(string=? "hello" "hello") 2])`,
 `2
 `
 );
@@ -1725,37 +1729,6 @@ define: expected the name of the function, but found a part
 define: expected a variable name, or a function name and its variables (in parentheses), but found a keyword
 define: expected the name of the function, but found a keyword
 define: expected a variable, but found a keyword
-`);
-
-tIO(`define-struct
-(define-struct)
-(define-struct "posn" [x y])
-(define-struct 1 [x y])
-(define-struct #t [x y])
-(define-struct (f x) [x y])
-(define-struct posn)
-(define-struct posn 1 2 3)
-(define-struct posn (x y) 2 3)
-(define-struct posn "x")
-(define-struct posn 1)
-(define-struct posn #t)
-(define-struct posn (x 1) 1)
-(define-struct posn (x (x y)))
-`,
-`define-struct: expected an open parenthesis before define-struct, but found none
-define-struct: expected the structure name after define-struct, but nothing's there
-define-struct: expected the structure name after define-struct, but found a string
-define-struct: expected the structure name after define-struct, but found a number
-define-struct: expected the structure name after define-struct, but found something else
-define-struct: expected the structure name after define-struct, but found a part
-define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-define-struct: expected nothing after the field names, but found 2 extra parts
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
-define-struct: expected a field name, but found a number
-define-struct: expected a field name, but found a part
 `);
 
 tIO(`if
@@ -2137,7 +2110,7 @@ t('(define (fib n)\n' +
 '           1\n' +
 '           (+ (fib (- n 2)) (fib (- n 1))))))');
 
- /**
+  /**
  * Behavior:
  * Someone uses an editor that inserts matching parens automatically.
  * when they write (fib 10), it goes from () to (fib 10) one character at a time.
@@ -2147,3 +2120,59 @@ t('(define (fib n)\n' +
  * Behavior:
  * A user comments out a piece of code.
  */
+}
+
+const defineStructTests = (): void => {
+tIO(`define-struct
+(define-struct)
+(define-struct "posn" [x y])
+(define-struct 1 [x y])
+(define-struct #t [x y])
+(define-struct (f x) [x y])
+(define-struct posn)
+(define-struct posn 1 2 3)
+(define-struct posn (x y) 2 3)
+(define-struct posn "x")
+(define-struct posn 1)
+(define-struct posn #t)
+(define-struct posn (x 1) 1)
+(define-struct posn (x (x y)))
+`,
+`define-struct: expected an open parenthesis before define-struct, but found none
+define-struct: expected the structure name after define-struct, but nothing's there
+define-struct: expected the structure name after define-struct, but found a string
+define-struct: expected the structure name after define-struct, but found a number
+define-struct: expected the structure name after define-struct, but found something else
+define-struct: expected the structure name after define-struct, but found a part
+define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected nothing after the field names, but found 2 extra parts
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
+define-struct: expected a field name, but found a number
+define-struct: expected a field name, but found a part
+`);
+}
+
+/**
+ * A place to put the test groupings we are currently working on.
+ * These are currently run always by default.
+ */
+ const currentWorkingOnTheseTests = (): void => {
+  nonDefineStructTests();
+}
+
+/**
+ * A place to put the test groupings we are not currently working on.
+ * These are currently run never by default.
+ */
+const nonCurrentWorkingOnTheseTests = (): void => {
+  defineStructTests();
+  a2Tests();
+  a3Tests();
+  a4Tests();
+}
+
+
+currentWorkingOnTheseTests();

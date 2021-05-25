@@ -17,6 +17,8 @@ import {
 
 import { TokenType } from '../types';
 
+export const a2Tests = (): void => {
+
 t(
 `; Exercise 1.
 
@@ -313,3 +315,5 @@ Defined (y-pos t) to be (- (* init-y-vel t) (* 0.5 0.003 t t)).
 🎉
 `
 );
+
+}

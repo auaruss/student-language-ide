@@ -8,6 +8,8 @@
 
 import { tIO } from './test-harness';
 
+export const a3Tests = (): void => {
+
 tIO(`; A Year is a non-negative integer
 ; Examples:
 ;   0
@@ -450,3 +452,5 @@ Defined (days->day d) to be (add1 (days-in-year->days-in-month (modulo d 365))).
 Defined first-day to be 737682.
 Defined length-of-semester to be 109.
 `);
+
+}

@@ -8,6 +8,8 @@
 
 import { tIO } from './test-harness';
 
+export const a4Tests = (): void => {
+
 tIO(`; Exercise 1. (Unimplemented)
 ; Exercise 2. (Unimplemented)
 ; Exercise 3. (Unimplemented)
@@ -156,3 +158,5 @@ tIO(`; Exercise 1. (Unimplemented)
 (check-expect (edit e5 "\r") e5)
 (check-expect (edit e5 "up") e5)`,
 ``);
+
+}
