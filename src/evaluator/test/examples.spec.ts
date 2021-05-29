@@ -1852,9 +1852,7 @@ t('(cond ["#t" "hello"] [else "goodbye"])');
 t('((λ (x) (+ 2 x)) 2)');
 
 // How keywords are restricted from being used as var names in BSL.
-/** @fix */
 tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword\n');
-/** @fix */
 tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword\n');
 
 
@@ -1910,7 +1908,6 @@ tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
 
 
 // Note: This is an intentional difference from how DrRacket BSL behaves.
-/** @fix */
 tIO(`(define (f check-expect) check-expect)
 (define (f check-error) check-error)
 (define (f check-within) check-within)
@@ -1919,6 +1916,7 @@ tIO(`(define (f check-expect) check-expect)
 (define (f check-member-of) check-member-of)
 (define (f check-range) check-range)`,
 `define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword
 define: expected a variable, but found a keyword

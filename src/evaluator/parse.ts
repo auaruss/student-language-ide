@@ -368,14 +368,40 @@ parseEnv.set('check-within', [
   }
 ]);
 
+/** @todo implement */
+parseEnv.set('check-error', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
+]);
+
+parseEnv.set('check-random', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
+]);
+
+parseEnv.set('check-satisfied', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
+]);
+
+parseEnv.set('check-member-of', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
+]);
+
+parseEnv.set('check-range', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
+]);
+
 parseEnv.set('lambda', [
   () => { return TopLevelErr('Unimplemented keyword', []) },
-  (sexps) => { return TopLevelErr('Unimplemented keyword', []) }
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
 ]);
 
 parseEnv.set('λ', [
   () => { return TopLevelErr('Unimplemented keyword', []) },
-  (sexps) => { return TopLevelErr('Unimplemented keyword', []) }
+  (sexps) => { return TopLevelErr('Unimplemented keyword', sexps) }
 ]);
 
 /**
