@@ -368,6 +368,16 @@ parseEnv.set('check-within', [
   }
 ]);
 
+parseEnv.set('lambda', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', []) }
+]);
+
+parseEnv.set('λ', [
+  () => { return TopLevelErr('Unimplemented keyword', []) },
+  (sexps) => { return TopLevelErr('Unimplemented keyword', []) }
+]);
+
 /**
  * Given a program, parses the string into a set of top level syntactical objects
  * @param exp program to be parsed
