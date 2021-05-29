@@ -406,48 +406,6 @@ t('((+) 1 2)', undefined, undefined,
   ]
 );
 
-// t(`(and true)
-// (and true true)
-// (and true true true)
-// (and true false true)
-// (and true false "hello")
-// (and true "hello" false)`,
-//   undefined,
-//   undefined,
-//   [
-//     TopLevelErr('and: expects at least 2 arguments, but found only 1', read('true')),
-//     and1, and2, and3, and4, and5
-//   ],
-//   undefined,
-// `and: expects at least 2 arguments, but found only 1
-// #true
-// #true
-// #false
-// #false
-// and: question result is not true or false: "hello"
-// `);
-
-// t(`(or false)
-// (or false false)
-// (or false true true)
-// (or false false true)
-// (or false true "hello")
-// (or false "hello" true)`,
-//   undefined,
-//   undefined,
-//   [
-//     TopLevelErr('or: expects at least 2 arguments, but found only 1', read('false')),
-//     or1, or2, or3, or4, or5
-//   ],
-//   undefined,
-// `or: expects at least 2 arguments, but found only 1
-// #false
-// #true
-// #true
-// #true
-// or: question result is not true or false: "hello"
-// `);
-
 }
 
 const evaluatorErrorTests = (): void => {
@@ -494,6 +452,12 @@ tIO(
 !: expected a function call, but there is no open parenthesis before this function
 `
 );
+
+tIO(`(define (hi bye) (+))
+(pi)`,
+`Defined (hi bye) to be (+).
+function call: expected a function after the open parenthesis, but found a variable
+`);
 
 }
 
@@ -826,60 +790,25 @@ const defineStructTests = (): void => {
   `);
 }
 
-const otherTurnedOffTests = (): void => {
+const pendingEvaluatorChangesTests = (): void => {
 
 /**
  * @knowntestfail pending evaluator changes
  */
-tIO('(sin 1)',
-`${ Math.sin(1) }
-`
-);
+ tIO('(sin 1)',
+ `${ Math.sin(1) }
+ `
+ );
+ 
+ /**
+  * @knowntestfail pending evaluator changes
+  */
+ tIO('(sin 2 3)',
+ 'sin: expects only 1 argument, but found 2\n'
+ );
 
 /**
  * @knowntestfail pending evaluator changes
- */
-tIO('(sin 2 3)',
-'sin: expects only 1 argument, but found 2\n'
-);
-
-/**
- * @knowntestfail 
- */
-tIO('(define f +)', 
-`+: expected a function call, but there is no open parenthesis before this function
-`
-);
-
-/**
- * @knowntestfail unimplemented evaluator features
- */
-tIO(`(not true)
-(not false)
-(not true true)
-(not "One")`,
-`#false
-#true
-not: expects only 1 argument, but found 2
-not: expected either #true or #false; given "one"
-`);
-
-/**
- * @knowntestfail '.' should not pass the reader as valid
- */
-tIO(`(define (f .) .)`,
-`read-syntax: illegal use of \`.\`
-`);
-
-/**
- * @knowntestfail '#)' should not pass the reader as valid
- */
-tIO(`((#) 2 3)`,
-`read-syntax: bad syntax \`#)\`
-`);
-
-/**
- * @knowntestfail pending evaluator refactoring
  */
 tIO(`(modulo 5 2)
 (modulo -5 2)
@@ -895,70 +824,68 @@ modulo: undefined for 0
 -5
 2
 16
-`
-);
-
+`);
+ 
 /**
- * @knowntestfail unimplemented feature
+ * @knowntestfail pending evaluator changes
  */
-tIO(`(substring "hello world" 2)
-(substring "hello world" 2 4)
-(substring "hello" 5 5)
-(substring "hello" 25)
-(substring "hello" 5 25)`,
-`"llo world"
-"ll"
-""
-substring: starting index is out of range
-  starting index: 25
-  valid range: [0, 5]
-  string: "hello"
-substring: ending index is out of range
-  ending index: 25
-  starting index: 5
-  valid range: [0, 5]
-  string: "hello"
+t(`(and true)
+(and true true)
+(and true true true)
+(and true false true)
+(and true false "hello")
+(and true "hello" false)`,
+  undefined,
+  undefined,
+  [
+    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('true')),
+    and1, and2, and3, and4, and5
+  ],
+  undefined,
+`and: expects at least 2 arguments, but found only 1
+#true
+#true
+#false
+#false
+and: question result is not true or false: "hello"
+`);
+ 
+/**
+ * @knowntestfail pending evaluator changes
+ */
+t(`(or false)
+(or false false)
+(or false true true)
+(or false false true)
+(or false true "hello")
+(or false "hello" true)`,
+  undefined,
+  undefined,
+  [
+    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('false')),
+    or1, or2, or3, or4, or5
+  ],
+  undefined,
+`or: expects at least 2 arguments, but found only 1
+#false
+#true
+#true
+#true
+or: question result is not true or false: "hello"
 `);
 
 /**
  * @knowntestfail pending evaluator refactoring
  */
-tIO(`(abs -1 -2)
-(abs -13)
-(abs 0)
-(abs 100)`,
-`abs: expects only 1 argument, but found 2
-13
-0
-100
-`);
-
-/**
- * @knowntestfail due to unimplemented parser checking features
- */
-tIO('(define (hi bye) rye)',
-`rye: this variable is not defined
-`);
-
-/**
-* @knowntestfail due to unimplemented parser checking features
-*/
-tIO('(define (hi bye) (f 2 2))',
-`f: this function is not defined
-`);
-
-/**
- * @knowntestfail printer spacing
- */
-tIO(`("string")
-(id)
-(#t)
-((+ 2 2) 2 2)`,
-`function call: expected a function after the open parenthesis, but found a string
-id: this function is not defined
-function call: expected a function after the open parenthesis, but found something else
-function call: expected a function after the open parenthesis, but found a part
-`);
+ tIO(`(abs -1 -2)
+ (abs -13)
+ (abs 0)
+ (abs 100)`,
+ `abs: expects only 1 argument, but found 2
+ 13
+ 0
+ 100
+ `);
 
 /**
  * @knowntestfail pending evaluator refactoring
@@ -1059,6 +986,94 @@ t(`
   [ posnTemplateDefn ],
   undefined,
 `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+`);
+
+}
+
+const otherTurnedOffTests = (): void => {
+
+/**
+ * @knowntestfail 
+ */
+tIO('(define f +)', 
+`+: expected a function call, but there is no open parenthesis before this function
+`
+);
+
+/**
+ * @knowntestfail unimplemented evaluator features
+ */
+tIO(`(not true)
+(not false)
+(not true true)
+(not "One")`,
+`#false
+#true
+not: expects only 1 argument, but found 2
+not: expected either #true or #false; given "one"
+`);
+
+/**
+ * @knowntestfail '.' should not pass the reader as valid
+ */
+tIO(`(define (f .) .)`,
+`read-syntax: illegal use of \`.\`
+`);
+
+/**
+ * @knowntestfail '#)' should not pass the reader as valid
+ */
+tIO(`((#) 2 3)`,
+`read-syntax: bad syntax \`#)\`
+`);
+
+/**
+ * @knowntestfail unimplemented feature
+ */
+tIO(`(substring "hello world" 2)
+(substring "hello world" 2 4)
+(substring "hello" 5 5)
+(substring "hello" 25)
+(substring "hello" 5 25)`,
+`"llo world"
+"ll"
+""
+substring: starting index is out of range
+  starting index: 25
+  valid range: [0, 5]
+  string: "hello"
+substring: ending index is out of range
+  ending index: 25
+  starting index: 5
+  valid range: [0, 5]
+  string: "hello"
+`);
+
+/**
+ * @knowntestfail due to unimplemented parser checking features
+ */
+tIO('(define (hi bye) rye)',
+`rye: this variable is not defined
+`);
+
+/**
+* @knowntestfail due to unimplemented parser checking features
+*/
+tIO('(define (hi bye) (f 2 2))',
+`f: this function is not defined
+`);
+
+/**
+ * @knowntestfail printer spacing
+ */
+tIO(`("string")
+(id)
+(#t)
+((+ 2 2) 2 2)`,
+`function call: expected a function after the open parenthesis, but found a string
+id: this function is not defined
+function call: expected a function after the open parenthesis, but found something else
+function call: expected a function after the open parenthesis, but found a part
 `);
 
 }
@@ -1891,19 +1906,11 @@ tIO('(floor 1.55555)',
 `1
 `);
 
-// Neither of these appear to be parsing errors in BSL. Should we change that?
-/** @fix */
-tIO(`(define (hi bye) (+))
-(pi)`,
-`Defined (hi bye) to be (+).
-function call: expected a function after the open parenthesis, but found a variable
-`);
-
 // This is a parsing error.
 /** @fix */
-tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
-`function call: expected a function after the open parenthesis, but found (+ 2 2)
-`);
+// tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
+// `function call: expected a function after the open parenthesis, but found (+ 2 2)
+// `);
 
 
 
@@ -2054,9 +2061,8 @@ const currentWorkingOnTheseTests = (): void => {
   parserErrorTests();
 
   checkExpectTests();
-
   arithmeticTests();
-
+  pendingEvaluatorChangesTests();
 }
 
 /**
