@@ -1853,9 +1853,9 @@ t('((λ (x) (+ 2 x)) 2)');
 
 // How keywords are restricted from being used as var names in BSL.
 /** @fix */
-tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword');
+tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword\n');
 /** @fix */
-tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword');
+tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword\n');
 
 
 tIO(`(define (f make-posn) make-posn)
