@@ -9,12 +9,13 @@
  */
 
 import {
-  isValueError, isExprError, isReadError, isTokenError, isResultError
+  isValueError, isExprError, isReadError, isTokenError, isResultError, isTopLevelError,
+  isExpr
 } from './../predicates';
 
 import {
   TopLevel, Expr, ReadError, TokenError, 
-  Token, SExp, Result, Value, ValueError, ExprError, ResultError, ExprResult
+  Token, SExp, Result, Value, ValueError, ExprError, ResultError, ExprResult, TopLevelError
 } from '../types';
 
 import { checkExpect } from './check-expect';
@@ -431,7 +432,13 @@ const matchingValueErrors = (actual: ValueError, expected: ValueError): boolean 
  * @returns whether two result errors are equal
  */
 const matchingResultErrors = (actual: ResultError, expected: ResultError): boolean => {
-  return true;
+  if (isTopLevelError(expected))
+    return (isTopLevelError(actual) && matchingTopLevelErrors(actual, expected));
+  return (
+    (! isTopLevelError(actual))
+    && expected.resultError === actual.resultError
+    && matchingTopLevels(expected.toplevel, actual.toplevel)
+  )
 }
 
 /**
@@ -441,5 +448,78 @@ const matchingResultErrors = (actual: ResultError, expected: ResultError): boole
  * @returns whether two expression results are equal
  */
  const matchingExprResults = (actual: ExprResult, expected: ExprResult): boolean => {
+  if (isValueError(expected))
+    return isValueError(actual) && matchingValueErrors(actual, expected);
+  return (! isValueError(actual)) && matchingValues(actual, expected);
+}
+
+/**
+ * Determines if two top level syntactical objects are equal.
+ * @param actual actual top level syntactical object produced by a function
+ * @param expected test top level syntactical object expected to be equal 
+ * @returns whether top level syntactical objects are equal
+ */
+const matchingTopLevels = (actual: TopLevel, expected: TopLevel): boolean => {
+  if (isTopLevelError(expected))
+    return isTopLevelError(actual) && matchingTopLevelErrors(actual, expected);
+  if (isExpr(expected))
+    return isExpr(actual) && matchingExprs(actual, expected);
+  
+  if (isTopLevelError(actual) || isExpr(actual))
+    return false;
+  
+  switch (expected.type) {
+    case 'check-error':
+      return (
+        expected.type === actual.type
+        && matchingExprs(actual.expression, expected.expression)
+        && actual.expectedErrorMessage === expected.expectedErrorMessage
+      );
+
+    case 'check-expect':
+      return (
+        expected.type === actual.type
+        && matchingExprs(actual.actual, expected.actual)
+        && matchingExprs(actual.expected, expected.expected)
+      );
+
+    case 'check-within':
+      return (
+        expected.type === actual.type
+        && matchingExprs(actual.actual, expected.actual)
+        && matchingExprs(actual.expected, expected.expected)
+        && matchingExprs(actual.margin, expected.margin)
+      );
+
+    case 'define-constant':
+      return (
+        expected.type === actual.type
+        && expected.name === actual.name
+        && matchingExprs(actual.body, expected.body)
+      );
+
+    case 'define-function':
+      return (
+        expected.type === actual.type
+        && expected.name === actual.name
+        && expected.params === actual.params
+      );
+
+    case 'define-struct':
+      return (
+        expected.type === actual.type
+        && expected.fields === actual.fields
+        && expected.name === actual.name
+      );
+  }
+}
+
+/**
+ * Determines if two top level errors are equal.
+ * @param actual actual top level error produced by a function
+ * @param expected test top level error expected to be equal 
+ * @returns whether top level errors are equal
+ */
+const matchingTopLevelErrors = (actual: TopLevelError, expected: TopLevelError): boolean => {
   return true;
 }
