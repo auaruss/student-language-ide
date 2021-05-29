@@ -67,9 +67,7 @@ parseEnv.set('define', [
 
       case 'SExp Array':
         if (sexps[0].sexp.length === 0)
-            return TopLevelErr('define: expected a name for the function, but nothing\'s there', sexps); 
-        if (sexps[0].sexp.length === 1)
-          return TopLevelErr('define: expected at least one variable after the function name, but found none', sexps);
+            return TopLevelErr('define: expected a name for the function, but nothing\'s there', sexps);
 
         const firstItemInFunctionHeader = sexps[0].sexp[0];
 
@@ -83,11 +81,19 @@ parseEnv.set('define', [
 
         for (const sexp of sexps[0].sexp.slice(1)) {
           if (isReadError(sexp)) return sexp;
-          if (! (sexp.type === 'Id'))
+          if (sexp.type !== 'Id')
             return TopLevelErr(`define: expected a variable, but found a ${ sexp.type }`, sexps);
           
+          if (parseEnv.has(sexp.sexp))
+            return TopLevelErr('define: expected a variable, but found a keyword', sexps);
+
           params.push(sexp.sexp);
         }
+
+        // This is here because if we place it before the loop keywords are checked after
+        // length of the header, which is not intended behavior in DrRacket BSL.
+        if (sexps[0].sexp.length === 1)
+          return TopLevelErr('define: expected at least one variable after the function name, but found none', sexps);
 
         if (sexps.length > 2)
           return TopLevelErr(`define: expected only one expression for the function body, but found ${ sexps.length - 2 } extra part ${ (sexps.length === 3) ? '' : 's'}`, sexps);
