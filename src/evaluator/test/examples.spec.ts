@@ -2048,6 +2048,29 @@ t('(+ 2 4) (+ 4 7)',
   '11\n'
 );
 
+
+t('(define (define-struct x y) x)'); // error
+
+t('(define (x define-struct y) y)'); // error
+
+t('(define define 1)', undefined, undefined, 
+  [
+    TopLevelErr(
+      'define: expected a variable name, or a function name and its variables (in parentheses), but found a keyword',
+      read('(define define 1)')
+    )
+  ]
+);
+
+t('(+ define 1)', undefined, undefined, 
+  [
+    TopLevelErr(
+      'define: expected an open parenthesis before define, but found none',
+      [IdAtom('define')]
+    )
+  ]
+);
+
 }
 
 /**
@@ -2062,7 +2085,6 @@ const currentWorkingOnTheseTests = (): void => {
 
   checkExpectTests();
   arithmeticTests();
-  pendingEvaluatorChangesTests();
 }
 
 /**
@@ -2080,6 +2102,7 @@ const nonCurrentWorkingOnTheseTests = (): void => {
   a4Tests();
 
   otherTurnedOffTests();
+  pendingEvaluatorChangesTests();
 }
 
 
