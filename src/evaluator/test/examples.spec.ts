@@ -78,9 +78,12 @@ t('(define bool #t123)',
   [
     TopLevelErr('define: expected only one expression after the variable name bool, but found 1 extra part',
     [
-      IdAtom('bool'),
-      TokErr('#'),
-      IdAtom('t123'),
+      SExps(
+        IdAtom('define'),
+        IdAtom('bool'),
+        TokErr('#'),
+        IdAtom('t123')
+      )
     ])
   ],
 );
@@ -2048,9 +2051,10 @@ t('(+ 2 4) (+ 4 7)',
   '11\n'
 );
 
-
+/** @fix */
 t('(define (define-struct x y) x)'); // error
 
+/** @fix */
 t('(define (x define-struct y) y)'); // error
 
 t('(define define 1)', undefined, undefined, 

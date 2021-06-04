@@ -1,5 +1,3 @@
-import { assertNotNull } from '@angular/compiler/src/output/output_ast';
-import { MakeVariableDefinition, MakeStructureDefinition } from './constructors';
 /**
  * @fileoverview An AST parser for the student languages.
  *               Generally, produces types from the third section of types.ts given types
@@ -10,10 +8,16 @@ import { MakeVariableDefinition, MakeStructureDefinition } from './constructors'
 
 'use strict';
 
-import { IdAtom, MakeBooleanExpr, MakeCond, MakeIf, MakeNumberExpr, MakeStringExpr, MakeVariableUsageExpr, TopLevelErr, MakeTemplatePlaceholder, SExps, MakeFunctionDefinition, MakeAnd, MakeOr, MakeCheckExpect, MakeCheckWithin, MakeCall } from './constructors';
+import {
+  IdAtom, MakeBooleanExpr, MakeCond, MakeIf, MakeNumberExpr,
+  MakeStringExpr, MakeVariableUsageExpr, TopLevelErr, MakeTemplatePlaceholder,
+  SExps, MakeFunctionDefinition, MakeAnd, MakeOr, MakeCheckExpect, 
+  MakeCheckWithin, MakeCall
+} from './constructors';
 import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError, isExprArray } from './predicates';
 import { read } from './read';
 import { Expr, ParseEnv, SExp, TopLevel, TopLevelError } from './types';
+import { MakeVariableDefinition, MakeStructureDefinition } from './constructors';
 
 
 /**
@@ -31,7 +35,7 @@ const parseEnv: ParseEnv
   >();
 
 parseEnv.set('define', [
-  () => TopLevelErr('define: expected an open parenthesis before define, but found none', []),
+  () => TopLevelErr('define: expected an open parenthesis before define, but found none', [IdAtom('define')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('define: expected a variable name, or a function name and its variables (in parentheses), but nothing\'s there', [SExps(IdAtom('define'), ...sexps)]);
@@ -57,9 +61,10 @@ parseEnv.set('define', [
           return TopLevelErr(
             `define: expected only one expression after the variable name ${ sexps[0].sexp }, but found 1 extra part`,
             [SExps(IdAtom('define'), ...sexps)]
-          ); // (define x y z z x x c x c v)
+          ); 
 
-        // variable is keyword?
+        if (parseEnv.has(sexps[0].sexp))
+            return TopLevelErr('define: expected a variable name, or a function name and its variables (in parentheses), but found a keyword', [SExps(IdAtom('define'), ...sexps)]);
 
         const maybeBody = parseExpression(sexps[1]);
 
@@ -112,7 +117,7 @@ parseEnv.set('define', [
 ]);
 
 parseEnv.set('define-struct', [
-  () => TopLevelErr('define-struct: expected an open parenthesis before define-struct, but found none', []),
+  () => TopLevelErr('define-struct: expected an open parenthesis before define-struct, but found none', [IdAtom('define-struct')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('define: expected only one expression for the function body, but found 1 extra part', [SExps(IdAtom('define-struct'), ...sexps)]);
@@ -177,7 +182,7 @@ parseEnv.set('define-struct', [
 ]);
 
 parseEnv.set('if', [
-  () => TopLevelErr('if: expected an open parenthesis before if, but found none', []),
+  () => TopLevelErr('if: expected an open parenthesis before if, but found none', [IdAtom('if')]),
   (sexps: SExp[]) => {
     if (isReadError(sexps[0])) return sexps[0];
     if (sexps.length === 0)
@@ -198,7 +203,7 @@ parseEnv.set('if', [
 ]);
 
 parseEnv.set('cond', [
-  () => TopLevelErr('cond: expected an open parenthesis before cond, but found none', []),
+  () => TopLevelErr('cond: expected an open parenthesis before cond, but found none', [IdAtom('cond')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('cond: expected a clause after cond, but nothing\'s there', [SExps(IdAtom('cond'), ...sexps)]);
@@ -242,7 +247,7 @@ parseEnv.set('cond', [
 ]);
 
 parseEnv.set('and', [
-  () => TopLevelErr('and: expected an open parenthesis before and, but found none', []),
+  () => TopLevelErr('and: expected an open parenthesis before and, but found none', [IdAtom('and')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('and: expects at least 2 arguments, but found none', [SExps(IdAtom('and'), ...sexps)]);
@@ -260,7 +265,7 @@ parseEnv.set('and', [
 ]);
 
 parseEnv.set('or', [
-  () => TopLevelErr('or: expected an open parenthesis before and, but found none', []),
+  () => TopLevelErr('or: expected an open parenthesis before and, but found none', [IdAtom('or')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('or: expects at least 2 arguments, but found none', [SExps(IdAtom('or'), ...sexps)]);
@@ -279,7 +284,7 @@ parseEnv.set('or', [
 
 
 parseEnv.set('..', [
-  () => TopLevelErr('..: expected a finished expression, but found a template', []),
+  () => TopLevelErr('..: expected a finished expression, but found a template', [IdAtom('..')]),
   (sexps: SExp[]) => {
     for (const sexp of sexps) {
       if (isReadError(sexp)) return sexp;
@@ -289,7 +294,7 @@ parseEnv.set('..', [
 ]);
 
 parseEnv.set('...', [
-  () => TopLevelErr('...: expected a finished expression, but found a template', []),
+  () => TopLevelErr('...: expected a finished expression, but found a template', [IdAtom('...')]),
   (sexps: SExp[]) => {
     for (const sexp of sexps) {
       if (isReadError(sexp)) return sexp;
@@ -299,7 +304,7 @@ parseEnv.set('...', [
 ]);
 
 parseEnv.set('....', [
-  () => TopLevelErr('....: expected a finished expression, but found a template', []),
+  () => TopLevelErr('....: expected a finished expression, but found a template', [IdAtom('....')]),
   (sexps: SExp[]) => {
     for (const sexp of sexps) {
       if (isReadError(sexp)) return sexp;
@@ -309,7 +314,7 @@ parseEnv.set('....', [
 ]);
 
 parseEnv.set('.....', [
-  () => TopLevelErr('.....: expected a finished expression, but found a template', []),
+  () => TopLevelErr('.....: expected a finished expression, but found a template', [IdAtom('.....')]),
   (sexps: SExp[]) => {
     for (const sexp of sexps) {
       if (isReadError(sexp)) return sexp;
@@ -319,7 +324,7 @@ parseEnv.set('.....', [
 ]);
 
 parseEnv.set('......', [
-  () => TopLevelErr('......: expected a finished expression, but found a template', []),
+  () => TopLevelErr('......: expected a finished expression, but found a template', [IdAtom('......')]),
   (sexps: SExp[]) => {
     for (const sexp of sexps) {
       if (isReadError(sexp)) return sexp;
@@ -329,7 +334,7 @@ parseEnv.set('......', [
 ]);
 
 parseEnv.set('check-expect', [
-  () => TopLevelErr('check-expect: expects 2 arguments, but found none', []),
+  () => TopLevelErr('check-expect: expects 2 arguments, but found none', [IdAtom('check-expect')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('check-expect: expects 2 arguments, but found none', [SExps(IdAtom('check-expect'), ...sexps)]);
@@ -352,7 +357,7 @@ parseEnv.set('check-expect', [
 ]);
 
 parseEnv.set('check-within', [
-  () => TopLevelErr('check-within: expects 3 arguments, but found none', []),
+  () => TopLevelErr('check-within: expects 3 arguments, but found none', [IdAtom('check-within')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
       return TopLevelErr('check-within: expects 3 arguments, but found none', [SExps(IdAtom('check-within'), ...sexps)]);
@@ -373,37 +378,37 @@ parseEnv.set('check-within', [
 
 /** @todo implement */
 parseEnv.set('check-error', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('check-error')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('check-error'), ...sexps)]) }
 ]);
 
 parseEnv.set('check-random', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('check-random')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('check-random'), ...sexps)]) }
 ]);
 
 parseEnv.set('check-satisfied', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('check-satisfied')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('check-satisfied'), ...sexps)]) }
 ]);
 
 parseEnv.set('check-member-of', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('check-member-of')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('check-member-of'), ...sexps)]) }
 ]);
 
 parseEnv.set('check-range', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('check-range')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('check-range'), ...sexps)]) }
 ]);
 
 parseEnv.set('lambda', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('lambda')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('lambda'), ...sexps)]) }
 ]);
 
 parseEnv.set('λ', [
-  () => { return TopLevelErr('Unimplemented keyword', []) },
+  () => { return TopLevelErr('Unimplemented keyword', [IdAtom('λ')]) },
   (sexps) => { return TopLevelErr('Unimplemented keyword', [SExps(IdAtom('λ'), ...sexps)]) }
 ]);
 
@@ -540,7 +545,7 @@ const parseCall = (fname: string, sexps: SExp[]): Expr | TopLevelError => {
     const maybeArg = parseExpression(sexp);
 
     if (isTopLevelError(maybeArg) || isExprError(maybeArg) || (! isExpr(maybeArg)))
-      return maybeArg; // TopLevelErr('define...', []);
+      return maybeArg;
 
     parsedArgs.push(maybeArg);
   }
