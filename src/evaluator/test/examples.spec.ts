@@ -702,7 +702,7 @@ const checkExpectTests = (): void => {
 
 const builtinStructTests = (): void => {
 
-tIO('(make-posn 2 3)', '(make-posn 2 3)');
+tIO('(make-posn 2 3)', '(make-posn 2 3)\n');
 
 tIO('(posn-x (make-posn 2 3))', '2\n');
 

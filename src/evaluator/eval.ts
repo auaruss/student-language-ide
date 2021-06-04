@@ -1,4 +1,4 @@
-import { isValue, isValueArray, isTopLevelError, isExpr, isExprResult, isTopLevel } from './predicates';
+import { isValue, isValueArray, isTopLevelError, isExpr, isTopLevel } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -57,7 +57,7 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
   const evalPass = toplevels.map(
     e => {
       return (
-        ((! isTopLevelError(e)) 
+        ((! isTopLevelError(e))
           && (! isExpr(e))
           && (
                (e.type === 'check-expect')
@@ -76,7 +76,7 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
         ((! isTopLevelError(e))
           && isTopLevel(e)
           && (! isExpr(e))
-        ) ? evaluateCheck(e, env) 
+        ) ? evaluateCheck(e, env)
         : e
       );
     }
@@ -146,8 +146,10 @@ const evaluateDefinition = (d: {
       case 'define-function':
         sndarg = Clos(d.params, env, d.body);
         break;
+
       case 'define-constant':
         sndarg = evaluateExpr(d.body, env);
+        
         if (!isValueError(sndarg)) switch (sndarg.type) {
           case 'BuiltinFunction':
           case 'Closure':
@@ -156,9 +158,12 @@ const evaluateDefinition = (d: {
           case 'StructurePredicate':
             return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
         }
+
+        return Bind(d.name, sndarg);
+
       case 'define-struct':
         return ValErr('Unimplemented feature');
-    }
+  }
     if (defnVal.type === 'nothing') {
       mutateEnv(d.name, MakeJust(sndarg), env);
       return Bind(d.name, sndarg);
@@ -186,10 +191,8 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       return MakeAtomic(e.const);
     case 'VariableUsage':
       let x = getVal(e.const, env);
-      if (!x) {
+      if (!x || x.type === 'nothing') {
         return ValErr('this variable is not defined', e);
-      } else if (x.type === 'nothing') {
-        return ValErr('Id referenced before definition', e);
       } else {
         return x.thing;
       }
@@ -255,7 +258,7 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
   switch (op.type) {
     case 'Atomic':
     case 'Struct':
-      return ValErr('Tried to apply a nonfunction as a function', e);
+      return ValErr('function call: expected a function after the open parenthesis, but found a variable');
 
     case 'BuiltinFunction':
       return op.value(args);
@@ -285,8 +288,8 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
       return MakeStruct(op.struct, args);
 
     case 'StructurePredicate':
-      if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
-      if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
+      if (args.length !== 1) return ValErr('must apply a structure predicate to exactly one argument', e);
+      if (args[0].type !== 'Struct') return MakeAtomic(false);
       return MakeAtomic(op.struct === args[0].struct);
   }
 
