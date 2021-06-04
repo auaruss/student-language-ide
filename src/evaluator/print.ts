@@ -117,10 +117,12 @@ const printExpr = (e: Expr): string => {
 
     case 'Call':
       return (
-        `(${e.op} ${
-          e.args.reduce(
-            (acc, elem) => acc + printExpr(elem) + ' ',
-            ''
+        `(${
+          e.op.concat(
+            e.args.reduce(
+              (acc, elem) => acc + printExpr(elem) + ' ',
+              ' '
+            )
           ).trim()})`
       );
 
