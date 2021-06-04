@@ -1,4 +1,3 @@
-import { isValue, isValueArray, isTopLevelError, isExpr, isTopLevel } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -20,7 +19,10 @@ import {
   MakeCheckSuccess, MakeCheckFailure, MakeStruct, ResultErr
 } from './constructors';
 
-import { isExprError, isValueError } from './predicates';
+import {
+  isValue, isValueArray, isTopLevelError,
+  isExpr, isTopLevel, isExprError, isValueError
+} from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
 
@@ -65,7 +67,7 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
             || (e.type === 'check-error')
           )
         ) ? e
-        : evaluateDefOrExpr(e, env)
+        : evaluateTopLevel(e, env)
       );
     }
   );
@@ -89,11 +91,11 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
  * @param env the environment for the selected student language
  * @returns a result after evaluating the top level syntactical object
  */
-const evaluateDefOrExpr = (toplevel: TopLevel, env: Env): Result => {
+const evaluateTopLevel = (toplevel: TopLevel, env: Env): Result => {
   if (isTopLevelError(toplevel)) return toplevel;
   if (! isExpr(toplevel)
     && (
-      toplevel.type ==='define-constant'
+       toplevel.type ==='define-constant'
     || toplevel.type === 'define-function'
     || toplevel.type === 'define-struct'
     )
@@ -167,12 +169,10 @@ const evaluateDefinition = (d: {
     if (defnVal.type === 'nothing') {
       mutateEnv(d.name, MakeJust(sndarg), env);
       return Bind(d.name, sndarg);
-    } else {
+    } else
       return ResultErr('Repeated definition of the same name', d);
-    }
   }
 }
-
 
 /**
  * Evaluates an expression.
@@ -184,18 +184,17 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
   if (isExprError(e)) {
     return e;
   } else switch (e.typeOfExpression) {
-
     case 'String':
     case 'Number':
     case 'Boolean':
       return MakeAtomic(e.const);
+
     case 'VariableUsage':
       let x = getVal(e.const, env);
-      if (!x || x.type === 'nothing') {
+      if (!x || x.type === 'nothing')
         return ValErr('this variable is not defined', e);
-      } else {
+      else
         return x.thing;
-      }
 
     case 'if':
       const pred = evaluateExpr(e.predicate, env);
@@ -332,12 +331,14 @@ const evaluateCheck = (c: {
           c.expected
         )
       );
+
     case 'Atomic':
     case 'Struct':
       const actual = evaluateExpr(c.actual, env);
-      if (isValueError(actual)) {
+      if (isValueError(actual))
         return MakeCheckExpectedError(actual);
-      } else switch (actual.type) {
+
+      switch (actual.type) {
         case 'BuiltinFunction':
         case 'Closure':
         case 'StructureAccessor':
@@ -349,30 +350,27 @@ const evaluateCheck = (c: {
               c.actual
             )
           );
+
         case 'Atomic':
         case 'Struct':
-          if (actualEqualsExpected(actual, expected)) {
+          if (actualEqualsExpected(actual, expected))
             return MakeCheckSuccess();
-          } else {
+          else
             return MakeCheckFailure(actual, expected);
-          }
       }
-
   }
 }
 
 const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
   if (isValue(actual)) {
-    if (expected.type === 'Atomic') {
+    if (expected.type === 'Atomic')
       return actual.type === 'Atomic' && expected.value === actual.value;
-    } else if (expected.type === 'BuiltinFunction') {
+    else if (expected.type === 'BuiltinFunction')
       return false;
-    } else {
+    else
       return false;
-    }
   } else return false;
 }
-
 
 /**
  * Puts a definition into an environment. Does not mutate the original environment.
@@ -401,8 +399,6 @@ const extendEnv = (
 const mutateEnv = (name: String, v: Maybe<ExprResult>, env: Env): void => {
   env.set(name, v);
 };
-
-
 
 /**
  * Checks if an identifier is in an enviroment
