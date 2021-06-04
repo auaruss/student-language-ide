@@ -101,7 +101,7 @@ const substring = (): Just<ExprResult> => {
         const str = strs[0];
 
         const nums = checkIfIsNumbers(vs.slice(1));
-        if (! nums) return ValErr('substring: expects one to two numbers as 2nd and possibly 3rd arguments');
+        if (typeof nums === 'number') return ValErr('substring: expects one to two numbers as 2nd and possibly 3rd arguments');
 
         if (nums[0] > str.length) return ValErr('substring: starting index is out of range');
         if (nums.length === 1) return MakeAtomic(str.slice(nums[0]));
@@ -182,7 +182,7 @@ const lessThan = (): Just<ExprResult> => {
   return BFnEnv(checkArityThenApply('<',
     (vs: Value[]) => {
       let nums = checkIfIsNumbers(vs);
-      if (! nums) return ValErr('<: all arguments to < must be numbers');
+      if (typeof nums === 'number') return ValErr('<: all arguments to < must be numbers');
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
@@ -200,7 +200,7 @@ const lessThanEq = (): Just<ExprResult> => {
   return BFnEnv(checkArityThenApply('<=',
     (vs: Value[]) => {
       let nums = checkIfIsNumbers(vs);
-      if (! nums) return ValErr('<=: all arguments to <= must be numbers');
+      if (typeof nums === 'number') return ValErr('<=: all arguments to <= must be numbers');
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
@@ -218,7 +218,7 @@ const eq = (): Just<ExprResult> => {
   return BFnEnv(checkArityThenApply('=',
     (vs: Value[]) => {
       let nums = checkIfIsNumbers(vs);
-      if (! nums) return ValErr('=: all arguments to = must be numbers');
+      if (typeof nums === 'number') return ValErr('=: all arguments to = must be numbers');
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
@@ -236,7 +236,7 @@ const greaterThanEq = (): Just<ExprResult> => {
   return BFnEnv(checkArityThenApply('>=',
     (vs: Value[]) => {
       let nums = checkIfIsNumbers(vs);
-      if (! nums) return ValErr('>=: all arguments to >= must be numbers');
+      if (typeof nums === 'number') return ValErr('>=: all arguments to >= must be numbers');
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
@@ -254,7 +254,7 @@ const greaterThan = (): Just<ExprResult> => {
   return BFnEnv(checkArityThenApply('>',
     (vs: Value[]) => {
       let nums = checkIfIsNumbers(vs);
-      if (! nums) return ValErr('>: all arguments to > must be numbers');
+      if (typeof nums === 'number') return ValErr('>: all arguments to > must be numbers');
 
       let currentNum = nums[0];
       for (let num of nums.slice(1)) {
@@ -331,10 +331,18 @@ const constructReducibleNumberOperation = (
   subtraction?: boolean
 ): ((vs: Value[]) => ExprResult) => {
   return (vs: Value[]) => {
-    const nums: number[] | false = checkIfIsNumbers(vs);
+    const nums: number[] | number = checkIfIsNumbers(vs);
     
-    if (nums === false) {
-      return ValErr('Not a number');
+    if (typeof nums === 'number') {
+      const v = vs[nums];
+      const loc = nums + 1;
+      const suffix = ((loc%100) === 1) ? 'st' : ((loc%100) === 2) ? 'nd' : ((loc%100) === 3) ? 'rd' : 'th';
+
+      if (v.type === 'Atomic')
+        return ValErr(`+: expects a number as ${loc.toString().concat(suffix)} argument, given ${ 
+          typeof v.value === 'string' ? '"' + v.value + '"' : v.value
+        }`);
+      return ValErr('function call: expected a function after the open parenthesis, but received something else');
     }
 
     if (subtraction && nums.length === 1) return MakeAtomic(-nums[0]);
@@ -389,13 +397,21 @@ const NFnEnv = (v: string | boolean | number): Just<ExprResult> => {
   return MakeJust(MakeAtomic(v));
 }
 
-const checkIfIsNumbers = (vs: Value[]): number[] | false => {
+/**
+ * Checks whether an array of values is an array of numbers.
+ * @param vs argument values to check
+ * @returns either the index of the first non-number, or a confirmed array of numbers extracted from the value structures
+ */
+const checkIfIsNumbers = (vs: Value[]): number[] | number => {
   const nums: number[] = []
-  for (let v of vs) {
+  for (let i = 0; i < vs.length; i++) {
+    let v = vs[i];
+
     if (! (v.type === 'Atomic'))
-      return false;
+      return i;
     if (typeof v.value !== 'number')
-      return false;
+      return i;
+
     nums.push(v.value);
   }
 

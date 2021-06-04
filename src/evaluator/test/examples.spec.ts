@@ -700,7 +700,7 @@ const checkExpectTests = (): void => {
 
 }
 
-const posnTests = (): void => {
+const builtinStructTests = (): void => {
 
 tIO('(make-posn 2 3)', '(make-posn 2 3)');
 
@@ -713,7 +713,9 @@ tIO('(make-posn (+ 2 "hello") 2)',
 `
 );
 
-// Fixing this test requires making error reporting into a side channel.
+/**
+ * @knowntestfail Fixing this test requires making error reporting into a side channel.
+ */
 tIO(`(define p (make-posn (+ 2 "hello") 3))
 (posn-y p)
 `,
@@ -1077,6 +1079,18 @@ tIO(`("string")
 id: this function is not defined
 function call: expected a function after the open parenthesis, but found something else
 function call: expected a function after the open parenthesis, but found a part
+`);
+
+tIO(`
+(+ 2 2 2 2 2 2 2 2 2 2 2
+  22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2 2 2 2
+  2 222 2 2 2 2 2 2 2 2 2 2 22
+  2 2 2 2 2 2 2 2 2
+  2 22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2
+  2 2 2 2 22 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+  2 2 2 22 2 "hello" 1
+)`,
+`+: expects a number as 101st argument, given "hello"... [102 total] ...
 `);
 
 }
@@ -2075,6 +2089,12 @@ t('(+ define 1)', undefined, undefined,
   ]
 );
 
+/** @UnimplementedTest */
+t('(pi)');
+
+/** @UnimplementedTest */
+t('(3)');
+
 }
 
 /**
@@ -2086,6 +2106,8 @@ const currentWorkingOnTheseTests = (): void => {
   tokenizerErrorTests();
   readerErrorTests();
   parserErrorTests();
+  evaluatorErrorTests();
+  builtinStructTests();
 
   checkExpectTests();
   arithmeticTests();
@@ -2097,9 +2119,7 @@ const currentWorkingOnTheseTests = (): void => {
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
   defineStructTests();
-  evaluatorErrorTests();
   demoTests();
-  posnTests();
 
   a2Tests();
   a3Tests();
