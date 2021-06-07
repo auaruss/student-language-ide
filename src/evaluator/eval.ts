@@ -1,3 +1,4 @@
+import { MakeStructType, MakeStructureConstructor, MakeStructurePredicate, MakeStructureAccessor } from './constructors';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -25,6 +26,7 @@ import {
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
+import { __classPrivateFieldSet } from 'tslib';
 
 /**
  * Evaluates a string into a list of results.
@@ -161,10 +163,18 @@ const evaluateDefinition = (d: {
             return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
         }
 
-        return Bind(d.name, sndarg);
+        break;
 
       case 'define-struct':
-        return ValErr('Unimplemented feature');
+        const s = MakeStructType(d.name, d.fields);
+
+        mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
+        mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
+
+        for (let i = 0; i < d.fields.length; i++)
+          mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
+
+        return MakeAtomic('Defined a struct.');
   }
     if (defnVal.type === 'nothing') {
       mutateEnv(d.name, MakeJust(sndarg), env);

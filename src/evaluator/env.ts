@@ -6,8 +6,8 @@
 
 'use strict';
 
-import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor, MakeStructurePredicate } from './constructors';
-import { ExprResult, Env, Just, Maybe, Value, StructType, Expr } from './types';
+import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor,MakeStructurePredicate } from './constructors';
+import { ExprResult, Env, Just, Maybe, Value, StructType } from './types';
 import { MakeBuiltinFunction, MakeAtomic, ValErr, MakeJust } from './constructors';
 
 export const builtinEnv = (): Env => {
