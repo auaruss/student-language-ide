@@ -882,15 +882,15 @@ or: question result is not true or false: "hello"
 /**
  * @knowntestfail pending evaluator refactoring
  */
- tIO(`(abs -1 -2)
- (abs -13)
- (abs 0)
- (abs 100)`,
- `abs: expects only 1 argument, but found 2
- 13
- 0
- 100
- `);
+tIO(`(abs -1 -2)
+(abs -13)
+(abs 0)
+(abs 100)`,
+`abs: expects only 1 argument, but found 2
+13
+0
+100
+`);
 
 /**
  * @knowntestfail pending evaluator refactoring
@@ -2111,6 +2111,8 @@ const currentWorkingOnTheseTests = (): void => {
 
   checkExpectTests();
   arithmeticTests();
+
+  pendingEvaluatorChangesTests();
 }
 
 /**
@@ -2121,12 +2123,11 @@ const nonCurrentWorkingOnTheseTests = (): void => {
   defineStructTests();
   demoTests();
 
+  otherTurnedOffTests();
+
   a2Tests();
   a3Tests();
   a4Tests();
-
-  otherTurnedOffTests();
-  pendingEvaluatorChangesTests();
 }
 
 
