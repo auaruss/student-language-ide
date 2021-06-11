@@ -1,4 +1,3 @@
-import { MakeStructType, MakeStructureConstructor, MakeStructurePredicate, MakeStructureAccessor } from './constructors';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -17,7 +16,8 @@ import {
 import {
   Bind, Clos, MakeAtomic, ValErr,
   MakeNothing, MakeJust, MakeCheckExpectedError, 
-  MakeCheckSuccess, MakeCheckFailure, MakeStruct, ResultErr
+  MakeCheckSuccess, MakeCheckFailure, MakeStruct, ResultErr,
+  MakeStructType, MakeStructureConstructor, MakeStructurePredicate, MakeStructureAccessor
 } from './constructors';
 
 import {
@@ -26,7 +26,6 @@ import {
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
-import { __classPrivateFieldSet } from 'tslib';
 
 /**
  * Evaluates a string into a list of results.
@@ -141,47 +140,57 @@ const evaluateDefinition = (d: {
   name: string,
   fields: string[]
 }, env: Env): Result => {
+
+  /**
+   * @todo this doesnt check correctly for 'define-struct'
+   *       check either 2+n or 3+n times to make sure the first pass has been implemented correctly
+   *       for this check.
+   */
   let defnVal = env.get(d.name);
-  if (defnVal === undefined) {
+
+  if (defnVal === undefined)
     throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
-  } else {
-    let sndarg: ExprResult;
-    switch (d.type) {
-      case 'define-function':
-        sndarg = Clos(d.params, env, d.body);
-        break;
 
-      case 'define-constant':
-        sndarg = evaluateExpr(d.body, env);
-        
-        if (!isValueError(sndarg)) switch (sndarg.type) {
-          case 'BuiltinFunction':
-          case 'Closure':
-          case 'StructureAccessor':
-          case 'StructureConstructor':
-          case 'StructurePredicate':
-            return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
-        }
+  let sndarg: ExprResult;
+  switch (d.type) {
+    case 'define-struct':
+      const s = MakeStructType(d.name, d.fields);
 
-        break;
+      /**
+       * @todo test drracket errors for these next 2 lines
+       */
 
-      case 'define-struct':
-        const s = MakeStructType(d.name, d.fields);
+      mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
+      mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
 
-        mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
-        mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
+      for (let i = 0; i < d.fields.length; i++)
+        mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
 
-        for (let i = 0; i < d.fields.length; i++)
-          mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
+      return MakeAtomic('Defined a struct.');
 
-        return MakeAtomic('Defined a struct.');
+    case 'define-function':
+      sndarg = Clos(d.params, env, d.body);
+      break;
+
+    case 'define-constant':
+      sndarg = evaluateExpr(d.body, env);
+      
+      if (!isValueError(sndarg)) switch (sndarg.type) {
+        case 'BuiltinFunction':
+        case 'Closure':
+        case 'StructureAccessor':
+        case 'StructureConstructor':
+        case 'StructurePredicate':
+          return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
+      }
+
+      break;
   }
-    if (defnVal.type === 'nothing') {
-      mutateEnv(d.name, MakeJust(sndarg), env);
-      return Bind(d.name, sndarg);
-    } else
-      return ResultErr('Repeated definition of the same name', d);
-  }
+
+  if (defnVal.type === 'nothing') {
+    mutateEnv(d.name, MakeJust(sndarg), env);
+    return Bind(d.name, sndarg);
+  } else return ResultErr('Repeated definition of the same name', d);
 }
 
 /**
@@ -219,7 +228,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
         if (isValueError(pred)) return pred;
         if (pred.type === 'Atomic' && pred.value === 'else')
           return evaluateExpr(clause[1], env);
-        if (! (pred.type === 'Atomic' && typeof pred.value === "boolean"))
+        if (! (pred.type === 'Atomic' && typeof pred.value === 'boolean'))
           return ValErr('Expression used as clause predicate in cond must evaluate to a boolean', e);
         if (pred.value) return evaluateExpr(clause[1], env);
       }
@@ -241,9 +250,91 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       return apply(op, args, env, e);
 
     case 'and':
+      for (let argument of e.arguments) {
+        let evaluatedArg = evaluateExpr(argument, env);
+        
+        if (isValueError(evaluatedArg)) return evaluatedArg;
+
+        switch (evaluatedArg.type) {
+          case 'Atomic':
+            if (evaluatedArg.value === false)
+              return MakeAtomic(false);
+            if (evaluatedArg.value === true)
+              break;
+            return ValErr(`and: question result is not true or false`, argument);
+          
+          case 'Struct':
+            return ValErr(`and: question result is not true or false`, argument);
+
+          case 'BuiltinFunction':
+          case 'Closure':
+            // Should we throw an error here?
+            // I'm not sure if this code is reachable.
+            return ValErr('Unimplemented');
+
+
+          case 'StructureConstructor':
+            return ValErr(
+              `make-${evaluatedArg.struct.name}:  expected a function call, but there is no open parenthesis before this function`
+            );
+
+          case 'StructureAccessor':
+            return ValErr(
+              `${evaluatedArg.struct.name}-${+ evaluatedArg.struct.fields[evaluatedArg.index]}:  expected a function call, but there is no open parenthesis before this function`
+            );
+            
+          case 'StructurePredicate':
+            return ValErr(
+              `${evaluatedArg.struct.name}-?:  expected a function call, but there is no open parenthesis before this function`
+            );     
+        }
+      }
+      return MakeAtomic(true);
+
     case 'or':
+      for (let argument of e.arguments) {
+        let evaluatedArg = evaluateExpr(argument, env);
+        
+        if (isValueError(evaluatedArg)) return evaluatedArg;
+
+        switch (evaluatedArg.type) {
+          case 'Atomic':
+            if (evaluatedArg.value === false)
+              break;
+            if (evaluatedArg.value === true)
+              return MakeAtomic(true);
+            return ValErr(`and: question result is not true or false`, argument);
+          
+          case 'Struct':
+            return ValErr(`and: question result is not true or false`, argument);
+
+          case 'BuiltinFunction':
+          case 'Closure':
+            // Should we throw an error here?
+            // I'm not sure if this code is reachable.
+            return ValErr('Unimplemented');
+
+
+          case 'StructureConstructor':
+            return ValErr(
+              `make-${evaluatedArg.struct.name}:  expected a function call, but there is no open parenthesis before this function`
+            );
+
+          case 'StructureAccessor':
+            return ValErr(
+              `${evaluatedArg.struct.name}-${+ evaluatedArg.struct.fields[evaluatedArg.index]}:  expected a function call, but there is no open parenthesis before this function`
+            );
+            
+          case 'StructurePredicate':
+            return ValErr(
+              `${evaluatedArg.struct.name}-?:  expected a function call, but there is no open parenthesis before this function`
+            );     
+        }
+      }
+      return MakeAtomic(false);
+
     case 'TemplatePlaceholder':
-      return ValErr('Unimplemented');
+      return ValErr('...: expected a finished expression, but found a template');
   }
 }
 
