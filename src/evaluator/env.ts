@@ -138,12 +138,13 @@ const modulo = (): Just<ExprResult> => {
       (vs: Value[]) => {
         const nums = checkIfIsNumbers(vs);
 
-        if (! nums) return ValErr('modulo: all arguments must be numbers');
+        if (typeof nums === 'number') return ValErr('modulo: all arguments must be numbers');
 
         if (nums[1] === 0)
           return ValErr('modulo: undefined for 0');
-
-        return MakeAtomic(nums[0] % nums[1]); 
+        
+        let [a, n] = nums;
+        return MakeAtomic(a - n * Math.floor(a/n)); 
       }, 2, false
     )
   );
