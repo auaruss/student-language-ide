@@ -962,7 +962,7 @@ tIO(`(abs -1 -2)
 `);
 
 /**
- * @knowntestfail pending evaluator refactoring
+ * @knowntestfail bug in the parser, likely
  */
 tIO(
 `(define (f x)
@@ -970,7 +970,7 @@ tIO(
         [... 2]))
 (f true)
 (f false)`,
-`Defined (f x) to be (cond [true 1] [... 2]).
+`Defined (f x) to be (cond [x 1] [... 2]).
 1
 ...: expected a finished expression, but found a template
 `
