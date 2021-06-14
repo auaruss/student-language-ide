@@ -283,55 +283,18 @@ parseEnv.set('or', [
 ]);
 
 
-parseEnv.set('..', [
-  () => TopLevelErr('..: expected a finished expression, but found a template', [IdAtom('..')]),
-  (sexps: SExp[]) => {
-    for (const sexp of sexps) {
-      if (isReadError(sexp)) return sexp;
-    }
-    return MakeTemplatePlaceholder(SExps(IdAtom('..'), ...sexps));
-  }
-]);
+function dots_msg(d) {
+return [
+(() => MakeTemplatePlaceholder(IdAtom(d))),
+(sexps: SExp[]) => {
+for (const sexp of sexps) {
+if (isReadError(sexp)) return sexp;
+}
+return MakeTemplatePlaceholder(SExps(IdAtom(d), ...sexps));
+}];
+}
 
-parseEnv.set('...', [
-  () => TopLevelErr('...: expected a finished expression, but found a template', [IdAtom('...')]),
-  (sexps: SExp[]) => {
-    for (const sexp of sexps) {
-      if (isReadError(sexp)) return sexp;
-    }
-    return MakeTemplatePlaceholder(SExps(IdAtom('...'), ...sexps));
-  }
-]);
-
-parseEnv.set('....', [
-  () => TopLevelErr('....: expected a finished expression, but found a template', [IdAtom('....')]),
-  (sexps: SExp[]) => {
-    for (const sexp of sexps) {
-      if (isReadError(sexp)) return sexp;
-    }
-    return MakeTemplatePlaceholder(SExps(IdAtom('....'), ...sexps));
-  }
-]);
-
-parseEnv.set('.....', [
-  () => TopLevelErr('.....: expected a finished expression, but found a template', [IdAtom('.....')]),
-  (sexps: SExp[]) => {
-    for (const sexp of sexps) {
-      if (isReadError(sexp)) return sexp;
-    }
-    return MakeTemplatePlaceholder(SExps(IdAtom('.....'), ...sexps));
-  }
-]);
-
-parseEnv.set('......', [
-  () => TopLevelErr('......: expected a finished expression, but found a template', [IdAtom('......')]),
-  (sexps: SExp[]) => {
-    for (const sexp of sexps) {
-      if (isReadError(sexp)) return sexp;
-    }
-    return MakeTemplatePlaceholder(SExps(IdAtom('......'), ...sexps));
-  }
-]);
+['..', '...', '....', '.....', '......'].map((d) => parse_env.set(d, dots_msg(d)));
 
 parseEnv.set('check-expect', [
   () => TopLevelErr('check-expect: expects 2 arguments, but found none', [IdAtom('check-expect')]),
