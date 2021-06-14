@@ -283,18 +283,18 @@ parseEnv.set('or', [
 ]);
 
 
-function dots_msg(d) {
-return [
-(() => MakeTemplatePlaceholder(IdAtom(d))),
-(sexps: SExp[]) => {
-for (const sexp of sexps) {
-if (isReadError(sexp)) return sexp;
-}
-return MakeTemplatePlaceholder(SExps(IdAtom(d), ...sexps));
-}];
+function dots_msg(d: string): [() => TopLevel, (sexps: SExp[]) => TopLevel] {
+  return [
+    (() => MakeTemplatePlaceholder(IdAtom(d))),
+  (sexps: SExp[]) => {
+    for (const sexp of sexps) {
+      if (isReadError(sexp)) return sexp;
+    }
+    return MakeTemplatePlaceholder(SExps(IdAtom(d), ...sexps));
+  }];
 }
 
-['..', '...', '....', '.....', '......'].map((d) => parse_env.set(d, dots_msg(d)));
+['..', '...', '....', '.....', '......'].map((d) => parseEnv.set(d, dots_msg(d)));
 
 parseEnv.set('check-expect', [
   () => TopLevelErr('check-expect: expects 2 arguments, but found none', [IdAtom('check-expect')]),
