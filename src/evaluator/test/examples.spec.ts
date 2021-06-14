@@ -36,6 +36,13 @@ import { a2Tests } from './assignment2.spec';
 import { a3Tests } from './assignment3.spec';
 import { a4Tests } from './assignment4.spec';
 
+/** 
+ * @todo by july 9, document tags @fix and @UnimplementedTest in a README for the next maintainer/dev.
+ * @todo check-within check-error tests
+ * @todo talk in meeting about format-month variable test in pendingEvaluatorChangesTests  
+ * @todo ask about (+ + *) in meeting (is this applicable to the evaluator or wait for new parser pass?)
+ */
+
 const tokenizerErrorTests = (): void => {
   t('#t123',
   [
@@ -762,75 +769,7 @@ tIO('(- 0 0)', '0\n');
 
 }
 
-const defineStructTests = (): void => {
-  tIO(`define-struct
-  (define-struct)
-  (define-struct "posn" [x y])
-  (define-struct 1 [x y])
-  (define-struct #t [x y])
-  (define-struct (f x) [x y])
-  (define-struct posn)
-  (define-struct posn 1 2 3)
-  (define-struct posn (x y) 2 3)
-  (define-struct posn "x")
-  (define-struct posn 1)
-  (define-struct posn #t)
-  (define-struct posn (x 1) 1)
-  (define-struct posn (x (x y)))
-  `,
-  `define-struct: expected an open parenthesis before define-struct, but found none
-  define-struct: expected the structure name after define-struct, but nothing's there
-  define-struct: expected the structure name after define-struct, but found a string
-  define-struct: expected the structure name after define-struct, but found a number
-  define-struct: expected the structure name after define-struct, but found something else
-  define-struct: expected the structure name after define-struct, but found a part
-  define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
-  define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-  define-struct: expected nothing after the field names, but found 2 extra parts
-  define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
-  define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-  define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
-  define-struct: expected a field name, but found a number
-  define-struct: expected a field name, but found a part
-  `);
-}
-
-const pendingEvaluatorChangesTests = (): void => {
-
-/**
- * @knowntestfail pending evaluator changes
- */
- tIO('(sin 1)',
- `${ Math.sin(1) }
- `
- );
- 
- /**
-  * @knowntestfail pending evaluator changes
-  */
- tIO('(sin 2 3)',
- 'sin: expects only 1 argument, but found 2\n'
- );
-
-/**
- * @knowntestfail pending evaluator changes
- */
-tIO(`(modulo 5 2)
-(modulo -5 2)
-(modulo 0 1)
-(modulo 0 0)
-(modulo 2 -7)
-(modulo 2 7)
-(modulo 135 17)`,
-`1
-1
-0
-modulo: undefined for 0
--5
-2
-16
-`);
- 
+const andOrTests = (): void => {
 /**
  * @knowntestfail pending evaluator changes
  */
@@ -880,6 +819,136 @@ or: question result is not true or false: "hello"
 `);
 
 /**
+ * @knowntestfail to be dealt with when the arity pass of the parser is added (all of these examples)
+ */
+tIO(
+`(and false +)
+
+(define (f x) x)
+(and false f)
+
+(and false make-posn)
+(and false posn-x)
+(and false posn?)
+(and "hello" true)`,
+`+: expected a function call, but there is no open parenthesis before this function
+Defined (f x) to be x.
+f: expected a function call, but there is no open parenthesis before this function
+make-posn: expected a function call, but there is no open parenthesis before this function
+posn-x: expected a function call, but there is no open parenthesis before this function
+posn?: expected a function call, but there is no open parenthesis before this function
+and: question result is not true or false: "hello"
+`);
+
+tIO(
+`(and false (make-posn 2 2))`,
+`#false
+`);
+
+}
+
+const defineStructTests = (): void => {
+tIO(`define-struct
+(define-struct)
+(define-struct "posn" [x y])
+(define-struct 1 [x y])
+(define-struct #t [x y])
+(define-struct (f x) [x y])
+(define-struct posn)
+(define-struct posn 1 2 3)
+(define-struct posn (x y) 2 3)
+(define-struct posn "x")
+(define-struct posn 1)
+(define-struct posn #t)
+(define-struct posn (x 1) 1)
+(define-struct posn (x (x y)))
+`,
+`define-struct: expected an open parenthesis before define-struct, but found none
+define-struct: expected the structure name after define-struct, but nothing's there
+define-struct: expected the structure name after define-struct, but found a string
+define-struct: expected the structure name after define-struct, but found a number
+define-struct: expected the structure name after define-struct, but found something else
+define-struct: expected the structure name after define-struct, but found a part
+define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected nothing after the field names, but found 2 extra parts
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
+define-struct: expected a field name, but found a number
+define-struct: expected a field name, but found a part
+`);
+
+/**
+ * @UnimplementedTest
+ */
+tIO(`(define-struct point (x y))
+(define-struct point (x y))`,
+``);
+
+/**
+ * @UnimplementedTest
+ */
+tIO(`(define-struct point (x y))
+(define point-x 1)`,
+``);
+
+/**
+ * @UnimplementedTest
+ */
+tIO(`(define-struct point (x y))
+(define (point-x y) y)`,
+``);
+
+/**
+ * @UnimplementedTest
+ */
+tIO(`(define point-x 1)
+(define-struct point (x y))`,
+``);
+
+/**
+ * @UnimplementedTest
+ */
+tIO(`(define (point-x y) y)
+(define-struct point (x y))`,
+``);
+
+tIO(`(define point-x 10)`,
+`Defined point-x to be 10.
+`);
+
+}
+
+const pendingEvaluatorChangesTests = (): void => {
+ 
+ /**
+  * @knowntestfail pending evaluator changes
+  */
+ tIO('(sin 2 3)',
+ 'sin: expects only 1 argument, but found 2\n'
+ );
+
+/**
+ * @knowntestfail pending evaluator changes
+ */
+tIO(`(modulo 5 2)
+(modulo -5 2)
+(modulo 0 1)
+(modulo 0 0)
+(modulo 2 -7)
+(modulo 2 7)
+(modulo 135 17)`,
+`1
+1
+0
+modulo: undefined for 0
+-5
+2
+16
+`);
+
+/**
  * @knowntestfail pending evaluator refactoring
  */
 tIO(`(abs -1 -2)
@@ -914,7 +983,6 @@ tIO(`(+ + *)`,
 `+: expected a function call, but there is no open parenthesis before this function`
 );
 
-
 /**
  * @knowntestfail pending evaluator refactoring
  */
@@ -922,14 +990,6 @@ tIO(`(define f (+ sin cos))`,
 `sin: expected a function call, but there is no open parenthesis before this function
 `);
 
-/**
- * @knowntestfail pending evaluator refactoring
- */
-tIO(`(+ + *)`,
-`+: expected a function call, but there is no open parenthesis before this function
-`);
-
-// Not failing, just keeping it with the other cond test
 tIO(
 `(cond [(string=? "hello" "goodbye") 1]
         [(string=? "hello" "hello") 2])`,
@@ -937,17 +997,6 @@ tIO(
 `
 );
 
-/**
- * @knowntestfail pending evaluator refactoring
- */
-tIO(`(cond [(string=? "hello" "goodbye") 1]
-[(string=? "hello" "hellow") 2])`,
-`cond: all question results were false
-`)
-
-/**
- * @knowntestfail pending evaluator refactoring
- */
 tIO('(define x 10) x',
 `Defined x to be 10.
 10
@@ -956,28 +1005,35 @@ tIO('(define x 10) x',
 /**
  * @knowntestfail pending evaluator refactoring
  */
-tIO(`
-(define (process-posn p) 
-  (... (posn-x p) ... (posn-y p) ...))
-(process-posn (make-posn 1 2))
-`,
-`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
-...: expected a finished expression, but found a template
+// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
+// tIO(`
+// (define (format-month m f)
+//   (cond [(string=? "long" f) m]
+//         [(string=? "short" f) (substring m 0 3)]))
+
+// (define (format-november format-month) (format-month "November" "long"))`,
+// `Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
+// function call: expected a function after the open parenthesis, but found a variable
+// `);
+
+}
+
+const pendingPrinterChangesTests = (): void => {
+
+/**
+ * @knowntestfail pending evaluator changes
+ */
+tIO('(sin 1)',
+`${ Math.sin(1) }
 `);
 
 /**
  * @knowntestfail pending evaluator refactoring
  */
-// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
-tIO(`
-(define (format-month m f)
-  (cond [(string=? "long" f) m]
-        [(string=? "short" f) (substring m 0 3)]))
-
-(define (format-november format-month) (format-month "November" "long"))`,
-`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
-function call: expected a function after the open parenthesis, but found a variable
-`);
+tIO(`(cond [(string=? "hello" "goodbye") 1]
+[(string=? "hello" "hellow") 2])`,
+`cond: all question results were false
+`)
 
 /**
  * @knowntestfail pending evaluator refactoring
@@ -992,6 +1048,18 @@ t(`
   undefined,
 `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
 `);
+
+/**
+ * @knowntestfail pending evaluator refactoring
+ */
+ tIO(`
+ (define (process-posn p) 
+   (... (posn-x p) ... (posn-y p) ...))
+ (process-posn (make-posn 1 2))
+ `,
+ `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+ ...: expected a finished expression, but found a template
+ `);
 
 }
 
@@ -2107,7 +2175,7 @@ const currentWorkingOnTheseTests = (): void => {
   readerErrorTests();
   parserErrorTests();
   evaluatorErrorTests();
-  builtinStructTests();
+  // builtinStructTests();
 
   checkExpectTests();
   arithmeticTests();
@@ -2122,6 +2190,7 @@ const currentWorkingOnTheseTests = (): void => {
 const nonCurrentWorkingOnTheseTests = (): void => {
   defineStructTests();
   demoTests();
+  pendingPrinterChangesTests();
 
   otherTurnedOffTests();
 
