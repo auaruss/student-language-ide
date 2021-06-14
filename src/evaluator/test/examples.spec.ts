@@ -1006,15 +1006,15 @@ tIO('(define x 10) x',
  * @knowntestfail pending evaluator refactoring
  */
 // What should happen when we replace an existing function with a new variable in scope then try to use that variable.
-// tIO(`
-// (define (format-month m f)
-//   (cond [(string=? "long" f) m]
-//         [(string=? "short" f) (substring m 0 3)]))
+tIO(`
+(define (format-month m f)
+  (cond [(string=? "long" f) m]
+        [(string=? "short" f) (substring m 0 3)]))
 
-// (define (format-november format-month) (format-month "November" "long"))`,
-// `Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
-// function call: expected a function after the open parenthesis, but found a variable
-// `);
+(define (format-november format-month) (format-month "November" "long"))`,
+`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
+function call: expected a function after the open parenthesis, but found a variable
+`);
 
 }
 
@@ -1033,7 +1033,7 @@ tIO('(sin 1)',
 tIO(`(cond [(string=? "hello" "goodbye") 1]
 [(string=? "hello" "hellow") 2])`,
 `cond: all question results were false
-`)
+`);
 
 /**
  * @knowntestfail pending evaluator refactoring
