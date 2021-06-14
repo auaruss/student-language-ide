@@ -102,20 +102,9 @@ const evaluateTopLevel = (toplevel: TopLevel, env: Env): Result => {
     )
   ) {
     return evaluateDefinition(toplevel, env);
-  } else if (isExpr(toplevel)) {
-    const v = evaluateExpr(toplevel, env);
-    if (! isValueError(v))
-      switch (v.type) {
-        case 'BuiltinFunction':
-        case 'Closure':
-        case 'StructureAccessor':
-        case 'StructureConstructor':
-        case 'StructurePredicate':
-          return ValErr('expected a function call, but there is no open parenthesis before this function', toplevel);
-      }
-    return v;
+  } else if (isExpr(toplevel))
+    return evaluateExpr(toplevel, env);
 
-  }
   else return ResultErr('err', toplevel);
 }
 
@@ -174,16 +163,6 @@ const evaluateDefinition = (d: {
 
     case 'define-constant':
       sndarg = evaluateExpr(d.body, env);
-      
-      if (!isValueError(sndarg)) switch (sndarg.type) {
-        case 'BuiltinFunction':
-        case 'Closure':
-        case 'StructureAccessor':
-        case 'StructureConstructor':
-        case 'StructurePredicate':
-          return ResultErr('expected a function call, but there is no open parenthesis before this function', d);
-      }
-
       break;
   }
 
@@ -209,11 +188,24 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       return MakeAtomic(e.const);
 
     case 'VariableUsage':
-      let x = getVal(e.const, env);
-      if (!x || x.type === 'nothing')
+      let maybeExprResult = getVal(e.const, env);
+      if (!maybeExprResult || maybeExprResult.type === 'nothing')
         return ValErr('this variable is not defined', e);
-      else
-        return x.thing;
+      
+      let exprResult = maybeExprResult.thing;
+
+      if (isValueError(exprResult)) return exprResult;
+
+      switch (exprResult.type) {
+        case 'BuiltinFunction':
+        case 'Closure':
+        case 'StructureAccessor':
+        case 'StructureConstructor':
+        case 'StructurePredicate':
+          return ValErr(e.const + ': expected a function call, but there is no open parenthesis before this function');
+      }
+
+      return exprResult;
 
     case 'if':
       const pred = evaluateExpr(e.predicate, env);
@@ -261,32 +253,10 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
               return MakeAtomic(false);
             if (evaluatedArg.value === true)
               break;
-            return ValErr(`and: question result is not true or false`, argument);
           
-          case 'Struct':
-            return ValErr(`and: question result is not true or false`, argument);
-
-          case 'BuiltinFunction':
-          case 'Closure':
-            // Should we throw an error here?
-            // I'm not sure if this code is reachable.
-            return ValErr('Unimplemented');
-
-
-          case 'StructureConstructor':
-            return ValErr(
-              `make-${evaluatedArg.struct.name}:  expected a function call, but there is no open parenthesis before this function`
-            );
-
-          case 'StructureAccessor':
-            return ValErr(
-              `${evaluatedArg.struct.name}-${+ evaluatedArg.struct.fields[evaluatedArg.index]}:  expected a function call, but there is no open parenthesis before this function`
-            );
-            
-          case 'StructurePredicate':
-            return ValErr(
-              `${evaluatedArg.struct.name}-?:  expected a function call, but there is no open parenthesis before this function`
-            );     
+          // Fallthrough case for all non-boolean values.
+          default:
+            return ValErr(`and: question result is not true or false`, argument);   
         }
       }
       return MakeAtomic(true);
@@ -303,32 +273,10 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
               break;
             if (evaluatedArg.value === true)
               return MakeAtomic(true);
-            return ValErr(`and: question result is not true or false`, argument);
           
-          case 'Struct':
+          // Fallthrough case for all non-boolean values.
+          default:
             return ValErr(`and: question result is not true or false`, argument);
-
-          case 'BuiltinFunction':
-          case 'Closure':
-            // Should we throw an error here?
-            // I'm not sure if this code is reachable.
-            return ValErr('Unimplemented');
-
-
-          case 'StructureConstructor':
-            return ValErr(
-              `make-${evaluatedArg.struct.name}:  expected a function call, but there is no open parenthesis before this function`
-            );
-
-          case 'StructureAccessor':
-            return ValErr(
-              `${evaluatedArg.struct.name}-${+ evaluatedArg.struct.fields[evaluatedArg.index]}:  expected a function call, but there is no open parenthesis before this function`
-            );
-            
-          case 'StructurePredicate':
-            return ValErr(
-              `${evaluatedArg.struct.name}-?:  expected a function call, but there is no open parenthesis before this function`
-            );     
         }
       }
       return MakeAtomic(false);
@@ -350,8 +298,18 @@ const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
   return maybeBody.thing;
 }
 
+/**
+ * @todo e
+ * @param args 
+ * @param env 
+ * @returns 
+ */
 const evaluateOperands = (args: Expr[], env: Env): ExprResult[] => {
   return args.map(arg => evaluateExpr(arg, env));
+}
+
+const produceFunctionErrorMessage = (): void => {
+
 }
 
 const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
@@ -419,46 +377,14 @@ const evaluateCheck = (c: {
   const expected = evaluateExpr(c.expected, env);
   if (isValueError(expected)) {
     return MakeCheckExpectedError(expected);
-  } else switch (expected.type) {
-    // Checking function equality is not allowed.
-    case 'BuiltinFunction':
-    case 'Closure':
-    case 'StructureAccessor':
-    case 'StructureConstructor':
-    case 'StructurePredicate':
-      return MakeCheckExpectedError(
-        ValErr(
-          'expected a function call, but there is no open parenthesis before this function',
-          c.expected
-        )
-      );
-
-    case 'Atomic':
-    case 'Struct':
-      const actual = evaluateExpr(c.actual, env);
-      if (isValueError(actual))
-        return MakeCheckExpectedError(actual);
-
-      switch (actual.type) {
-        case 'BuiltinFunction':
-        case 'Closure':
-        case 'StructureAccessor':
-        case 'StructureConstructor':
-        case 'StructurePredicate':
-          return MakeCheckExpectedError(
-            ValErr(
-              'expected a function call, but there is no open parenthesis before this function',
-              c.actual
-            )
-          );
-
-        case 'Atomic':
-        case 'Struct':
-          if (actualEqualsExpected(actual, expected))
-            return MakeCheckSuccess();
-          else
-            return MakeCheckFailure(actual, expected);
-      }
+  } else {
+    const actual = evaluateExpr(c.actual, env);
+    if (isValueError(actual))
+      return MakeCheckExpectedError(actual);
+    if (actualEqualsExpected(actual, expected))
+      return MakeCheckSuccess();
+    else
+      return MakeCheckFailure(actual, expected);
   }
 }
 
