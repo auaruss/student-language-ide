@@ -219,7 +219,7 @@ export const MakeAnd = (args: Expr[]): Expr => {
 
 export const MakeOr = (args: Expr[]): Expr => {
   return {
-    typeOfExpression: 'and',
+    typeOfExpression: 'or',
     arguments: args
   };
 }
