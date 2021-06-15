@@ -771,7 +771,7 @@ tIO('(- 0 0)', '0\n');
 
 const andOrTests = (): void => {
 /**
- * @knowntestfail pending evaluator changes
+ * @knowntestfail pending printer changes
  */
 t(`(and true)
 (and true true)
@@ -782,7 +782,7 @@ t(`(and true)
   undefined,
   undefined,
   [
-    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('true')),
+    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('(and true)')),
     and1, and2, and3, and4, and5
   ],
   undefined,
@@ -795,7 +795,7 @@ and: question result is not true or false: "hello"
 `);
  
 /**
- * @knowntestfail pending evaluator changes
+ * @knowntestfail pending printer changes
  */
 t(`(or false)
 (or false false)
@@ -806,7 +806,7 @@ t(`(or false)
   undefined,
   undefined,
   [
-    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('false')),
+    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('(or false)')),
     or1, or2, or3, or4, or5
   ],
   undefined,
@@ -2185,6 +2185,7 @@ const currentWorkingOnTheseTests = (): void => {
 const nonCurrentWorkingOnTheseTests = (): void => {
   defineStructTests();
   demoTests();
+  andOrTests(); // pending printer/parser changes
   pendingPrinterChangesTests();
   pendingNextParserPassTests();
 
