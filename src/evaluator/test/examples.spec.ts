@@ -41,6 +41,7 @@ import { a4Tests } from './assignment4.spec';
  * @todo check-within check-error tests
  * @todo talk in meeting about format-month variable test in pendingEvaluatorChangesTests  
  * @todo ask about (+ + *) in meeting (is this applicable to the evaluator or wait for new parser pass?)
+ * @todo move demo code out of otherTurnedOnTests into demoTests
  */
 
 const tokenizerErrorTests = (): void => {
@@ -1156,6 +1157,15 @@ tIO(`
 `+: expects a number as 101st argument, given "hello"... [102 total] ...
 `);
 
+
+/**
+ * @knowntestfail pending addition of parser arity pass
+ */
+tIO(`(define (apply2 f x y) (f x y)) (apply2 + 2 3)`,
+`function call: expected a function after the open parenthesis, but found a variable
+apply2: this function is not defined
+`);
+
 }
 
 const otherTurnedOnTests = (): void => {
@@ -2157,6 +2167,10 @@ t('(pi)');
 
 /** @UnimplementedTest */
 t('(3)');
+
+tIO(`(cond [(< 2 3) +] [else -])`,
+`+: expected a function call, but there is no open parenthesis before this function
+`);
 
 }
 
