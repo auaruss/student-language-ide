@@ -276,7 +276,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
           
           // Fallthrough case for all non-boolean values.
           default:
-            return ValErr(`and: question result is not true or false`, argument);
+            return ValErr(`or: question result is not true or false`, argument);
         }
       }
       return MakeAtomic(false);
