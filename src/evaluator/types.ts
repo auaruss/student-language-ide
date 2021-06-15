@@ -180,6 +180,8 @@ export type Value
     type: 'Closure',
     value: Closure
   } | {
+    type: 'StructType'
+  } | {
     type: 'Struct',
     struct: StructType
     values: ExprResult[]
