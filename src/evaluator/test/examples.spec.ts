@@ -929,9 +929,6 @@ const pendingEvaluatorChangesTests = (): void => {
  'sin: expects only 1 argument, but found 2\n'
  );
 
-/**
- * @knowntestfail pending evaluator changes
- */
 tIO(`(modulo 5 2)
 (modulo -5 2)
 (modulo 0 1)
@@ -948,9 +945,6 @@ modulo: undefined for 0
 16
 `);
 
-/**
- * @knowntestfail pending evaluator refactoring
- */
 tIO(`(abs -1 -2)
 (abs -13)
 (abs 0)
@@ -961,31 +955,6 @@ tIO(`(abs -1 -2)
 100
 `);
 
-/**
- * @knowntestfail bug in the parser, likely
- */
-tIO(
-`(define (f x)
-  (cond [x 1]
-        [... 2]))
-(f true)
-(f false)`,
-`Defined (f x) to be (cond [x 1] [... 2]).
-1
-...: expected a finished expression, but found a template
-`
-);
-
-/**
- * @knowntestfail pending evaluator refactoring
- */
-tIO(`(+ + *)`,
-`+: expected a function call, but there is no open parenthesis before this function`
-);
-
-/**
- * @knowntestfail pending evaluator refactoring
- */
 tIO(`(define f (+ sin cos))`,
 `sin: expected a function call, but there is no open parenthesis before this function
 `);
@@ -1002,33 +971,19 @@ tIO('(define x 10) x',
 10
 `);
 
-/**
- * @knowntestfail pending evaluator refactoring
- */
-// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
-tIO(`
-(define (format-month m f)
-  (cond [(string=? "long" f) m]
-        [(string=? "short" f) (substring m 0 3)]))
-
-(define (format-november format-month) (format-month "November" "long"))`,
-`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
-function call: expected a function after the open parenthesis, but found a variable
-`);
-
 }
 
 const pendingPrinterChangesTests = (): void => {
 
 /**
- * @knowntestfail pending evaluator changes
+ * @knowntestfail pending printer changes
  */
 tIO('(sin 1)',
 `${ Math.sin(1) }
 `);
 
 /**
- * @knowntestfail pending evaluator refactoring
+ * @knowntestfail pending printer changes
  */
 tIO(`(cond [(string=? "hello" "goodbye") 1]
 [(string=? "hello" "hellow") 2])`,
@@ -1036,7 +991,7 @@ tIO(`(cond [(string=? "hello" "goodbye") 1]
 `);
 
 /**
- * @knowntestfail pending evaluator refactoring
+ * @knowntestfail pending printer changes
  */
 t(`
 (define (process-posn p) 
@@ -1050,16 +1005,56 @@ t(`
 `);
 
 /**
- * @knowntestfail pending evaluator refactoring
+ * @knowntestfail pending printer changes
  */
- tIO(`
- (define (process-posn p) 
-   (... (posn-x p) ... (posn-y p) ...))
- (process-posn (make-posn 1 2))
- `,
- `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
- ...: expected a finished expression, but found a template
- `);
+tIO(`
+(define (process-posn p) 
+  (... (posn-x p) ... (posn-y p) ...))
+(process-posn (make-posn 1 2))
+`,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+...: expected a finished expression, but found a template
+`);
+
+/**
+ * @knowntestfail pending printer changes
+ */
+ tIO(
+`(define (f x)
+  (cond [x 1]
+        [... 2]))
+(f true)
+(f false)`,
+`Defined (f x) to be (cond [x 1] [... 2]).
+1
+...: expected a finished expression, but found a template
+`
+);
+
+/**
+ * @knowntestfail pending printer changes
+ */
+ tIO(`(+ + *)`,
+ `+: expected a function call, but there is no open parenthesis before this function`
+ );
+
+}
+
+const pendingNextParserPassTests = (): void => {
+
+/**
+ * @knowntestfail pending adding function arity parser pass
+ */
+// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
+tIO(`
+(define (format-month m f)
+  (cond [(string=? "long" f) m]
+        [(string=? "short" f) (substring m 0 3)]))
+
+(define (format-november format-month) (format-month "November" "long"))`,
+`Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
+function call: expected a function after the open parenthesis, but found a variable
+`);
 
 }
 
@@ -2191,6 +2186,7 @@ const nonCurrentWorkingOnTheseTests = (): void => {
   defineStructTests();
   demoTests();
   pendingPrinterChangesTests();
+  pendingNextParserPassTests();
 
   otherTurnedOffTests();
 
