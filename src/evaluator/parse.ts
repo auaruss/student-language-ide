@@ -160,6 +160,7 @@ parseEnv.set('define-struct', [
                   return TopLevelErr('define-struct: expected a field name, but found a boolean', [SExps(IdAtom('define-struct'), ...sexps)]);
                 case 'Id':
                   fields.push(sexp.sexp);
+                  break;
                 case 'SExp Array':
                   return TopLevelErr('define-struct: expected a field name, but found a part', [SExps(IdAtom('define-struct'), ...sexps)]);
               }
