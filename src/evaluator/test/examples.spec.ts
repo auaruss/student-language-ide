@@ -849,6 +849,7 @@ tIO(
 }
 
 const defineStructTests = (): void => {
+
 tIO(`define-struct
 (define-struct)
 (define-struct "posn" [x y])
@@ -917,6 +918,15 @@ tIO(`(define (point-x y) y)
 
 tIO(`(define point-x 10)`,
 `Defined point-x to be 10.
+`);
+
+tIO(`(define-struct point [x y])
+(point x (make-point 10 10))`,
+`posn: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
+`)
+
+tIO(`(posn "x" 10)`,
+`posn: expected a function after the open parenthesis, but found a structure type (do you mean make-posn)
 `);
 
 }
@@ -2184,6 +2194,7 @@ const currentWorkingOnTheseTests = (): void => {
   readerErrorTests();
   parserErrorTests();
   evaluatorErrorTests();
+  defineStructTests();
   // builtinStructTests();
 
   checkExpectTests();
@@ -2197,7 +2208,6 @@ const currentWorkingOnTheseTests = (): void => {
  * These are currently run never by default.
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
-  defineStructTests();
   demoTests();
   andOrTests(); // pending printer/parser changes
   pendingPrinterChangesTests();
