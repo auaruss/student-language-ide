@@ -224,7 +224,9 @@ const printValue = (v: Value): string => {
   
     case 'StructurePredicate':
       return `${v.struct.name}?`;
-
+    
+    case 'StructType':
+      return `${v.name}: expected a function after the open parenthesis, but found a structure type (do you mean make-${v.name})`
   }
 }
 

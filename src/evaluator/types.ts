@@ -180,7 +180,8 @@ export type Value
     type: 'Closure',
     value: Closure
   } | {
-    type: 'StructType'
+    type: 'StructType',
+    name: string
   } | {
     type: 'Struct',
     struct: StructType
