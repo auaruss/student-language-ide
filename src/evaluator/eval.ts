@@ -52,8 +52,17 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
           toplevel.type === 'define-constant'
           || toplevel.type === 'define-function'
           || toplevel.type === 'define-struct'
-        )) {
-        env = extendEnv(toplevel.name, env);
+    )) {
+      env = extendEnv(toplevel.name, env);
+
+      if (toplevel.type === 'define-struct') {
+        env = extendEnv('make-' + toplevel.name, env);
+        env = extendEnv(toplevel.name + '?', env);
+
+        for (let field of toplevel.fields) {
+          env = extendEnv(toplevel.name + '-' + field, env);
+        }
+      }
     }
   }
 
@@ -94,18 +103,18 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
  */
 const evaluateTopLevel = (toplevel: TopLevel, env: Env): Result => {
   if (isTopLevelError(toplevel)) return toplevel;
-  if (! isExpr(toplevel)
+  if ((! isExpr(toplevel))
     && (
-       toplevel.type ==='define-constant'
+       toplevel.type === 'define-constant'
     || toplevel.type === 'define-function'
     || toplevel.type === 'define-struct'
     )
-  ) {
+  )
     return evaluateDefinition(toplevel, env);
-  } else if (isExpr(toplevel))
+  else if (isExpr(toplevel))
     return evaluateExpr(toplevel, env);
 
-  else return ResultErr('err', toplevel);
+  else return ResultErr('err, not a definition or expression, bug in evaluateTopLevel', toplevel);
 }
 
 /**
@@ -130,15 +139,25 @@ const evaluateDefinition = (d: {
   fields: string[]
 }, env: Env): Result => {
 
-  /**
-   * @todo this doesnt check correctly for 'define-struct'
-   *       check either 2+n or 3+n times to make sure the first pass has been implemented correctly
-   *       for this check.
-   */
   let defnVal = env.get(d.name);
-
   if (defnVal === undefined)
     throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+
+  if (d.type === 'define-struct') {
+    let structConstructor = env.get('make-' + d.name);
+    if (structConstructor === undefined)
+      throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    
+    let structPredicate = env.get(d.name + '?');
+      if (structPredicate === undefined)
+        throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    
+    for (let field of d.fields) {
+      let structAccessor = env.get(d.name + '-' + field);
+      if (structAccessor === undefined)
+        throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    }
+  }
 
   let sndarg: ExprResult;
   switch (d.type) {
@@ -148,14 +167,14 @@ const evaluateDefinition = (d: {
       /**
        * @todo test drracket errors for these next 2 lines
        */
-
       mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
       mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
 
       for (let i = 0; i < d.fields.length; i++)
         mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
 
-      return MakeAtomic('Defined a struct.');
+      sndarg = { type: 'StructType', name: d.name };
+      break;
 
     case 'define-function':
       sndarg = Clos(d.params, env, d.body);
@@ -308,10 +327,6 @@ const evaluateOperands = (args: Expr[], env: Env): ExprResult[] => {
   return args.map(arg => evaluateExpr(arg, env));
 }
 
-const produceFunctionErrorMessage = (): void => {
-
-}
-
 const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
   switch (op.type) {
     case 'Atomic':
@@ -333,6 +348,9 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
       }
         
       return evaluateExpr(clos.body, localEnv);
+
+    case 'StructType':
+      return ValErr(`${op.name}: expected a function after the open parenthesis, but found a structure type (do you mean make-${op.name})`);
 
     case 'StructureAccessor':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);

@@ -35,6 +35,7 @@ export const builtinEnv = (): Env => {
   env.set('modulo', modulo());
   env.set('abs', absoluteVal());
 
+  env.set('posn', MakeJust({ type: 'StructType', name: 'posn' }));
   env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
   env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
   env.set('posn-y', MakeJust(MakeStructureAccessor(posnType, 1)));
