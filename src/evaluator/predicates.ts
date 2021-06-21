@@ -213,6 +213,9 @@ export const isValue = (x: any): x is Value => {
     ) || (
       x.type === 'StructurePredicate'
       && isStructType(x.struct)
+    ) || (
+      x.type === 'StructType'
+      && typeof x.name === 'string'
     )
   ));
 }
