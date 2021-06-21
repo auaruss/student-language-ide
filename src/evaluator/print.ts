@@ -172,7 +172,7 @@ export const printResult = (r: Result): string => {
   switch (r.type) {
     case 'define':
       if (isValueError(r.toBe)) return printValueError(r.toBe);
-      if (r.toBe === null) return `Defined ${r.defined} to be nothing.`
+      if (r.toBe === null) return `Defined ${r.defined}.`
       if (r.toBe.type === 'Closure'){
         const args = r.toBe.value.args.reduce((acc, elem) => `${acc} `.concat(elem), '')
         return `Defined (${r.defined}${args}) to be ${printExprResult(r.toBe)}.`;
