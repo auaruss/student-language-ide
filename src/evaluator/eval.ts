@@ -308,11 +308,16 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
 const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
   let maybeBody = getVal(op, env);
 
-  if (!maybeBody) {
+  if (!maybeBody)
     return ValErr('Expression undefined in program', e);
-  } else if (maybeBody.type === 'nothing') {
+  if (maybeBody.type === 'nothing')
     return ValErr('Expression defined later in program', e);
-  }
+  if (isValueError(maybeBody.thing))
+    return maybeBody.thing;
+  if (maybeBody.thing.type === 'StructType')
+    return ValErr(
+      `${ maybeBody.thing.name }: expected a function after the open parenthesis, but found a structure type (do you mean make-${ maybeBody.thing.name })`
+    );
 
   return maybeBody.thing;
 }
