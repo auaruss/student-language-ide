@@ -850,71 +850,96 @@ tIO(
 
 const defineStructTests = (): void => {
 
-tIO(`define-struct
-(define-struct)
-(define-struct "posn" [x y])
-(define-struct 1 [x y])
-(define-struct #t [x y])
-(define-struct (f x) [x y])
-(define-struct posn)
-(define-struct posn 1 2 3)
-(define-struct posn (x y) 2 3)
-(define-struct posn "x")
-(define-struct posn 1)
-(define-struct posn #t)
-(define-struct posn (x 1) 1)
-(define-struct posn (x (x y)))
-`,
+tIO(`define-struct`,
 `define-struct: expected an open parenthesis before define-struct, but found none
-define-struct: expected the structure name after define-struct, but nothing's there
-define-struct: expected the structure name after define-struct, but found a string
-define-struct: expected the structure name after define-struct, but found a number
-define-struct: expected the structure name after define-struct, but found something else
-define-struct: expected the structure name after define-struct, but found a part
-define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-define-struct: expected nothing after the field names, but found 2 extra parts
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
-define-struct: expected a field name, but found a number
-define-struct: expected a field name, but found a part
 `);
 
-/**
- * @UnimplementedTest
- */
-tIO(`(define-struct point (x y))
-(define-struct point (x y))`,
-``);
+tIO(`(define-struct)`,
+`define-struct: expected the structure name after define-struct, but nothing's there
+`);
 
-/**
- * @UnimplementedTest
- */
-tIO(`(define-struct point (x y))
-(define point-x 1)`,
-``);
+tIO(`(define-struct "posn" [x y])`,
+`define-struct: expected the structure name after define-struct, but found a string
+`);
 
-/**
- * @UnimplementedTest
- */
-tIO(`(define-struct point (x y))
-(define (point-x y) y)`,
-``);
+tIO(`(define-struct 1 [x y])`,
+`define-struct: expected the structure name after define-struct, but found a number
+`);
 
-/**
- * @UnimplementedTest
- */
-tIO(`(define point-x 1)
-(define-struct point (x y))`,
-``);
+tIO(`(define-struct #t [x y])`,
+`define-struct: expected the structure name after define-struct, but found a boolean
+`);
 
-/**
- * @UnimplementedTest
- */
-tIO(`(define (point-x y) y)
-(define-struct point (x y))`,
-``);
+tIO(`(define-struct (f x) [x y])`,
+`define-struct: expected the structure name after define-struct, but found a part
+`);
+
+tIO(`(define-struct posn)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
+`);
+
+tIO(`(define-struct posn 1 2 3)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+`);
+
+tIO(`(define-struct posn (x y) 2 3)`,
+`define-struct: expected nothing after the field names, but found 2 extra parts
+`);
+
+tIO(`(define-struct posn "x")`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
+`);
+
+tIO(`(define-struct posn 1)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+`);
+
+tIO(`(define-struct posn #t)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
+`);
+
+tIO(`(define-struct posn (x 1) 1)`,
+`define-struct: expected a field name, but found a number
+`);
+
+tIO(`(define-struct posn (x (x y)))`,
+`define-struct: expected a field name, but found a part
+`);
+
+// /**
+//  * @UnimplementedTest
+//  */
+// tIO(`(define-struct point (x y))
+// (define-struct point (x y))`,
+// ``);
+
+// /**
+//  * @UnimplementedTest
+//  */
+// tIO(`(define-struct point (x y))
+// (define point-x 1)`,
+// ``);
+
+// /**
+//  * @UnimplementedTest
+//  */
+// tIO(`(define-struct point (x y))
+// (define (point-x y) y)`,
+// ``);
+
+// /**
+//  * @UnimplementedTest
+//  */
+// tIO(`(define point-x 1)
+// (define-struct point (x y))`,
+// ``);
+
+// /**
+//  * @UnimplementedTest
+//  */
+// tIO(`(define (point-x y) y)
+// (define-struct point (x y))`,
+// ``);
 
 tIO(`(define point-x 10)`,
 `Defined point-x to be 10.
@@ -922,7 +947,8 @@ tIO(`(define point-x 10)`,
 
 tIO(`(define-struct point [x y])
 (point x (make-point 10 10))`,
-`posn: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
+`Defined point to be a structure type named point.
+posn: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
 `)
 
 tIO(`(posn "x" 10)`,
