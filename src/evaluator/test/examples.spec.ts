@@ -2227,6 +2227,11 @@ const currentWorkingOnTheseTests = (): void => {
   arithmeticTests();
 
   pendingEvaluatorChangesTests();
+
+  a2Tests();
+  a3Tests();
+  a4Tests();
+  demoTests();
 }
 
 /**
@@ -2234,16 +2239,11 @@ const currentWorkingOnTheseTests = (): void => {
  * These are currently run never by default.
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
-  demoTests();
   andOrTests(); // pending printer/parser changes
   pendingPrinterChangesTests();
   pendingNextParserPassTests();
 
   otherTurnedOffTests();
-
-  a2Tests();
-  a3Tests();
-  a4Tests();
 }
 
 
