@@ -61,10 +61,10 @@ export const t  = (
 ): void => {
 
   const pipeline = () => {
-    if (input) {
+    if (input !== undefined) {
       try {
         let ts = tokenize(input);
-        if (tokens) {
+        if (tokens !== undefined) {
           let toks: Token[] = tokens;
           it('should tokenize correctly', () => {
             expect(ts).toEqual(toks);
@@ -77,11 +77,11 @@ export const t  = (
       }
     }
 
-    if (tokens) {
+    if (tokens !== undefined) {
       let s: any;
       try {
         s = readTokens(tokens);
-        if (sexps) {
+        if (sexps !== undefined) {
           it('should read correctly', () => {
             expect(s).toEqual(sexps);
           });
@@ -93,10 +93,10 @@ export const t  = (
       }
     }
 
-    if (sexps) {
+    if (sexps !== undefined) {
       try {
         let d = parseTopLevels(sexps);
-        if (toplevels) {
+        if (toplevels !== undefined) {
           let def: TopLevel[] = toplevels;
           it('should parse correctly', () => {
             expect(d).toEqual(def);
@@ -109,10 +109,10 @@ export const t  = (
       }
     }
 
-    if (toplevels) {
+    if (toplevels !== undefined) {
       try {
         let doe = evaluateTopLevels(toplevels);
-        if (values) {
+        if (values !== undefined) {
           const vals: Result[] = values;
 
           if (vals.length != doe.length) {
@@ -163,10 +163,10 @@ export const t  = (
       }
     }
 
-    if (values) { // values cannot be guaranteed to be 
+    if (values !== undefined) { // values cannot be guaranteed to be 
       try {
         let o = printResults(values);
-        if (output) {
+        if (output !== undefined) {
           it('should output correctly', () => {
             expect(o).toEqual(output);
           });
@@ -180,7 +180,7 @@ export const t  = (
   let subject;
 
   for (let i of [input, tokens, sexps, toplevels, values, output]) {
-    if (i) {
+    if (i !== undefined) {
       if (typeof i === 'string')
         subject = i;
       else

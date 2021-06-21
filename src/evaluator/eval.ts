@@ -314,10 +314,6 @@ const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
     return ValErr('Expression defined later in program', e);
   if (isValueError(maybeBody.thing))
     return maybeBody.thing;
-  if (maybeBody.thing.type === 'StructType')
-    return ValErr(
-      `${ maybeBody.thing.name }: expected a function after the open parenthesis, but found a structure type (do you mean make-${ maybeBody.thing.name })`
-    );
 
   return maybeBody.thing;
 }
@@ -338,6 +334,9 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
     case 'Struct':
       return ValErr('function call: expected a function after the open parenthesis, but found a variable');
 
+    case 'StructType':
+      return ValErr(`${op.name}: expected a function after the open parenthesis, but found a structure type (do you mean make-${op.name})`);
+
     case 'BuiltinFunction':
       return op.value(args);
 
@@ -353,9 +352,6 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
       }
         
       return evaluateExpr(clos.body, localEnv);
-
-    case 'StructType':
-      return ValErr(`${op.name}: expected a function after the open parenthesis, but found a structure type (do you mean make-${op.name})`);
 
     case 'StructureAccessor':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
