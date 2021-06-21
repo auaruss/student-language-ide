@@ -948,7 +948,7 @@ tIO(`(define point-x 10)`,
 tIO(`(define-struct point [x y])
 (point x (make-point 10 10))`,
 `Defined point to be a structure type named point.
-posn: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
+point: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
 `)
 
 tIO(`(posn "x" 10)`,
