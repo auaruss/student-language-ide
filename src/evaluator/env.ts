@@ -333,30 +333,30 @@ const constructReducibleNumberOperation = (
   subtraction?: boolean
 ): ((vs: Value[]) => ExprResult) => {
   return (vs: Value[]) => {
-    const nums: number[] | number = checkIfIsNumbers(vs);
+    const numsOrIndex: number[] | number = checkIfIsNumbers(vs);
     
-    if (typeof nums === 'number') {
-      const v = vs[nums];
-      const loc = nums + 1;
+    if (typeof numsOrIndex === 'number') {
+      const v = vs[numsOrIndex];
+      const loc = numsOrIndex + 1;
       const suffix = ((loc%100) === 1) ? 'st' : ((loc%100) === 2) ? 'nd' : ((loc%100) === 3) ? 'rd' : 'th';
 
-      if (v.type === 'Atomic')
-        return ValErr(`+: expects a number as ${loc.toString().concat(suffix)} argument, given ${ 
-          typeof v.value === 'string' ? '"' + v.value + '"' : v.value
-        }`);
-      return ValErr('function call: expected a function after the open parenthesis, but received something else');
+      return ValErr(`+: expects a number as ${loc.toString().concat(suffix)} argument, given ${ 
+        (v.type === 'Atomic')
+        ? typeof v.value === 'string' ? '"' + v.value + '"' : v.value
+        : 'something else'
+      }`);
     }
 
-    if (subtraction && nums.length === 1) return MakeAtomic(-nums[0]);
+    if (subtraction && numsOrIndex.length === 1) return MakeAtomic(-numsOrIndex[0]);
     
     if (idIsIndex)
       return MakeAtomic(
-        nums.slice(0, id)
-            .concat(nums.slice(id + 1))
-            .reduce(op, nums[id])
+        numsOrIndex.slice(0, id)
+            .concat(numsOrIndex.slice(id + 1))
+            .reduce(op, numsOrIndex[id])
       );
 
-    return MakeAtomic(nums.reduce(op, id));
+    return MakeAtomic(numsOrIndex.reduce(op, id));
   };
 }
 
