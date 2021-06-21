@@ -120,7 +120,7 @@ parseEnv.set('define-struct', [
   () => TopLevelErr('define-struct: expected an open parenthesis before define-struct, but found none', [IdAtom('define-struct')]),
   (sexps: SExp[]) => {
     if (sexps.length === 0)
-      return TopLevelErr('define: expected only one expression for the function body, but found 1 extra part', [SExps(IdAtom('define-struct'), ...sexps)]);
+      return TopLevelErr('define-struct: expected the structure name after define-struct, but nothing\'s there', [SExps(IdAtom('define-struct'), ...sexps)]);
 
     if (isReadError(sexps[0])) return sexps[0];
 
