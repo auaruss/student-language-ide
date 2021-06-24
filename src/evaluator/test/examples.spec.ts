@@ -39,9 +39,8 @@ import { a4Tests } from './assignment4.spec';
 /** 
  * @todo by july 9, document tags @fix and @UnimplementedTest in a README for the next maintainer/dev.
  * @todo check-within check-error tests
- * @todo talk in meeting about format-month variable test in pendingEvaluatorChangesTests  
- * @todo ask about (+ + *) in meeting (is this applicable to the evaluator or wait for new parser pass?)
  * @todo move demo code out of otherTurnedOnTests into demoTests
+ * @todo break up tests (particularly and/or) which have too many unrelated expressions together
  */
 
 const tokenizerErrorTests = (): void => {
@@ -838,7 +837,7 @@ f: expected a function call, but there is no open parenthesis before this functi
 make-posn: expected a function call, but there is no open parenthesis before this function
 posn-x: expected a function call, but there is no open parenthesis before this function
 posn?: expected a function call, but there is no open parenthesis before this function
-and: question result is not true or false: "hello"
+"hello": and: question result is not true or false: "hello"
 `);
 
 tIO(
@@ -946,8 +945,10 @@ tIO(`(define point-x 10)`,
 `);
 
 tIO(`(define-struct point [x y])
+(define x 10)
 (point x (make-point 10 10))`,
 `Defined point to be a structure type named point.
+Defined x to be 10.
 point: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
 `)
 
@@ -2230,8 +2231,10 @@ const currentWorkingOnTheseTests = (): void => {
 
   a2Tests();
   a3Tests();
-  a4Tests();
+  // a4Tests();
   demoTests();
+
+  andOrTests(); // pending printer/parser changes
 }
 
 /**
@@ -2239,7 +2242,7 @@ const currentWorkingOnTheseTests = (): void => {
  * These are currently run never by default.
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
-  andOrTests(); // pending printer/parser changes
+
   pendingPrinterChangesTests();
   pendingNextParserPassTests();
 
