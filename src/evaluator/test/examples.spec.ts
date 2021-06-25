@@ -2207,6 +2207,42 @@ tIO(`(cond [(< 2 3) +] [else -])`,
 
 }
 
+const builtinEnvironmentTests = (): void => {
+
+// Note: This is not how DrRacket outputs number->string arity mismatch
+// DrRacket output:
+// number->string: arity mismatch;
+//  the expected number of arguments does not match the given number
+//   expected: 1 to 2
+//   given: 0
+tIO(`(number->string)`,
+`number->string: expects at least 1 argument, but found only 0
+`);
+
+tIO(`(number->string x)`,
+`x: this variable is not defined
+`);
+
+tIO(`(number->string 1)`,
+`"1"
+`);
+
+// Note: This is not how DrRacket outputs number->string arity mismatch
+// DrRacket output:
+// number->string: expects (or/c 2 8 10 16), (or/c 2 8 10 16), (or/c 2 8 10 16), or (or/c 2 8 10 16) as 2nd argument, given "hello"
+tIO(`(number->string 1 "hello")`,
+`number->string: expects only 1 argument, but found 2
+`);
+
+// Note: This is not how DrRacket outputs number->string arity mismatch
+// DrRacket output:
+// "1"
+tIO(`(number->string 1 2)`,
+`number->string: expects only 1 argument, but found 2
+`);
+
+}
+
 /**
  * A place to put the test groupings we are currently working on.
  * These are currently run always by default.
@@ -2225,10 +2261,12 @@ const currentWorkingOnTheseTests = (): void => {
 
   pendingEvaluatorChangesTests();
 
-  // a2Tests();
-  // a3Tests();
+  a2Tests();
+  a3Tests();
   // a4Tests();
   demoTests();
+
+  builtinEnvironmentTests();
 
   andOrTests(); // pending printer/parser changes
 }

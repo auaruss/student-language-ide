@@ -50,6 +50,8 @@ export const builtinEnv = (): Env => {
   env.set('>=', greaterThanEq());
   env.set('>', greaterThan());
 
+  env.set('number->string', numberToString());
+
   return env;
 }
 
@@ -268,6 +270,10 @@ const greaterThan = (): Just<ExprResult> => {
     }, 
     2, true
   ));
+}
+
+const numberToString = (): Just<ExprResult> => {
+  return BFnEnv(constructSingletonStringOperation('number->string', x => x.toString()));
 }
 
 // ----------------------------------------------------------------------------
