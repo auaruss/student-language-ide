@@ -769,7 +769,7 @@ tIO('(- 0 0)', '0\n');
 
 }
 
-const andOrTests = (): void => {
+const andOrTests = (): void => {~
 /**
  * @knowntestfail pending printer changes
  */
@@ -791,7 +791,7 @@ t(`(and true)
 #true
 #false
 #false
-and: question result is not true or false: "hello"
+"hello": and: question result is not true or false
 `);
  
 /**
@@ -815,29 +815,7 @@ t(`(or false)
 #true
 #true
 #true
-or: question result is not true or false: "hello"
-`);
-
-/**
- * @knowntestfail to be dealt with when the arity pass of the parser is added (all of these examples)
- */
-tIO(
-`(and false +)
-
-(define (f x) x)
-(and false f)
-
-(and false make-posn)
-(and false posn-x)
-(and false posn?)
-(and "hello" true)`,
-`+: expected a function call, but there is no open parenthesis before this function
-Defined (f x) to be x.
-f: expected a function call, but there is no open parenthesis before this function
-make-posn: expected a function call, but there is no open parenthesis before this function
-posn-x: expected a function call, but there is no open parenthesis before this function
-posn?: expected a function call, but there is no open parenthesis before this function
-"hello": and: question result is not true or false: "hello"
+"hello": or: question result is not true or false
 `);
 
 tIO(
@@ -905,40 +883,36 @@ tIO(`(define-struct posn (x (x y)))`,
 `define-struct: expected a field name, but found a part
 `);
 
-// /**
-//  * @UnimplementedTest
-//  */
-// tIO(`(define-struct point (x y))
-// (define-struct point (x y))`,
-// ``);
 
-// /**
-//  * @UnimplementedTest
-//  */
-// tIO(`(define-struct point (x y))
-// (define point-x 1)`,
-// ``);
+tIO(`(define-struct point (x y))
+(define-struct point (x y))`,
+`Defined point to be a structure type named point.
+point: this name was defined previously and cannot be re-defined
+`);
 
-// /**
-//  * @UnimplementedTest
-//  */
-// tIO(`(define-struct point (x y))
-// (define (point-x y) y)`,
-// ``);
+tIO(`(define-struct point (x y))
+(define point-x 1)`,
+`Defined point to be a structure type named point.
+point-x: this name was defined previously and cannot be re-defined
+`);
 
-// /**
-//  * @UnimplementedTest
-//  */
-// tIO(`(define point-x 1)
-// (define-struct point (x y))`,
-// ``);
+tIO(`(define-struct point (x y))
+(define (point-x y) y)`,
+`Defined point to be a structure type named point.
+point-x: this name was defined previously and cannot be re-defined
+`);
 
-// /**
-//  * @UnimplementedTest
-//  */
-// tIO(`(define (point-x y) y)
-// (define-struct point (x y))`,
-// ``);
+tIO(`(define point-x 1)
+(define-struct point (x y))`,
+`Defined point-x to be 1.
+point-x: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define (point-x y) y)
+(define-struct point (x y))`,
+`Defined (point-x y) to be y.
+point-x: this name was defined previously and cannot be re-defined
+`);
 
 tIO(`(define point-x 10)`,
 `Defined point-x to be 10.
@@ -1092,6 +1066,28 @@ tIO(`
 (define (format-november format-month) (format-month "November" "long"))`,
 `Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
 function call: expected a function after the open parenthesis, but found a variable
+`);
+
+/**
+ * @knowntestfail to be dealt with when the arity pass of the parser is added (all of these examples)
+ */
+tIO(
+`(and false +)
+
+(define (f x) x)
+(and false f)
+
+(and false make-posn)
+(and false posn-x)
+(and false posn?)
+(and "hello" true)`,
+`+: expected a function call, but there is no open parenthesis before this function
+Defined (f x) to be x.
+f: expected a function call, but there is no open parenthesis before this function
+make-posn: expected a function call, but there is no open parenthesis before this function
+posn-x: expected a function call, but there is no open parenthesis before this function
+posn?: expected a function call, but there is no open parenthesis before this function
+"hello": and: question result is not true or false
 `);
 
 }
@@ -2229,8 +2225,8 @@ const currentWorkingOnTheseTests = (): void => {
 
   pendingEvaluatorChangesTests();
 
-  a2Tests();
-  a3Tests();
+  // a2Tests();
+  // a3Tests();
   // a4Tests();
   demoTests();
 
