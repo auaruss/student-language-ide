@@ -17,7 +17,7 @@ import {
   Bind, Clos, MakeAtomic, ValErr,
   MakeNothing, MakeJust, MakeCheckExpectedError, 
   MakeCheckSuccess, MakeCheckFailure, MakeStruct, ResultErr,
-  MakeStructType, MakeStructureConstructor, MakeStructurePredicate, MakeStructureAccessor
+  MakeStructType, MakeStructureConstructor, MakeStructurePredicate, MakeStructureAccessor, MakeStringExpr, MakeVariableUsageExpr
 } from './constructors';
 
 import {
@@ -142,20 +142,29 @@ const evaluateDefinition = (d: {
   let defnVal = env.get(d.name);
   if (defnVal === undefined)
     throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    if (defnVal.type === 'just')
+      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(d.name));
+
 
   if (d.type === 'define-struct') {
     let structConstructor = env.get('make-' + d.name);
     if (structConstructor === undefined)
       throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    if (structConstructor.type === 'just')
+      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
     
     let structPredicate = env.get(d.name + '?');
       if (structPredicate === undefined)
         throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
-    
+    if (structPredicate.type === 'just')
+      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
+
     for (let field of d.fields) {
       let structAccessor = env.get(d.name + '-' + field);
       if (structAccessor === undefined)
         throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+      if (structAccessor.type === 'just')
+        return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
     }
   }
 
@@ -164,9 +173,6 @@ const evaluateDefinition = (d: {
     case 'define-struct':
       const s = MakeStructType(d.name, d.fields);
 
-      /**
-       * @todo test drracket errors for these next 2 lines
-       */
       mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
       mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
 
@@ -185,10 +191,8 @@ const evaluateDefinition = (d: {
       break;
   }
 
-  if (defnVal.type === 'nothing') {
-    mutateEnv(d.name, MakeJust(sndarg), env);
-    return Bind(d.name, sndarg);
-  } else return ResultErr('Repeated definition of the same name', d);
+  mutateEnv(d.name, MakeJust(sndarg), env);
+  return Bind(d.name, sndarg);
 }
 
 /**
