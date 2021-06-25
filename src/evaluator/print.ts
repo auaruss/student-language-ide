@@ -86,7 +86,7 @@ const printTopLevel = (tl: TopLevel): string => {
 
     case 'define-struct':
       const fields = tl.fields.reduce((elem, acc) => `${elem} `.concat(acc))
-      return `(define-structm${tl.name} (${tl.fields}))`;
+      return `(define-struct ${tl.name} (${tl.fields.reduce((a, b) => a + ' ' + b ) }))`;
 
     case 'check-expect':
       return `(check-expect ${printExpr(tl.actual)} ${printExpr(tl.expected)})`;
@@ -104,7 +104,7 @@ const printExpr = (e: Expr): string => {
 
   switch (e.typeOfExpression) {
     case 'String':
-      return e.const;
+      return `"${e.const}"`;
 
     case 'Number':
       return e.const.toString();
