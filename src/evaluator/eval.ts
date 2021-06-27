@@ -360,7 +360,7 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
     case 'StructureAccessor':
       if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
       if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
-      if (args[0].struct !== op.struct) return ValErr('applied structure accessor to the wrong type of struct', e);
+      if (args[0].struct !== op.struct) return ValErr(`posn-x: expects a posn, given a ${ args[0].struct.name }`);
       return args[0].values[op.index];
 
     case 'StructureConstructor':
