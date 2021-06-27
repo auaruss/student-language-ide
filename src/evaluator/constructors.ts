@@ -294,6 +294,10 @@ export const MakeBuiltinFunction = (v: ((vs: Value[]) => ExprResult)): Value => 
   return { type: 'BuiltinFunction', value: v };
 }
 
+export const MakeStructTypeValue = (name: string): Value  => {
+  return { type: 'StructType', name: name };
+}
+
 export const MakeStruct = (s: StructType, v: ExprResult[]): Value => {
   return {
     type: 'Struct',

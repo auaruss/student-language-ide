@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor,MakeStructurePredicate } from './constructors';
+import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor,MakeStructurePredicate, MakeStructTypeValue } from './constructors';
 import { ExprResult, Env, Just, Maybe, Value, StructType } from './types';
 import { MakeBuiltinFunction, MakeAtomic, ValErr, MakeJust } from './constructors';
 
@@ -14,6 +14,7 @@ export const builtinEnv = (): Env => {
   let env = new Map<String, Maybe<ExprResult>>();
 
   const posnType: StructType = MakeStructType('posn', ['x', 'y']);
+  const colorType: StructType = MakeStructType('color', ['red', 'green', 'blue']);
 
   env.set('pi', NFnEnv(Math.PI));
   env.set('true', NFnEnv(true));
@@ -35,11 +36,18 @@ export const builtinEnv = (): Env => {
   env.set('modulo', modulo());
   env.set('abs', absoluteVal());
 
-  env.set('posn', MakeJust({ type: 'StructType', name: 'posn' }));
+  env.set('posn', MakeJust(MakeStructTypeValue('posn')));
   env.set('make-posn', MakeJust(MakeStructureConstructor(posnType)));
   env.set('posn-x', MakeJust(MakeStructureAccessor(posnType, 0)));
   env.set('posn-y', MakeJust(MakeStructureAccessor(posnType, 1)));
   env.set('posn?', MakeJust(MakeStructurePredicate(posnType)));
+
+  env.set('color', MakeJust(MakeStructTypeValue('color')));
+  env.set('make-color', MakeJust(MakeStructureConstructor(colorType)));
+  env.set('color-red', MakeJust(MakeStructureAccessor(colorType, 0)));
+  env.set('color-green', MakeJust(MakeStructureAccessor(colorType, 1)));
+  env.set('color-blue', MakeJust(MakeStructureAccessor(colorType, 2)));
+  env.set('color?', MakeJust(MakeStructurePredicate(colorType)));
 
   env.set('and', and());
   env.set('or', or());
