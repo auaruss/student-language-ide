@@ -730,8 +730,8 @@ tIO(`(define p (make-posn (+ 2 "hello") 3))
 p: this variable is not defined
 `);
 
-tIO('(posn-x (make-color 15 15 15 15))',
-`posn-x: expects a posn, given (make-color 15 15 15 15)
+tIO('(posn-x (make-color 15 15 15))',
+`posn-x: expects a posn, given a color
 `);
   
 tIO(`(posn? (make-posn 2 2))`,
@@ -769,10 +769,8 @@ tIO('(- 0 0)', '0\n');
 
 }
 
-const andOrTests = (): void => {~
-/**
- * @knowntestfail pending printer changes
- */
+const andOrTests = (): void => {
+
 t(`(and true)
 (and true true)
 (and true true true)
@@ -793,10 +791,7 @@ t(`(and true)
 #false
 "hello": and: question result is not true or false
 `);
- 
-/**
- * @knowntestfail pending printer changes
- */
+
 t(`(or false)
 (or false false)
 (or false true true)
@@ -2254,7 +2249,7 @@ const currentWorkingOnTheseTests = (): void => {
   parserErrorTests();
   evaluatorErrorTests();
   defineStructTests();
-  // builtinStructTests();
+  builtinStructTests();
 
   checkExpectTests();
   arithmeticTests();
@@ -2263,7 +2258,7 @@ const currentWorkingOnTheseTests = (): void => {
 
   a2Tests();
   a3Tests();
-  // a4Tests();
+  a4Tests();
   demoTests();
 
   builtinEnvironmentTests();
