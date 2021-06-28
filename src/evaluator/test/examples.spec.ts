@@ -919,7 +919,7 @@ tIO(`(define-struct point [x y])
 `Defined point to be a structure type named point.
 Defined x to be 10.
 point: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
-`)
+`);
 
 tIO(`(posn "x" 10)`,
 `posn: expected a function after the open parenthesis, but found a structure type (do you mean make-posn)
@@ -928,13 +928,10 @@ tIO(`(posn "x" 10)`,
 }
 
 const pendingEvaluatorChangesTests = (): void => {
- 
- /**
-  * @knowntestfail pending evaluator changes
-  */
- tIO('(sin 2 3)',
- 'sin: expects only 1 argument, but found 2\n'
- );
+
+tIO('(sin 2 3)',
+'sin: expects only 1 argument, but found 2\n'
+);
 
 tIO(`(modulo 5 2)
 (modulo -5 2)
@@ -981,13 +978,6 @@ tIO('(define x 10) x',
 }
 
 const pendingPrinterChangesTests = (): void => {
-
-/**
- * @knowntestfail pending printer changes
- */
-tIO('(sin 1)',
-`${ Math.sin(1) }
-`);
 
 /**
  * @knowntestfail pending printer changes
@@ -1041,9 +1031,9 @@ tIO(`
 /**
  * @knowntestfail pending printer changes
  */
- tIO(`(+ + *)`,
- `+: expected a function call, but there is no open parenthesis before this function`
- );
+tIO(`(+ + *)`,
+`+: expected a function call, but there is no open parenthesis before this function`
+);
 
 }
 
@@ -1089,9 +1079,6 @@ posn?: expected a function call, but there is no open parenthesis before this fu
 
 const otherTurnedOffTests = (): void => {
 
-/**
- * @knowntestfail 
- */
 tIO('(define f +)', 
 `+: expected a function call, but there is no open parenthesis before this function
 `
@@ -2024,11 +2011,9 @@ tIO('(floor 1.55555)',
 `1
 `);
 
-// This is a parsing error.
-/** @fix */
-// tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
-// `function call: expected a function after the open parenthesis, but found (+ 2 2)
-// `);
+tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
+`function call: expected a function after the open parenthesis, but found a part
+`);
 
 
 
@@ -2166,11 +2151,14 @@ t('(+ 2 4) (+ 4 7)',
   '11\n'
 );
 
-/** @fix */
-t('(define (define-struct x y) x)'); // error
+/** @knowntestfail */
+tIO(`(define (define-struct x y) x)`,
+`define: expected the name of the function, but found a keyword
+`);
 
-/** @fix */
-t('(define (x define-struct y) y)'); // error
+tIO('(define (x define-struct y) y)',
+`define: expected a variable, but found a keyword
+`);
 
 t('(define define 1)', undefined, undefined, 
   [
@@ -2236,6 +2224,10 @@ tIO(`(number->string 1 2)`,
 `number->string: expects only 1 argument, but found 2
 `);
 
+tIO('(sin 1)',
+`${ Math.sin(1) }
+`);
+
 }
 
 /**
@@ -2249,7 +2241,7 @@ const currentWorkingOnTheseTests = (): void => {
   parserErrorTests();
   evaluatorErrorTests();
   defineStructTests();
-  builtinStructTests();
+  // builtinStructTests();
 
   checkExpectTests();
   arithmeticTests();
@@ -2263,7 +2255,12 @@ const currentWorkingOnTheseTests = (): void => {
 
   builtinEnvironmentTests();
 
-  andOrTests(); // pending printer/parser changes
+  andOrTests();
+
+  otherTurnedOffTests();
+
+  pendingPrinterChangesTests();
+  pendingNextParserPassTests();
 }
 
 /**
@@ -2272,10 +2269,7 @@ const currentWorkingOnTheseTests = (): void => {
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
 
-  pendingPrinterChangesTests();
-  pendingNextParserPassTests();
 
-  otherTurnedOffTests();
 }
 
 
