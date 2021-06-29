@@ -248,7 +248,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
         if (pred.value) return evaluateExpr(clause[1], env);
       }
 
-      return ValErr('all cond questions are false', e);
+      return ValErr('all question results were false', e);
 
     case 'Call':
       const op = evaluateOperator(e, e.op, env);
