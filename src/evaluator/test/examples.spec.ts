@@ -37,11 +37,14 @@ import { a3Tests } from './assignment3.spec';
 import { a4Tests } from './assignment4.spec';
 
 /** 
- * @todo by july 9, document tags @fix and @UnimplementedTest in a README for the next maintainer/dev.
+ * @todo by july 9, document tags @UnimplementedTest in a README for the next maintainer/dev.
  * @todo check-within check-error tests
- * @todo move demo code out of otherTurnedOnTests into demoTests
  * @todo break up tests (particularly and/or) which have too many unrelated expressions together
+ * @todo add tests -> make tests pass -> refactor parser and remove/change test categories
+ * @todo document the process of setting up and testing the repo in explicit detail in README
  */
+
+const errorTests = (): void => {
 
 const tokenizerErrorTests = (): void => {
   t('#t123',
@@ -96,6 +99,8 @@ t('(define bool #t123)',
 );
 
 }
+
+tokenizerErrorTests();
 
 const readerErrorTests = (): void => {
 
@@ -397,7 +402,67 @@ t('(fact n) (if (= n 0) 1 (* n (fact (- n 1)))))',
   ]
 );
 
+t('(123)',
+  [
+    OP,
+    NumTok('123'),
+    CP
+  ],
+
+  [
+    SExps(NumAtom(123))
+  ]
+);
+
+/**
+ * @UnimplementedTest
+ *    1st option. Reader separates into 3 objects. ( [) 1
+ * -> 2nd option. Reader separates into 2 objects. ([) 1 <- We are currently using this.
+ *    3rd option. Reader separates into 3 objects, ignoring incorrect closing paren. ( [ 1
+ */
+ t('([)\n'
+ + '1'
+);
+
+/**
+* @UnimplementedTest
+*/
+t('([))\n'
+ + '1'
+);
+
+/**
+* @UnimplementedTest
+*/
+t('(]))\n'
++ '1'
+);
+
+/**
+* @UnimplementedTest
+*/
+t('([[[][][][][][])\n'
+ + '(define x 10)\n'
+ + 'x',
+);
+
+/**
+ * @knowntestfail '.' should not pass the reader as valid
+ */
+tIO(`(define (f .) .)`,
+`read-syntax: illegal use of \`.\`
+`);
+
+/**
+ * @knowntestfail '#)' should not pass the reader as valid
+ */
+tIO(`((#) 2 3)`,
+`read-syntax: bad syntax \`#)\`
+`);
+
 }
+
+readerErrorTests();
 
 const parserErrorTests = (): void => {
 
@@ -417,6 +482,8 @@ t('((+) 1 2)', undefined, undefined,
 );
 
 }
+
+parserErrorTests();
 
 const evaluatorErrorTests = (): void => {
 
@@ -471,7 +538,12 @@ function call: expected a function after the open parenthesis, but found a varia
 
 }
 
+evaluatorErrorTests();
+
+}
+
 const demoTests = (): void => {
+  
 /** 
  * Our demo: Someone tries to define fib.
  */
@@ -574,422 +646,133 @@ t('(define (fib n)\n' +
  * Behavior:
  * A user comments out a piece of code.
  */
-}
 
-const checkExpectTests = (): void => {
-
-/**
- * @UnimplementedTest
- */
- t('(check-expect (define x 10) 10)' // does not parse
-
- );
- 
- t('(check-expect -13 -13)', undefined, undefined,
-   [
-   checkExpectSameNum
-   ],
-   [
-   MakeCheckSuccess()
-   ],
-   '🎉\n'
- );
- 
- t('(check-expect "hello" "hello")', undefined, undefined,
-   [
-   checkExpectSameString
-   ],
-   [
-   MakeCheckSuccess()
-   ],
-   '🎉\n'
- );
- 
- t('(check-expect #true #t)', undefined, undefined,
-   [
-   checkExpectTrue
-   ],
-   [
-   MakeCheckSuccess()
-   ],
-   '🎉\n'
- );
- 
- t('(check-expect #f #f)', undefined, undefined,
-   [
-   checkExpectFalse
-   ],
-   [
-   MakeCheckSuccess()
-   ],
-   '🎉\n'
- );
- 
- t('(check-expect hello hello)', undefined, undefined,
-   [
-   checkExpectSameId
-   ],
-   [
-   checkExpectedErrorSameId
-   ],
- 'hello: this variable is not defined\n'
- );
- 
- t('(check-expect -13 1)', undefined, undefined,
-   [
-   checkExpectDiffNum
-   ],
-   [
-   checkFailureDiffNum
-   ],
-   'Actual value -13 differs from 1, the expected value.\n'
- );
- 
- t('(check-expect hello goodbye)', undefined, undefined,
-   [
-   checkExpectDiffId
-   ],
-   [
-   checkExpectedErrorDiffId
-   ],
-   'goodbye: this variable is not defined\n'
- );
- 
- t('(check-expect "hello" "goodbye")', undefined, undefined,
-   [
-   checkExpectDiffString
-   ],
-   [
-   checkFailureDiffString
-   ],
-   'Actual value "hello" differs from "goodbye", the expected value.\n'
- );
- 
- t('(check-expect #t #f)', undefined, undefined,
-   [
-   checkExpectTrueIsNotFalse
-   ],
-   [
-   checkFailureTrueIsNotFalse
-   ],
-   'Actual value #true differs from #false, the expected value.\n'
- );
- 
- t('(check-expect -13 hello)', undefined, undefined,
-   [
-   checkExpectDiffType1
-   ],
-   [
-   checkExpectedErrorDiffType1
-   ],
-   'hello: this variable is not defined\n'
- );
- 
- t('(check-expect hello "hello")', undefined, undefined,
-   [
-   checkExpectDiffType2
-   ],
-   [
-   checkFailureDiffType2
-   ],
-   'hello: this variable is not defined\n'
- );
- 
- t('(check-expect #true "goodbye")', undefined, undefined,
-   [
-   checkExpectDiffType3
-   ],
-   [
-   checkFailureDiffType3
-   ],
-   'Actual value #true differs from "goodbye", the expected value.\n'
- );
-
-}
-
-const builtinStructTests = (): void => {
-
-tIO('(make-posn 2 3)', '(make-posn 2 3)\n');
-
-tIO('(posn-x (make-posn 2 3))', '2\n');
-
-tIO('(posn-y (make-posn 2 3))', '3\n');
-
-tIO('(make-posn (+ 2 "hello") 2)',
-`+: expects a number as 2nd argument, given "hello"
-`
-);
+/*****************************************************************************
+ *                   Test cases for live editing behavior.                   *
+ *                                                                           *
+ * These test cases are intended to illustrate specific live editing         *
+ * behavior and the intended output of the live editor with that behavior.   *
+ *****************************************************************************/
 
 /**
- * @knowntestfail Fixing this test requires making error reporting into a side channel.
+ * Our demo: (+ 2 3)
  */
-tIO(`(define p (make-posn (+ 2 "hello") 3))
-(posn-y p)
-`,
-`+: expects a number as 2nd argument, given "hello"
-p: this variable is not defined
-`);
+ t('', [], [], [], [], '\n');
 
-tIO('(posn-x (make-color 15 15 15))',
-`posn-x: expects a posn, given a color
-`);
-  
-tIO(`(posn? (make-posn 2 2))`,
-`#true
-`);
-
-tIO(`(posn? 10)`,
-`#false
-`);
-
-}
-
-const arithmeticTests = (): void => {
-
-tIO(`(+ 2 3)
-(+ 1)
-(- 2 3)
-(- 1)
-(* 2 3)
-(* 1)
-(/ 2 3)
-(/ 1)`,
-`5
-+: expects at least 2 arguments, but found only 1
--1
--1
-6
-*: expects at least 2 arguments, but found only 1
-0.6666666666666666
-/: expects at least 2 arguments, but found only 1
-`);
-
-
-tIO('(- 0 0)', '0\n');
-
-}
-
-const andOrTests = (): void => {
-
-t(`(and true)
-(and true true)
-(and true true true)
-(and true false true)
-(and true false "hello")
-(and true "hello" false)`,
-  undefined,
-  undefined,
-  [
-    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('(and true)')),
-    and1, and2, and3, and4, and5
-  ],
-  undefined,
-`and: expects at least 2 arguments, but found only 1
-#true
-#true
-#false
-#false
-"hello": and: question result is not true or false
-`);
-
-t(`(or false)
-(or false false)
-(or false true true)
-(or false false true)
-(or false true "hello")
-(or false "hello" true)`,
-  undefined,
-  undefined,
-  [
-    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('(or false)')),
-    or1, or2, or3, or4, or5
-  ],
-  undefined,
-`or: expects at least 2 arguments, but found only 1
-#false
-#true
-#true
-#true
-"hello": or: question result is not true or false
-`);
-
-tIO(
-`(and false (make-posn 2 2))`,
-`#false
-`);
-
-}
-
-const defineStructTests = (): void => {
-
-tIO(`define-struct`,
-`define-struct: expected an open parenthesis before define-struct, but found none
-`);
-
-tIO(`(define-struct)`,
-`define-struct: expected the structure name after define-struct, but nothing's there
-`);
-
-tIO(`(define-struct "posn" [x y])`,
-`define-struct: expected the structure name after define-struct, but found a string
-`);
-
-tIO(`(define-struct 1 [x y])`,
-`define-struct: expected the structure name after define-struct, but found a number
-`);
-
-tIO(`(define-struct #t [x y])`,
-`define-struct: expected the structure name after define-struct, but found a boolean
-`);
-
-tIO(`(define-struct (f x) [x y])`,
-`define-struct: expected the structure name after define-struct, but found a part
-`);
-
-tIO(`(define-struct posn)`,
-`define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
-`);
-
-tIO(`(define-struct posn 1 2 3)`,
-`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-`);
-
-tIO(`(define-struct posn (x y) 2 3)`,
-`define-struct: expected nothing after the field names, but found 2 extra parts
-`);
-
-tIO(`(define-struct posn "x")`,
-`define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
-`);
-
-tIO(`(define-struct posn 1)`,
-`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
-`);
-
-tIO(`(define-struct posn #t)`,
-`define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
-`);
-
-tIO(`(define-struct posn (x 1) 1)`,
-`define-struct: expected a field name, but found a number
-`);
-
-tIO(`(define-struct posn (x (x y)))`,
-`define-struct: expected a field name, but found a part
-`);
-
-
-tIO(`(define-struct point (x y))
-(define-struct point (x y))`,
-`Defined point to be a structure type named point.
-point: this name was defined previously and cannot be re-defined
-`);
-
-tIO(`(define-struct point (x y))
-(define point-x 1)`,
-`Defined point to be a structure type named point.
-point-x: this name was defined previously and cannot be re-defined
-`);
-
-tIO(`(define-struct point (x y))
-(define (point-x y) y)`,
-`Defined point to be a structure type named point.
-point-x: this name was defined previously and cannot be re-defined
-`);
-
-tIO(`(define point-x 1)
-(define-struct point (x y))`,
-`Defined point-x to be 1.
-point-x: this name was defined previously and cannot be re-defined
-`);
-
-tIO(`(define (point-x y) y)
-(define-struct point (x y))`,
-`Defined (point-x y) to be y.
-point-x: this name was defined previously and cannot be re-defined
-`);
-
-tIO(`(define point-x 10)`,
-`Defined point-x to be 10.
-`);
-
-tIO(`(define-struct point [x y])
-(define x 10)
-(point x (make-point 10 10))`,
-`Defined point to be a structure type named point.
-Defined x to be 10.
-point: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
-`);
-
-tIO(`(posn "x" 10)`,
-`posn: expected a function after the open parenthesis, but found a structure type (do you mean make-posn)
-`);
-
-}
-
-const pendingEvaluatorChangesTests = (): void => {
-
-tIO('(sin 2 3)',
-'sin: expects only 1 argument, but found 2\n'
-);
-
-tIO(`(modulo 5 2)
-(modulo -5 2)
-(modulo 0 1)
-(modulo 0 0)
-(modulo 2 -7)
-(modulo 2 7)
-(modulo 135 17)`,
-`1
-1
-0
-modulo: undefined for 0
--5
-2
-16
-`);
-
-tIO(`(abs -1 -2)
-(abs -13)
-(abs 0)
-(abs 100)`,
-`abs: expects only 1 argument, but found 2
-13
-0
-100
-`);
-
-tIO(`(define f (+ sin cos))`,
-`sin: expected a function call, but there is no open parenthesis before this function
-`);
-
-tIO(
-`(cond [(string=? "hello" "goodbye") 1]
-        [(string=? "hello" "hello") 2])`,
-`2
-`
-);
-
-tIO('(define x 10) x',
-`Defined x to be 10.
-10
-`);
+ t('(',
+   [OP],
+   [ReadErr('No Closing Paren', [OP])],
+   [ReadErr('No Closing Paren', [OP])],
+   [ReadErr('No Closing Paren', [OP])],
+   'Read Error: No Closing Paren for (\n'
+ );
+ 
+ t('(+',
+   [OP, Tok(TokenType.Identifier, '+')],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
+   'Read Error: No Closing Paren for (+\n'
+ );
+ 
+ // t('(+ ');
+ 
+ t('(+ 2',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2')],
+   [ReadErr('No Closing Paren', [OP, IdTok('+'), NumTok('2')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2')])],
+   'Read Error: No Closing Paren for (+ 2\n'
+ );
+ 
+ t('(+ 2 3',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '3')],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
+   'Read Error: No Closing Paren for (+ 2 3\n'
+ );
+ 
+ 
+ t('(+ 2 3)',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '3'), CP],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(3)) ],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(3)]) ],
+   [ MakeAtomic(5) ],
+   '5\n'
+ );
+ 
+ // // t('(+ 2 3');
+ // // t('(+ 2 ');
+ 
+ 
+ t('(+ 2 4',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4')],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
+   [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
+   'Read Error: No Closing Paren for (+ 2 4\n'
+ );
+ 
+ t('(+ 2 4)',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)) ],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]) ],
+   [ MakeAtomic(6) ],
+   '6\n'
+ );
+ 
+ // // t('(+ 2 4) ');
+ 
+ t('(+ 2 4) (+',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+')],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
+   [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
+   '6\n'
+   + 'Read Error: No Closing Paren for (+\n'
+ );
+ 
+ // // t('(+ 2 4) (+ ');
+ 
+ t('(+ 2 4) (+ 4',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4')],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')])],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
+   [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
+   '6\n'
+   + 'Read Error: No Closing Paren for (+ 4\n'
+ );
+ 
+ // t('(+ 2 4) (+ 4 ');
+ 
+ t('(+ 2 4) (+ 4 7',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7')],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')])],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
+   [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
+   '6\n'
+   + 'Read Error: No Closing Paren for (+ 4 7\n'
+ );
+ 
+ t('(+ 2 4) (+ 4 7)',
+   [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7'), CP],
+   [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), SExps(IdAtom('+'), NumAtom(4), NumAtom(7))],
+   [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), MakeCall('+', [MakeNumberExpr(4), MakeNumberExpr(7)]) ],
+   [ MakeAtomic(6), MakeAtomic(11) ],
+   '6\n' +
+   '11\n'
+ );
 
 }
 
 const pendingPrinterChangesTests = (): void => {
 
-/**
- * @knowntestfail pending printer changes
- */
 tIO(`(cond [(string=? "hello" "goodbye") 1]
 [(string=? "hello" "hellow") 2])`,
-`cond: all question results were false
+`(cond [(string=? "hello" "goodbye") 1] [(string=? "hello" "hellow") 2]): all question results were false
 `);
 
-/**
- * @knowntestfail pending printer changes
- */
 t(`
 (define (process-posn p) 
   (... (posn-x p) ... (posn-y p) ...))
@@ -1001,9 +784,6 @@ t(`
 `Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
 `);
 
-/**
- * @knowntestfail pending printer changes
- */
 tIO(`
 (define (process-posn p) 
   (... (posn-x p) ... (posn-y p) ...))
@@ -1013,9 +793,6 @@ tIO(`
 ...: expected a finished expression, but found a template
 `);
 
-/**
- * @knowntestfail pending printer changes
- */
  tIO(
 `(define (f x)
   (cond [x 1]
@@ -1028,19 +805,16 @@ tIO(`
 `
 );
 
-/**
- * @knowntestfail pending printer changes
- */
 tIO(`(+ + *)`,
-`+: expected a function call, but there is no open parenthesis before this function`
-);
+`+: expected a function call, but there is no open parenthesis before this function
+`);
 
 }
 
-const pendingNextParserPassTests = (): void => {
+const parserStaticCheckTests = (): void => {
 
 /**
- * @knowntestfail pending adding function arity parser pass
+ * @knowntestfail 
  */
 // What should happen when we replace an existing function with a new variable in scope then try to use that variable.
 tIO(`
@@ -1054,7 +828,7 @@ function call: expected a function after the open parenthesis, but found a varia
 `);
 
 /**
- * @knowntestfail to be dealt with when the arity pass of the parser is added (all of these examples)
+ * @knowntestfail
  */
 tIO(
 `(and false +)
@@ -1075,115 +849,43 @@ posn?: expected a function call, but there is no open parenthesis before this fu
 "hello": and: question result is not true or false
 `);
 
-}
-
-const otherTurnedOffTests = (): void => {
-
-tIO('(define f +)', 
-`+: expected a function call, but there is no open parenthesis before this function
-`
-);
-
 /**
- * @knowntestfail unimplemented evaluator features
- */
-tIO(`(not true)
-(not false)
-(not true true)
-(not "One")`,
-`#false
-#true
-not: expects only 1 argument, but found 2
-not: expected either #true or #false; given "one"
-`);
-
-/**
- * @knowntestfail '.' should not pass the reader as valid
- */
-tIO(`(define (f .) .)`,
-`read-syntax: illegal use of \`.\`
-`);
-
-/**
- * @knowntestfail '#)' should not pass the reader as valid
- */
-tIO(`((#) 2 3)`,
-`read-syntax: bad syntax \`#)\`
-`);
-
-/**
- * @knowntestfail unimplemented feature
- */
-tIO(`(substring "hello world" 2)
-(substring "hello world" 2 4)
-(substring "hello" 5 5)
-(substring "hello" 25)
-(substring "hello" 5 25)`,
-`"llo world"
-"ll"
-""
-substring: starting index is out of range
-  starting index: 25
-  valid range: [0, 5]
-  string: "hello"
-substring: ending index is out of range
-  ending index: 25
-  starting index: 5
-  valid range: [0, 5]
-  string: "hello"
-`);
-
-/**
- * @knowntestfail due to unimplemented parser checking features
+ * @knowntestfail
  */
 tIO('(define (hi bye) rye)',
 `rye: this variable is not defined
 `);
-
+ 
 /**
-* @knowntestfail due to unimplemented parser checking features
-*/
+ * @knowntestfail
+ */
 tIO('(define (hi bye) (f 2 2))',
 `f: this function is not defined
 `);
 
 /**
- * @knowntestfail printer spacing
- */
-tIO(`("string")
-(id)
-(#t)
-((+ 2 2) 2 2)`,
-`function call: expected a function after the open parenthesis, but found a string
-id: this function is not defined
-function call: expected a function after the open parenthesis, but found something else
-function call: expected a function after the open parenthesis, but found a part
-`);
-
-tIO(`
-(+ 2 2 2 2 2 2 2 2 2 2 2
-  22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2 2 2 2
-  2 222 2 2 2 2 2 2 2 2 2 2 22
-  2 2 2 2 2 2 2 2 2
-  2 22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2
-  2 2 2 2 22 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
-  2 2 2 22 2 "hello" 1
-)`,
-`+: expects a number as 101st argument, given "hello"... [102 total] ...
-`);
-
-
-/**
- * @knowntestfail pending addition of parser arity pass
+ * @knowntestfail
  */
 tIO(`(define (apply2 f x y) (f x y)) (apply2 + 2 3)`,
 `function call: expected a function after the open parenthesis, but found a variable
 apply2: this function is not defined
 `);
 
+/**
+ * @knowntestfail
+ */
+ tIO(`("string")
+ (id)
+ (#t)
+ ((+ 2 2) 2 2)`,
+ `function call: expected a function after the open parenthesis, but found a string
+ id: this function is not defined
+ function call: expected a function after the open parenthesis, but found something else
+ function call: expected a function after the open parenthesis, but found a part
+ `);
 }
 
-const otherTurnedOnTests = (): void => {
+const atomicValuesTests = (): void => {
 
 t('', [], [], [], [], '\n');
 
@@ -1267,305 +969,9 @@ t('"abc"def"ghi"',
   ]
 );
 
-t(
-  '(define x 10)',
-  [ OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP ],
-  [ 
-    SExps(IdAtom('define'), IdAtom('x'), NumAtom(10))
-  ]
-);
+}
 
-
-
-t('(123)',
-  
-  [
-    OP,
-    NumTok('123'),
-    CP
-  ],
-
-  [
-    SExps(NumAtom(123))
-  ]
-);
-
-//    1st option. ( [) 1
-// -> 2nd option. ([) 1 <- We are currently using this.
-//    3rd option. ( [ 1
-t('([)\n'
-  + '1'
-);
-
-// ([) ) 1
-t('([))\n'
-  + '1'
-);
-
-t('(]))\n'
-+ '1'
-);
-
-t('([[[][][][][][])\n'
-  + '(define x 10)\n'
-  + 'x',
-);
-
-t('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))',
-  
-  [
-    OP,
-    IdTok('define'),
-    SPACE,
-    OP,
-    IdTok('fact'),
-    SPACE,
-    IdTok('n'),
-    CP,
-    SPACE,
-    OP,
-    IdTok('if'),
-    SPACE,
-    OP,
-    IdTok('='),
-    SPACE,
-    IdTok('n'),
-    SPACE,
-    NumTok('0'),
-    CP,
-    SPACE,
-    NumTok('1'),
-    SPACE,
-    OP,
-    IdTok('*'),
-    SPACE,
-    IdTok('n'),
-    SPACE,
-    OP,
-    IdTok('fact'),
-    SPACE,
-    OP,
-    IdTok('-'),
-    SPACE,
-    IdTok('n'),
-    SPACE,
-    NumTok('1'),
-    CP,
-    CP,
-    CP,
-    CP,
-    CP
-  ],
-
-  [
-    SExps(
-      IdAtom('define'),
-      SExps(
-        IdAtom('fact'),
-        IdAtom('n')
-      ),
-      SExps(
-        IdAtom('if'),
-        SExps(
-          IdAtom('='),
-          IdAtom('n'),
-          NumAtom(0)
-        ),
-        NumAtom(1),
-        SExps(
-          IdAtom('*'),
-          IdAtom('n'),
-          SExps(
-            IdAtom('fact'),
-            SExps(
-              IdAtom('-'),
-              IdAtom('n'),
-              NumAtom(1)
-            )
-          )
-        )
-      )
-    )
-  ],
-  
-  [
-    MakeFunctionDefinition(
-      'fact',
-      ['n'],
-      MakeIf(
-        MakeCall(
-          '=',
-          [ MakeVariableUsageExpr('n'), MakeNumberExpr(0) ]
-        ),
-        MakeNumberExpr(1),
-        MakeCall(
-          '*',
-          [
-            MakeVariableUsageExpr('n'),
-            MakeCall(
-              'fact',
-              [ MakeCall('-', [MakeVariableUsageExpr('n'), MakeNumberExpr(1)]) ]
-            )
-          ]
-        )
-      )
-    )
-  ]
-);
-
-t('(define (simple-choice x y z) (if x y z))\n'
-+ '(simple-choice #t 10 20)\n'
-+ '\n'
-+ '(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))\n'
-+ '(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))\n',
-
-  tokenize('(define (simple-choice x y z) (if x y z))')
-  .concat([ NL ])
-  .concat(tokenize('(simple-choice #t 10 20)'))
-  .concat([ Tok(TokenType.Whitespace, '\n\n') ])
-  .concat(tokenize('(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))'))
-  .concat([ NL ])
-  .concat(tokenize('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))'))
-  .concat([ NL ]),
-
-  [
-    SExps(
-      IdAtom('define'),
-      SExps(
-        IdAtom('simple-choice'),
-        IdAtom('x'),
-        IdAtom('y'),
-        IdAtom('z')
-      ),
-      SExps(
-        IdAtom('if'),
-        IdAtom('x'),
-        IdAtom('y'),
-        IdAtom('z')
-      )
-    ),
-
-    SExps(
-        IdAtom('simple-choice'),
-        BooleanAtom('#t'),
-        NumAtom(10),
-        NumAtom(20)
-    ),
-
-    SExps(
-      IdAtom('define'),
-      SExps(
-        IdAtom('*'),
-        IdAtom('m'),
-        IdAtom('n')
-      ),
-      SExps(
-        IdAtom('if'),
-        SExps(
-          IdAtom('='),
-          IdAtom('n'),
-          NumAtom(0)
-        ),
-        NumAtom(0),
-        SExps(
-          IdAtom('+'),
-          IdAtom('m'),
-          SExps(
-            IdAtom('*'),
-            IdAtom('m'),
-            SExps(
-              IdAtom('-'),
-              IdAtom('n'),
-              NumAtom(1)
-            )
-          )
-        )
-      )
-    ),
-
-    SExps(
-      IdAtom('define'),
-      SExps(
-        IdAtom('fact'),
-        IdAtom('n')
-      ),
-      SExps(
-        IdAtom('if'),
-        SExps(
-          IdAtom('='),
-          IdAtom('n'),
-          NumAtom(0)
-        ),
-        NumAtom(1),
-        SExps(
-          IdAtom('*'),
-          IdAtom('n'),
-          SExps(
-            IdAtom('fact'),
-            SExps(
-              IdAtom('-'),
-              IdAtom('n'),
-              NumAtom(1)
-            )
-          )
-        )
-      )
-    )
-  ]
-);
-
-t('(define (mn x y) (if (< x y) x y))',
-  [
-    OP,
-    IdTok('define'),
-    SPACE,
-    OP,
-    IdTok('mn'),
-    SPACE,
-    IdTok('x'),
-    SPACE,
-    IdTok('y'),
-    CP,
-    SPACE,
-    OP,
-    IdTok('if'),
-    SPACE,
-    OP,
-    IdTok('<'),
-    SPACE,
-    IdTok('x'),
-    SPACE,
-    IdTok('y'),
-    CP,
-    SPACE,
-    IdTok('x'),
-    SPACE,
-    IdTok('y'),
-    CP,
-    CP
-  ],
-
-  [
-    SExps(
-      IdAtom('define'),
-      SExps(
-        IdAtom('mn'),
-        IdAtom('x'),
-        IdAtom('y')
-      ),
-      SExps(
-        IdAtom('if'),
-        SExps(
-          IdAtom('<'),
-          IdAtom('x'),
-          IdAtom('y')
-        ),
-        IdAtom('x'),
-        IdAtom('y')
-      )
-    )
-  ]
-);
+const readerOnlyTests = (): void => {
 
 t('(simple-choice #t 10 20)',
 
@@ -1897,6 +1303,16 @@ t('("hello" world (this "is" "some non" sense (which should be) #t 10 readable))
   ]
 );
 
+t(
+  `;(define x 10)`,
+  [ CommentTok(';(define x 10)') ],
+  []
+);
+
+}
+
+const variousUnimplementedTests = (): void => {
+
 /**
  * @UnimplementedTest
  */
@@ -1915,40 +1331,6 @@ t('(define x (f 3)) (define (f y) y)');
  * @UnimplementedTest
  */
 t('(define x (+ (+) 3)');
-
-t(
-`(define x 10)
-(check-expect x 10)`,
-
-  [
-    OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP, NL,
-    OP, IdTok('check-expect'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP
-  ],
-
-  [
-    SExps(IdAtom('define'), IdAtom('x'), NumAtom(10)),
-    SExps(IdAtom('check-expect'), IdAtom('x'), NumAtom(10)),
-  ],
-
-  [
-    MakeVariableDefinition('x', MakeNumberExpr(10)),
-    MakeCheckExpect(MakeVariableUsageExpr('x'), MakeNumberExpr(10))
-  ]
-
-);
-
-t(
-`;(define x 10)`,
-[ CommentTok(';(define x 10)') ]
-);
-
-tIO('(define (f x) (+ x x))',
-'Defined (f x) to be (+ x x).\n'
-);
-
-tIO('(define (f x y) (+ x y))',
-'Defined (f x y) to be (+ x y).\n'
-);
 
 /**
  * @UnimplementedTest
@@ -1971,226 +1353,85 @@ t('(cond ["#t" "hello"] [else "goodbye"])');
  */
 t('((λ (x) (+ 2 x)) 2)');
 
-// How keywords are restricted from being used as var names in BSL.
-tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword\n');
-tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword\n');
-
-
-tIO(`(define (f make-posn) make-posn)
-(f 10)`,
-`Defined (f make-posn) to be make-posn.
-10
-`);
-
-tIO(`(add1 1)`,
-`2
-`);
-
-tIO(`(string-append "" "hello " "world" "")`,
-`"hello world"
-`
-);
-
-tIO(`(string=? "January" "January" "January")
-(string=? "January" "January")
-(string=? "January" "February" "January")
-(string=? "January" "February")
-`,
-`#true
-#true
-#false
-#false
-`);
-
-tIO('true false',
-`#true
-#false
-`);
-
-tIO('(floor 1.55555)',
-`1
-`);
-
-tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
-`function call: expected a function after the open parenthesis, but found a part
-`);
-
-
-
-// Note: This is an intentional difference from how DrRacket BSL behaves.
-tIO(`(define (f check-expect) check-expect)
-(define (f check-error) check-error)
-(define (f check-within) check-within)
-(define (f check-random) check-random)
-(define (f check-satisfied) check-satisfied)
-(define (f check-member-of) check-member-of)
-(define (f check-range) check-range)`,
-`define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-define: expected a variable, but found a keyword
-`);
-
-/*****************************************************************************
- *                   Test cases for live editing behavior.                   *
- *                                                                           *
- * These test cases are intended to illustrate specific live editing         *
- * behavior and the intended output of the live editor with that behavior.   *
- *****************************************************************************/
-
-/**
- * Our demo: (+ 2 3)
- */
-t('', [], [], [], [], '\n');
-
-t('(',
-  [OP],
-  [ReadErr('No Closing Paren', [OP])],
-  [ReadErr('No Closing Paren', [OP])],
-  [ReadErr('No Closing Paren', [OP])],
-  'Read Error: No Closing Paren for (\n'
-);
-
-t('(+',
-  [OP, Tok(TokenType.Identifier, '+')],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
-  'Read Error: No Closing Paren for (+\n'
-);
-
-// t('(+ ');
-
-t('(+ 2',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2')],
-  [ReadErr('No Closing Paren', [OP, IdTok('+'), NumTok('2')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2')])],
-  'Read Error: No Closing Paren for (+ 2\n'
-);
-
-t('(+ 2 3',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '3')],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '3')])],
-  'Read Error: No Closing Paren for (+ 2 3\n'
-);
-
-
-t('(+ 2 3)',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '3'), CP],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(3)) ],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(3)]) ],
-  [ MakeAtomic(5) ],
-  '5\n'
-);
-
-// // t('(+ 2 3');
-// // t('(+ 2 ');
-
-
-t('(+ 2 4',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4')],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
-  [ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '2'), Tok(TokenType.Number, '4')])],
-  'Read Error: No Closing Paren for (+ 2 4\n'
-);
-
-t('(+ 2 4)',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)) ],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]) ],
-  [ MakeAtomic(6) ],
-  '6\n'
-);
-
-// // t('(+ 2 4) ');
-
-t('(+ 2 4) (+',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+')],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')])],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
-  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+')]) ],
-  '6\n'
-  + 'Read Error: No Closing Paren for (+\n'
-);
-
-// // t('(+ 2 4) (+ ');
-
-t('(+ 2 4) (+ 4',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4')],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')])],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
-  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4')]) ],
-  '6\n'
-  + 'Read Error: No Closing Paren for (+ 4\n'
-);
-
-// t('(+ 2 4) (+ 4 ');
-
-t('(+ 2 4) (+ 4 7',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7')],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')])],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
-  [ MakeAtomic(6), ReadErr('No Closing Paren', [OP, Tok(TokenType.Identifier, '+'), Tok(TokenType.Number, '4'), Tok(TokenType.Number, '7')]) ],
-  '6\n'
-  + 'Read Error: No Closing Paren for (+ 4 7\n'
-);
-
-t('(+ 2 4) (+ 4 7)',
-  [OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '2'), SPACE, Tok(TokenType.Number, '4'), CP, SPACE, OP, Tok(TokenType.Identifier, '+'), SPACE, Tok(TokenType.Number, '4'), SPACE, Tok(TokenType.Number, '7'), CP],
-  [ SExps(IdAtom('+'), NumAtom(2), NumAtom(4)), SExps(IdAtom('+'), NumAtom(4), NumAtom(7))],
-  [ MakeCall('+', [MakeNumberExpr(2), MakeNumberExpr(4)]), MakeCall('+', [MakeNumberExpr(4), MakeNumberExpr(7)]) ],
-  [ MakeAtomic(6), MakeAtomic(11) ],
-  '6\n' +
-  '11\n'
-);
-
-/** @knowntestfail */
-tIO(`(define (define-struct x y) x)`,
-`define: expected the name of the function, but found a keyword
-`);
-
-tIO('(define (x define-struct y) y)',
-`define: expected a variable, but found a keyword
-`);
-
-t('(define define 1)', undefined, undefined, 
-  [
-    TopLevelErr(
-      'define: expected a variable name, or a function name and its variables (in parentheses), but found a keyword',
-      read('(define define 1)')
-    )
-  ]
-);
-
-t('(+ define 1)', undefined, undefined, 
-  [
-    TopLevelErr(
-      'define: expected an open parenthesis before define, but found none',
-      [IdAtom('define')]
-    )
-  ]
-);
-
 /** @UnimplementedTest */
 t('(pi)');
 
 /** @UnimplementedTest */
 t('(3)');
 
-tIO(`(cond [(< 2 3) +] [else -])`,
-`+: expected a function call, but there is no open parenthesis before this function
+}
+
+const builtinEnvironmentTests = (): void => {
+
+const builtinStructTests = (): void => {
+
+tIO('(make-posn 2 3)', '(make-posn 2 3)\n');
+
+tIO('(posn-x (make-posn 2 3))', '2\n');
+
+tIO('(posn-y (make-posn 2 3))', '3\n');
+
+tIO('(make-posn (+ 2 "hello") 2)',
+`+: expects a number as 2nd argument, given "hello"
+`
+);
+
+tIO(`(posn "x" 10)`,
+`posn: expected a function after the open parenthesis, but found a structure type (do you mean make-posn)
+`);
+
+/**
+ * @knowntestfail Fixing this test requires making error reporting into a side channel.
+ */
+tIO(`(define p (make-posn (+ 2 "hello") 3))
+(posn-y p)
+`,
+`+: expects a number as 2nd argument, given "hello"
+p: this variable is not defined
+`);
+
+tIO('(posn-x (make-color 15 15 15))',
+`posn-x: expects a posn, given a color
+`);
+
+tIO(`(posn? (make-posn 2 2))`,
+`#true
+`);
+
+tIO(`(posn? 10)`,
+`#false
 `);
 
 }
 
-const builtinEnvironmentTests = (): void => {
+builtinStructTests();
+
+const arithmeticTests = (): void => {
+
+tIO(`(+ 2 3)
+(+ 1)
+(- 2 3)
+(- 1)
+(* 2 3)
+(* 1)
+(/ 2 3)
+(/ 1)`,
+`5
++: expects at least 2 arguments, but found only 1
+-1
+-1
+6
+*: expects at least 2 arguments, but found only 1
+0.6666666666666666
+/: expects at least 2 arguments, but found only 1
+`);
+
+
+tIO('(- 0 0)', '0\n');
+
+}
+
+arithmeticTests();
 
 // Note: This is not how DrRacket outputs number->string arity mismatch
 // DrRacket output:
@@ -2228,6 +1469,789 @@ tIO('(sin 1)',
 `${ Math.sin(1) }
 `);
 
+tIO('(sin 2 3)',
+'sin: expects only 1 argument, but found 2\n'
+);
+
+tIO(`(modulo 5 2)
+(modulo -5 2)
+(modulo 0 1)
+(modulo 0 0)
+(modulo 2 -7)
+(modulo 2 7)
+(modulo 135 17)`,
+`1
+1
+0
+modulo: undefined for 0
+-5
+2
+16
+`);
+
+tIO(`(abs -1 -2)
+(abs -13)
+(abs 0)
+(abs 100)`,
+`abs: expects only 1 argument, but found 2
+13
+0
+100
+`);
+
+tIO(`(add1 1)`,
+`2
+`);
+
+tIO(`(string-append "" "hello " "world" "")`,
+`"hello world"
+`
+);
+
+tIO(`(string=? "January" "January" "January")
+(string=? "January" "January")
+(string=? "January" "February" "January")
+(string=? "January" "February")
+`,
+`#true
+#true
+#false
+#false
+`);
+
+tIO('true false',
+`#true
+#false
+`);
+
+tIO('(floor 1.55555)',
+`1
+`);
+
+t('(+ define 1)', undefined, undefined, 
+  [
+    TopLevelErr(
+      'define: expected an open parenthesis before define, but found none',
+      [IdAtom('define')]
+    )
+  ]
+);
+
+/**
+ * @knowntestfail unimplemented evaluator features
+ */
+tIO(`(not true)
+(not false)
+(not true true)
+(not "One")`,
+`#false
+#true
+not: expects only 1 argument, but found 2
+not: expected either #true or #false; given "one"
+`);
+
+/**
+ * @knowntestfail unimplemented feature
+ */
+tIO(`(substring "hello world" 2)
+(substring "hello world" 2 4)
+(substring "hello" 5 5)
+(substring "hello" 25)
+(substring "hello" 5 25)`,
+`"llo world"
+"ll"
+""
+substring: starting index is out of range
+  starting index: 25
+  valid range: [0, 5]
+  string: "hello"
+substring: ending index is out of range
+  ending index: 25
+  starting index: 5
+  valid range: [0, 5]
+  string: "hello"
+`);
+
+tIO(`
+(+ 2 2 2 2 2 2 2 2 2 2 2
+  22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2 2 2 2
+  2 222 2 2 2 2 2 2 2 2 2 2 22
+  2 2 2 2 2 2 2 2 2
+  2 22 2 2 2 2 2 2 2 2 2 2 22 2 2 2 2 2 2
+  2 2 2 2 22 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+  2 2 2 22 2 "hello" 1
+)`,
+`+: expects a number as 101st argument, given "hello"
+`);
+
+}
+
+const keywordTests = (): void => {
+
+const definitionTests = (): void => {
+
+tIO('(define x 10) x',
+`Defined x to be 10.
+10
+`);
+
+t(
+  '(define x 10)',
+  [ OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP ],
+  [ 
+    SExps(IdAtom('define'), IdAtom('x'), NumAtom(10))
+  ]
+);
+
+t('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))',
+  
+  [
+    OP,
+    IdTok('define'),
+    SPACE,
+    OP,
+    IdTok('fact'),
+    SPACE,
+    IdTok('n'),
+    CP,
+    SPACE,
+    OP,
+    IdTok('if'),
+    SPACE,
+    OP,
+    IdTok('='),
+    SPACE,
+    IdTok('n'),
+    SPACE,
+    NumTok('0'),
+    CP,
+    SPACE,
+    NumTok('1'),
+    SPACE,
+    OP,
+    IdTok('*'),
+    SPACE,
+    IdTok('n'),
+    SPACE,
+    OP,
+    IdTok('fact'),
+    SPACE,
+    OP,
+    IdTok('-'),
+    SPACE,
+    IdTok('n'),
+    SPACE,
+    NumTok('1'),
+    CP,
+    CP,
+    CP,
+    CP,
+    CP
+  ],
+
+  [
+    SExps(
+      IdAtom('define'),
+      SExps(
+        IdAtom('fact'),
+        IdAtom('n')
+      ),
+      SExps(
+        IdAtom('if'),
+        SExps(
+          IdAtom('='),
+          IdAtom('n'),
+          NumAtom(0)
+        ),
+        NumAtom(1),
+        SExps(
+          IdAtom('*'),
+          IdAtom('n'),
+          SExps(
+            IdAtom('fact'),
+            SExps(
+              IdAtom('-'),
+              IdAtom('n'),
+              NumAtom(1)
+            )
+          )
+        )
+      )
+    )
+  ],
+  
+  [
+    MakeFunctionDefinition(
+      'fact',
+      ['n'],
+      MakeIf(
+        MakeCall(
+          '=',
+          [ MakeVariableUsageExpr('n'), MakeNumberExpr(0) ]
+        ),
+        MakeNumberExpr(1),
+        MakeCall(
+          '*',
+          [
+            MakeVariableUsageExpr('n'),
+            MakeCall(
+              'fact',
+              [ MakeCall('-', [MakeVariableUsageExpr('n'), MakeNumberExpr(1)]) ]
+            )
+          ]
+        )
+      )
+    )
+  ]
+);
+
+t('(define (simple-choice x y z) (if x y z))\n'
++ '(simple-choice #t 10 20)\n'
++ '\n'
++ '(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))\n'
++ '(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))\n',
+
+  tokenize('(define (simple-choice x y z) (if x y z))')
+  .concat([ NL ])
+  .concat(tokenize('(simple-choice #t 10 20)'))
+  .concat([ Tok(TokenType.Whitespace, '\n\n') ])
+  .concat(tokenize('(define (* m n) (if (= n 0) 0 (+ m (* m (- n 1)))))'))
+  .concat([ NL ])
+  .concat(tokenize('(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))'))
+  .concat([ NL ]),
+
+  [
+    SExps(
+      IdAtom('define'),
+      SExps(
+        IdAtom('simple-choice'),
+        IdAtom('x'),
+        IdAtom('y'),
+        IdAtom('z')
+      ),
+      SExps(
+        IdAtom('if'),
+        IdAtom('x'),
+        IdAtom('y'),
+        IdAtom('z')
+      )
+    ),
+
+    SExps(
+        IdAtom('simple-choice'),
+        BooleanAtom('#t'),
+        NumAtom(10),
+        NumAtom(20)
+    ),
+
+    SExps(
+      IdAtom('define'),
+      SExps(
+        IdAtom('*'),
+        IdAtom('m'),
+        IdAtom('n')
+      ),
+      SExps(
+        IdAtom('if'),
+        SExps(
+          IdAtom('='),
+          IdAtom('n'),
+          NumAtom(0)
+        ),
+        NumAtom(0),
+        SExps(
+          IdAtom('+'),
+          IdAtom('m'),
+          SExps(
+            IdAtom('*'),
+            IdAtom('m'),
+            SExps(
+              IdAtom('-'),
+              IdAtom('n'),
+              NumAtom(1)
+            )
+          )
+        )
+      )
+    ),
+
+    SExps(
+      IdAtom('define'),
+      SExps(
+        IdAtom('fact'),
+        IdAtom('n')
+      ),
+      SExps(
+        IdAtom('if'),
+        SExps(
+          IdAtom('='),
+          IdAtom('n'),
+          NumAtom(0)
+        ),
+        NumAtom(1),
+        SExps(
+          IdAtom('*'),
+          IdAtom('n'),
+          SExps(
+            IdAtom('fact'),
+            SExps(
+              IdAtom('-'),
+              IdAtom('n'),
+              NumAtom(1)
+            )
+          )
+        )
+      )
+    )
+  ]
+);
+
+t('(define (mn x y) (if (< x y) x y))',
+  [
+    OP,
+    IdTok('define'),
+    SPACE,
+    OP,
+    IdTok('mn'),
+    SPACE,
+    IdTok('x'),
+    SPACE,
+    IdTok('y'),
+    CP,
+    SPACE,
+    OP,
+    IdTok('if'),
+    SPACE,
+    OP,
+    IdTok('<'),
+    SPACE,
+    IdTok('x'),
+    SPACE,
+    IdTok('y'),
+    CP,
+    SPACE,
+    IdTok('x'),
+    SPACE,
+    IdTok('y'),
+    CP,
+    CP
+  ],
+
+  [
+    SExps(
+      IdAtom('define'),
+      SExps(
+        IdAtom('mn'),
+        IdAtom('x'),
+        IdAtom('y')
+      ),
+      SExps(
+        IdAtom('if'),
+        SExps(
+          IdAtom('<'),
+          IdAtom('x'),
+          IdAtom('y')
+        ),
+        IdAtom('x'),
+        IdAtom('y')
+      )
+    )
+  ]
+);
+
+tIO('(define (f x) (+ x x))',
+'Defined (f x) to be (+ x x).\n'
+);
+
+tIO('(define (f x y) (+ x y))',
+'Defined (f x y) to be (+ x y).\n'
+);
+
+// How keywords are restricted from being used as var names in BSL.
+tIO('(define (f λ) (+ λ λ))', 'define: expected a variable, but found a keyword\n');
+tIO('(define (f if) (+ if if))', 'define: expected a variable, but found a keyword\n');
+
+
+tIO(`(define (f make-posn) make-posn)
+(f 10)`,
+`Defined (f make-posn) to be make-posn.
+10
+`);
+
+tIO('(define (x define-struct y) y)',
+`define: expected a variable, but found a keyword
+`);
+
+t('(define define 1)', undefined, undefined, 
+  [
+    TopLevelErr(
+      'define: expected a variable name, or a function name and its variables (in parentheses), but found a keyword',
+      read('(define define 1)')
+    )
+  ]
+);
+
+tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
+`function call: expected a function after the open parenthesis, but found a part
+`);
+
+/** @knowntestfail */
+tIO(`(define (define-struct x y) x)`,
+`define: expected the name of the function, but found a keyword
+`);
+
+tIO('(define f +)', 
+`+: expected a function call, but there is no open parenthesis before this function
+`);
+
+tIO(`(define f (+ sin cos))`,
+`sin: expected a function call, but there is no open parenthesis before this function
+`);
+
+}
+
+definitionTests();
+
+const defineStructTests = (): void => {
+
+tIO(`define-struct`,
+`define-struct: expected an open parenthesis before define-struct, but found none
+`);
+
+tIO(`(define-struct)`,
+`define-struct: expected the structure name after define-struct, but nothing's there
+`);
+
+tIO(`(define-struct "posn" [x y])`,
+`define-struct: expected the structure name after define-struct, but found a string
+`);
+
+tIO(`(define-struct 1 [x y])`,
+`define-struct: expected the structure name after define-struct, but found a number
+`);
+
+tIO(`(define-struct #t [x y])`,
+`define-struct: expected the structure name after define-struct, but found a boolean
+`);
+
+tIO(`(define-struct (f x) [x y])`,
+`define-struct: expected the structure name after define-struct, but found a part
+`);
+
+tIO(`(define-struct posn)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but nothing's there
+`);
+
+tIO(`(define-struct posn 1 2 3)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+`);
+
+tIO(`(define-struct posn (x y) 2 3)`,
+`define-struct: expected nothing after the field names, but found 2 extra parts
+`);
+
+tIO(`(define-struct posn "x")`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a string
+`);
+
+tIO(`(define-struct posn 1)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a number
+`);
+
+tIO(`(define-struct posn #t)`,
+`define-struct: expected at least one field name (in parentheses) after the structure name, but found a boolean
+`);
+
+tIO(`(define-struct posn (x 1) 1)`,
+`define-struct: expected a field name, but found a number
+`);
+
+tIO(`(define-struct posn (x (x y)))`,
+`define-struct: expected a field name, but found a part
+`);
+
+
+tIO(`(define-struct point (x y))
+(define-struct point (x y))`,
+`Defined point to be a structure type named point.
+point: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define-struct point (x y))
+(define point-x 1)`,
+`Defined point to be a structure type named point.
+point-x: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define-struct point (x y))
+(define (point-x y) y)`,
+`Defined point to be a structure type named point.
+point-x: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define point-x 1)
+(define-struct point (x y))`,
+`Defined point-x to be 1.
+point-x: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define (point-x y) y)
+(define-struct point (x y))`,
+`Defined (point-x y) to be y.
+point-x: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define point-x 10)`,
+`Defined point-x to be 10.
+`);
+
+tIO(`(define-struct point [x y])
+(define x 10)
+(point x (make-point 10 10))`,
+`Defined point to be a structure type named point.
+Defined x to be 10.
+point: expected a function after the open parenthesis, but found a structure type (do you mean make-point)
+`);
+
+}
+
+defineStructTests();
+
+const checkExpectTests = (): void => {
+
+/**
+ * @UnimplementedTest
+ */
+t('(check-expect (define x 10) 10)' // does not parse
+
+);
+
+t('(check-expect -13 -13)', undefined, undefined,
+  [
+  checkExpectSameNum
+  ],
+  [
+  MakeCheckSuccess()
+  ],
+  '🎉\n'
+);
+
+t('(check-expect "hello" "hello")', undefined, undefined,
+  [
+  checkExpectSameString
+  ],
+  [
+  MakeCheckSuccess()
+  ],
+  '🎉\n'
+);
+
+t('(check-expect #true #t)', undefined, undefined,
+  [
+  checkExpectTrue
+  ],
+  [
+  MakeCheckSuccess()
+  ],
+  '🎉\n'
+);
+
+t('(check-expect #f #f)', undefined, undefined,
+  [
+  checkExpectFalse
+  ],
+  [
+  MakeCheckSuccess()
+  ],
+  '🎉\n'
+);
+
+t('(check-expect hello hello)', undefined, undefined,
+  [
+  checkExpectSameId
+  ],
+  [
+  checkExpectedErrorSameId
+  ],
+'hello: this variable is not defined\n'
+);
+
+t('(check-expect -13 1)', undefined, undefined,
+  [
+  checkExpectDiffNum
+  ],
+  [
+  checkFailureDiffNum
+  ],
+  'Actual value -13 differs from 1, the expected value.\n'
+);
+
+t('(check-expect hello goodbye)', undefined, undefined,
+  [
+  checkExpectDiffId
+  ],
+  [
+  checkExpectedErrorDiffId
+  ],
+  'goodbye: this variable is not defined\n'
+);
+
+t('(check-expect "hello" "goodbye")', undefined, undefined,
+  [
+  checkExpectDiffString
+  ],
+  [
+  checkFailureDiffString
+  ],
+  'Actual value "hello" differs from "goodbye", the expected value.\n'
+);
+
+t('(check-expect #t #f)', undefined, undefined,
+  [
+  checkExpectTrueIsNotFalse
+  ],
+  [
+  checkFailureTrueIsNotFalse
+  ],
+  'Actual value #true differs from #false, the expected value.\n'
+);
+
+t('(check-expect -13 hello)', undefined, undefined,
+  [
+  checkExpectDiffType1
+  ],
+  [
+  checkExpectedErrorDiffType1
+  ],
+  'hello: this variable is not defined\n'
+);
+
+t('(check-expect hello "hello")', undefined, undefined,
+  [
+  checkExpectDiffType2
+  ],
+  [
+  checkFailureDiffType2
+  ],
+  'hello: this variable is not defined\n'
+);
+
+t('(check-expect #true "goodbye")', undefined, undefined,
+  [
+  checkExpectDiffType3
+  ],
+  [
+  checkFailureDiffType3
+  ],
+  'Actual value #true differs from "goodbye", the expected value.\n'
+);
+
+t(
+  `(define x 10)
+  (check-expect x 10)`,
+  
+    [
+      OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP, NL,
+      OP, IdTok('check-expect'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP
+    ],
+  
+    [
+      SExps(IdAtom('define'), IdAtom('x'), NumAtom(10)),
+      SExps(IdAtom('check-expect'), IdAtom('x'), NumAtom(10)),
+    ],
+  
+    [
+      MakeVariableDefinition('x', MakeNumberExpr(10)),
+      MakeCheckExpect(MakeVariableUsageExpr('x'), MakeNumberExpr(10))
+    ]
+  
+);
+
+}
+
+checkExpectTests();
+
+const andOrTests = (): void => {
+
+t(`(and true)
+(and true true)
+(and true true true)
+(and true false true)
+(and true false "hello")
+(and true "hello" false)`,
+  undefined,
+  undefined,
+  [
+    TopLevelErr('and: expects at least 2 arguments, but found only 1', read('(and true)')),
+    and1, and2, and3, and4, and5
+  ],
+  undefined,
+`and: expects at least 2 arguments, but found only 1
+#true
+#true
+#false
+#false
+"hello": and: question result is not true or false
+`);
+
+t(`(or false)
+(or false false)
+(or false true true)
+(or false false true)
+(or false true "hello")
+(or false "hello" true)`,
+  undefined,
+  undefined,
+  [
+    TopLevelErr('or: expects at least 2 arguments, but found only 1', read('(or false)')),
+    or1, or2, or3, or4, or5
+  ],
+  undefined,
+`or: expects at least 2 arguments, but found only 1
+#false
+#true
+#true
+#true
+"hello": or: question result is not true or false
+`);
+
+tIO(
+`(and false (make-posn 2 2))`,
+`#false
+`);
+
+}
+
+andOrTests();
+
+// Note: This is an intentional difference from how DrRacket BSL behaves.
+tIO(`(define (f check-expect) check-expect)
+(define (f check-error) check-error)
+(define (f check-within) check-within)
+(define (f check-random) check-random)
+(define (f check-satisfied) check-satisfied)
+(define (f check-member-of) check-member-of)
+(define (f check-range) check-range)`,
+`define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+define: expected a variable, but found a keyword
+`);
+
+tIO(`(cond [(< 2 3) +] [else -])`,
+`+: expected a function call, but there is no open parenthesis before this function
+`);
+
+tIO(
+`(cond [(string=? "hello" "goodbye") 1]
+        [(string=? "hello" "hello") 2])`,
+`2
+`
+);
+
 }
 
 /**
@@ -2235,32 +2259,21 @@ tIO('(sin 1)',
  * These are currently run always by default.
  */
 const currentWorkingOnTheseTests = (): void => {
-  otherTurnedOnTests();
-  tokenizerErrorTests();
-  readerErrorTests();
-  parserErrorTests();
-  evaluatorErrorTests();
-  defineStructTests();
-  // builtinStructTests();
+  // errorTests();
+  // readerOnlyTests();
 
-  checkExpectTests();
-  arithmeticTests();
+  // builtinEnvironmentTests();
+  // keywordTests();
+  // atomicValuesTests();
 
-  pendingEvaluatorChangesTests();
-
-  a2Tests();
-  a3Tests();
-  a4Tests();
-  demoTests();
-
-  builtinEnvironmentTests();
-
-  andOrTests();
-
-  otherTurnedOffTests();
+  // a2Tests();
+  // a3Tests();
+  // a4Tests();
+  // demoTests();
 
   pendingPrinterChangesTests();
-  pendingNextParserPassTests();
+  
+  // variousUnimplementedTests();
 }
 
 /**
@@ -2268,9 +2281,7 @@ const currentWorkingOnTheseTests = (): void => {
  * These are currently run never by default.
  */
 const nonCurrentWorkingOnTheseTests = (): void => {
-
-
+  parserStaticCheckTests();
 }
-
 
 currentWorkingOnTheseTests();
