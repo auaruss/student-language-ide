@@ -53,8 +53,8 @@ const printSexps = (sexps: SExp[]): string => {
     (acc, elem) => {
       if (isReadError(elem)) 
         return printReadError(elem);
-      else if (Array.isArray(elem.sexp)) 
-        return acc + '(' + printSexps(elem.sexp) + ')';
+      else if (elem.type === 'SExp Array') 
+        return acc + '(' + printSexps(elem.sexp) + ') ';
       else
         return acc + elem.sexp.toString() + ' ';
     },
@@ -133,18 +133,18 @@ const printExpr = (e: Expr): string => {
       let clauses = '';
     
       for (let clause of e.clauses) {
-        clauses += `[${ printExpr(clause[0]) } ${ printExpr(clause[1]) }]`
+        clauses += ` [${ printExpr(clause[0]) } ${ printExpr(clause[1]) }]`
       }
     
-      return `(cond ${clauses})`
+      return `(cond ${ clauses.trim() })`
 
     case 'and':
       const andArgs = e.arguments.reduce((acc, elem) => `${acc} `.concat(printExpr(elem)), '');
-      return `(and${andArgs})`;
+      return `(and ${andArgs})`;
 
     case 'or':
       const orArgs = e.arguments.reduce((acc, elem) => `${acc} `.concat(printExpr(elem)), '');
-      return `(or${orArgs})`;
+      return `(or ${orArgs})`;
 
     case 'TemplatePlaceholder':
       return printSexps([e.sexp]);
