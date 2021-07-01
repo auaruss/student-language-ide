@@ -104,6 +104,10 @@ tokenizerErrorTests();
 
 const readerErrorTests = (): void => {
 
+tIO(`([)]]]]]]]]]`,
+`Read Error: No Valid SExp for ([)]]]]]]]]]
+`);
+
 t('(', 
   [ OP ],
   [ ReadErr('No Closing Paren', [ OP ]) ],
@@ -486,6 +490,14 @@ t('((+) 1 2)', undefined, undefined,
 parserErrorTests();
 
 const evaluatorErrorTests = (): void => {
+
+tIO(`(define-struct check [expect to be])`,
+`check-expect: this name was defined previously and cannot be re-defined
+`);
+
+tIO(`(define-struct check-expect [to be])`,
+`check-expect: this name was defined previously and cannot be re-defined
+`);
 
 t('hello',
   [ IdTok('hello') ],
@@ -1562,14 +1574,7 @@ tIO(`(substring "hello world" 2)
 "ll"
 ""
 substring: starting index is out of range
-  starting index: 25
-  valid range: [0, 5]
-  string: "hello"
 substring: ending index is out of range
-  ending index: 25
-  starting index: 5
-  valid range: [0, 5]
-  string: "hello"
 `);
 
 tIO(`
@@ -2147,24 +2152,23 @@ t('(check-expect #true "goodbye")', undefined, undefined,
 );
 
 t(
-  `(define x 10)
-  (check-expect x 10)`,
-  
-    [
-      OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP, NL,
-      OP, IdTok('check-expect'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP
-    ],
-  
-    [
-      SExps(IdAtom('define'), IdAtom('x'), NumAtom(10)),
-      SExps(IdAtom('check-expect'), IdAtom('x'), NumAtom(10)),
-    ],
-  
-    [
-      MakeVariableDefinition('x', MakeNumberExpr(10)),
-      MakeCheckExpect(MakeVariableUsageExpr('x'), MakeNumberExpr(10))
-    ]
-  
+`(define x 10)
+(check-expect x 10)`,
+
+  [
+    OP, IdTok('define'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP, NL,
+    OP, IdTok('check-expect'), SPACE, IdTok('x'), SPACE, NumTok('10'), CP
+  ],
+
+  [
+    SExps(IdAtom('define'), IdAtom('x'), NumAtom(10)),
+    SExps(IdAtom('check-expect'), IdAtom('x'), NumAtom(10)),
+  ],
+
+  [
+    MakeVariableDefinition('x', MakeNumberExpr(10)),
+    MakeCheckExpect(MakeVariableUsageExpr('x'), MakeNumberExpr(10))
+  ]
 );
 
 }
@@ -2252,6 +2256,30 @@ tIO(
 `
 );
 
+tIO(`else`,
+`else: not allowed here, because this is not a question in a clause
+`);
+
+tIO(`(else 10)`,
+`else: not allowed here, because this is not a question in a clause
+`);
+
+tIO(
+`
+(cond [true 1]
+      [else 0])
+`,
+`1
+`);
+
+tIO(
+`
+(cond [false 1]
+      [else 0])
+`,
+`0
+`);
+
 }
 
 /**
@@ -2259,21 +2287,21 @@ tIO(
  * These are currently run always by default.
  */
 const currentWorkingOnTheseTests = (): void => {
-  // errorTests();
-  // readerOnlyTests();
+  errorTests();
+  readerOnlyTests();
 
-  // builtinEnvironmentTests();
-  // keywordTests();
-  // atomicValuesTests();
+  builtinEnvironmentTests();
+  keywordTests();
+  atomicValuesTests();
 
-  // a2Tests();
-  // a3Tests();
-  // a4Tests();
-  // demoTests();
+  a2Tests();
+  a3Tests();
+  a4Tests();
+  demoTests();
 
   pendingPrinterChangesTests();
   
-  // variousUnimplementedTests();
+  variousUnimplementedTests();
 }
 
 /**
