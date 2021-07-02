@@ -37,8 +37,8 @@ const printTokens = (ts: Token[]): string => {
               || elem.type === TokenType.OpenBraceParen)
         return acc + elem.token;
       else if (elem.type === TokenType.CloseParen
-            || elem.type === TokenType.CloseSquareParen
-            || elem.type === TokenType.CloseBraceParen)
+              || elem.type === TokenType.CloseSquareParen
+              || elem.type === TokenType.CloseBraceParen)
         return acc.trim() + elem.token + ' ';
       else return acc + elem.token + ' ';
     },
