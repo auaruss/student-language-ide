@@ -1,3 +1,17 @@
+/**
+ * @fileoverview The main testing file for the project.
+ * currentWorkingOnTheseTests is the function where the test 
+ * suites are run. The code is formatted here using few indentations because
+ * many tests are written with template literals (template strings),
+ * Feel free to change the indentation.
+ * The tests are structured into test suite functions which are intended
+ * to group related tests (by feature or concept). There is a
+ * nonCurrentWorkingOnTheseTests function which you can use to place test
+ * suites which may currently fail but are unrelated to your work.
+ * 
+ * @author Alice Russell
+ */
+
 'use strict';
 
 import { MakeCheckExpect, MakeCheckSuccess, MakeIf } from '../constructors';
@@ -35,14 +49,6 @@ import { read } from '../read';
 import { a2Tests } from './assignment2.spec';
 import { a3Tests } from './assignment3.spec';
 import { a4Tests } from './assignment4.spec';
-
-/** 
- * @todo by july 9, document tags @UnimplementedTest in a README for the next maintainer/dev.
- * @todo check-within check-error tests
- * @todo break up tests (particularly and/or) which have too many unrelated expressions together
- * @todo add tests -> make tests pass -> refactor parser and remove/change test categories
- * @todo document the process of setting up and testing the repo in explicit detail in README
- */
 
 const errorTests = (): void => {
 
@@ -470,6 +476,13 @@ readerErrorTests();
 
 const parserErrorTests = (): void => {
 
+/** @UnimplementedTest */
+t('(pi)');
+
+/** @UnimplementedTest */
+t('(3)');
+
+
 t('()',
   [ OP, CP ],
   [ SExps() ],
@@ -490,6 +503,11 @@ t('((+) 1 2)', undefined, undefined,
 parserErrorTests();
 
 const evaluatorErrorTests = (): void => {
+
+tIO(`(+ + *)`,
+`+: expected a function call, but there is no open parenthesis before this function
+`);
+  
 
 tIO(`(define-struct check [expect to be])`,
 `check-expect: this name was defined previously and cannot be re-defined
@@ -775,51 +793,6 @@ t('(define (fib n)\n' +
    '6\n' +
    '11\n'
  );
-
-}
-
-const pendingPrinterChangesTests = (): void => {
-
-tIO(`(cond [(string=? "hello" "goodbye") 1]
-[(string=? "hello" "hellow") 2])`,
-`(cond [(string=? "hello" "goodbye") 1] [(string=? "hello" "hellow") 2]): all question results were false
-`);
-
-t(`
-(define (process-posn p) 
-  (... (posn-x p) ... (posn-y p) ...))
-`,
-  undefined,
-  undefined,
-  [ posnTemplateDefn ],
-  undefined,
-`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
-`);
-
-tIO(`
-(define (process-posn p) 
-  (... (posn-x p) ... (posn-y p) ...))
-(process-posn (make-posn 1 2))
-`,
-`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
-...: expected a finished expression, but found a template
-`);
-
- tIO(
-`(define (f x)
-  (cond [x 1]
-        [... 2]))
-(f true)
-(f false)`,
-`Defined (f x) to be (cond [x 1] [... 2]).
-1
-...: expected a finished expression, but found a template
-`
-);
-
-tIO(`(+ + *)`,
-`+: expected a function call, but there is no open parenthesis before this function
-`);
 
 }
 
@@ -1323,56 +1296,6 @@ t(
 
 }
 
-const variousUnimplementedTests = (): void => {
-
-/**
- * @UnimplementedTest
- */
-t('(define y x)\n' + 
-'(define x 3)'
-);
-
-/**
- * @UnimplementedTest
- * f used before its definition
- * must know its got a defn but that it hasnt been 'filled in'
- */
-t('(define x (f 3)) (define (f y) y)');
-
-/**
- * @UnimplementedTest
- */
-t('(define x (+ (+) 3)');
-
-/**
- * @UnimplementedTest
- * This is parse error at 'if'. Fix the parser.
- */
-t('(define (f x) (if x))');
-
-/**
- * @UnimplementedTest
- */
-t('(define x 10) (define x 20)');
-
-/**
- * @UnimplementedTest
- */
-t('(cond ["#t" "hello"] [else "goodbye"])');
-
-/**
- * @UnimplementedTest
- */
-t('((λ (x) (+ 2 x)) 2)');
-
-/** @UnimplementedTest */
-t('(pi)');
-
-/** @UnimplementedTest */
-t('(3)');
-
-}
-
 const builtinEnvironmentTests = (): void => {
 
 const builtinStructTests = (): void => {
@@ -1594,6 +1517,29 @@ tIO(`
 const keywordTests = (): void => {
 
 const definitionTests = (): void => {
+
+/**
+ * @UnimplementedTest
+ * f used before its definition
+ * must know its got a defn but that it hasnt been 'filled in'
+ */
+t('(define x (f 3)) (define (f y) y)');
+
+/**
+ * @UnimplementedTest
+ */
+t('(define x (+ (+) 3)');
+ 
+/**
+ * @UnimplementedTest
+ * This is parse error at 'if'. Fix the parser.
+ */
+t('(define (f x) (if x))');
+ 
+/**
+ * @UnimplementedTest
+ */
+t('(define x 10) (define x 20)');
 
 tIO('(define x 10) x',
 `Defined x to be 10.
@@ -1913,6 +1859,12 @@ tIO(`(define f (+ sin cos))`,
 `sin: expected a function call, but there is no open parenthesis before this function
 `);
 
+tIO(`(define y x) 
+(define x 3)`,
+`x: this variable is not defined
+Defined x to be 3.
+`);
+
 }
 
 definitionTests();
@@ -2171,6 +2123,11 @@ t(
   ]
 );
 
+tIO(`(cond [(string=? "hello" "goodbye") 1]
+[(string=? "hello" "hellow") 2])`,
+`(cond [(string=? "hello" "goodbye") 1] [(string=? "hello" "hellow") 2]): all question results were false
+`);
+
 }
 
 checkExpectTests();
@@ -2280,6 +2237,47 @@ tIO(
 `0
 `);
 
+t(`
+(define (process-posn p) 
+  (... (posn-x p) ... (posn-y p) ...))
+`,
+  undefined,
+  undefined,
+  [ posnTemplateDefn ],
+  undefined,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+`);
+
+tIO(`
+(define (process-posn p) 
+  (... (posn-x p) ... (posn-y p) ...))
+(process-posn (make-posn 1 2))
+`,
+`Defined (process-posn p) to be (... (posn-x p) ... (posn-y p) ...).
+...: expected a finished expression, but found a template
+`);
+
+tIO(`
+(define (f x)
+  (cond [x 1]
+        [... 2]))
+(f true)
+(f false)`,
+`Defined (f x) to be (cond [x 1] [... 2]).
+1
+...: expected a finished expression, but found a template
+`);
+
+/**
+* @UnimplementedTest
+*/
+t('(cond ["#t" "hello"] [else "goodbye"])');
+
+/**
+ * @UnimplementedTest
+ */
+t('((λ (x) (+ 2 x)) 2)');
+
 }
 
 /**
@@ -2298,10 +2296,6 @@ const currentWorkingOnTheseTests = (): void => {
   a3Tests();
   a4Tests();
   demoTests();
-
-  pendingPrinterChangesTests();
-  
-  variousUnimplementedTests();
 }
 
 /**
