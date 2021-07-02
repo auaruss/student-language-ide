@@ -45,10 +45,10 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
         // this means parseRest is the rest of the current SExp. so for
         // '(define hello 1) (define x 10)'
         // parseRest should be equal to
-        // {
-        //   thing: [Id('define'), Id('hello'), Num('1').
-        //   remain: tokenize(') (define x 10)')
-        // } (ignoring whitespace in the tokenization)
+        // Res(
+        //   [Id('define'), Id('hello'), Num('1')],
+        //   tokenize(') (define x 10)')
+        // ) (ignoring whitespace in the tokenization)
 
         // Note that parseRest always returns a success, so we can assume that an SExp exists at the
         // start of the expression if and only if the remain from parsing the rest starts with a closing paren
@@ -89,40 +89,33 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
             if (parensMatch(firstToken.type, firstUnprocessedToken.type))
               return Res(SExpsFromArray(readRest.thing), readRest.remain.slice(1));
             return Res(ReadErr('Mismatched Parens', tokens), []);
-          } else {
-            return { thing: {readError: 'No Valid SExp', tokens: []}, remain: [] }
-          }
+          } else
+            return Res({readError: 'No Valid SExp', tokens: []}, []);
         }
+
       case TokenType.CloseParen:
       case TokenType.CloseSquareParen:
       case TokenType.CloseBraceParen:
-        return { thing: ReadErr('No Open Paren', [firstToken]), remain: tokens.slice(1) }
+        return Res(ReadErr('No Open Paren', [firstToken]),tokens.slice(1));
+
       case TokenType.Number:
-        return {
-          thing: NumAtom(Number(firstToken.token)),
-          remain: tokens.slice(1)
-        };
+        return Res(NumAtom(Number(firstToken.token)), tokens.slice(1));
+
       case TokenType.String:
-        return {
-          thing: StringAtom(firstToken.token.slice(1,-1)),
-          remain: tokens.slice(1)
-        };
+        return Res(StringAtom(firstToken.token.slice(1,-1)), tokens.slice(1));
+
       case TokenType.Identifier:
-        return {
-          thing: IdAtom(firstToken.token),
-          remain: tokens.slice(1)
-        };
+        return Res(IdAtom(firstToken.token), tokens.slice(1));
+
       case TokenType.Boolean:
-        return {
-          thing: BooleanAtom(firstToken.token),
-          remain: tokens.slice(1)
-        };
+        return Res(BooleanAtom(firstToken.token), tokens.slice(1));
+
       case TokenType.Whitespace:
+      case TokenType.Newline:
+      case TokenType.Comment:
         return readSexp(tokens.slice(1));
     }
   }
-
-  throw new Error('Could not find a proper return statement in readSexps.');
 }
 
 /**
@@ -131,14 +124,14 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
  * @returns a read result intended to be processed by readTokens
  */
 export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
-  if (tokens.length === 0) return { thing: [], remain: [] };
+  if (tokens.length === 0) return Res([], []);
   
   let firstToken = tokens[0];
   
   if (isTokenError(firstToken)) {
     let thingToReturn = readSexps(tokens.slice(1));
     thingToReturn.thing.unshift(firstToken);
-    return { thing: thingToReturn.thing, remain: thingToReturn.remain };
+    return Res(thingToReturn.thing, thingToReturn.remain);
   } else if (firstToken.type === TokenType.Whitespace) {
     return readSexps(tokens.slice(1));
   }
@@ -146,13 +139,13 @@ export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
   let readFirst = readSexp(tokens);
 
   if (isReadError(readFirst.thing)) {
-    return { thing: [], remain: tokens };
+    return Res([], tokens);
   }
 
   let readRest = readSexps(readFirst.remain);
 
   if (isReadError(readRest.thing)) {
-    return { thing: [readFirst.thing], remain: readFirst.remain };
+    return Res([readFirst.thing], readFirst.remain);
   } else {
     readRest.thing.unshift(readFirst.thing);
     return readRest;
