@@ -88,13 +88,7 @@ export function Res<T> (t: T, r: Token[]): ReadResult<T> {
   return { thing: t, remain: r };
 }
 
-export const ReadErr = (
-  e: 'No Valid SExp'
-  | 'No Closing Paren'
-  | 'No Open Paren'
-  | 'Mismatched Parens'
-  | 'Invalid token found while reading SExp',
-  v: Token[]): ReadError => { 
+export const ReadErr = (e: string, v: Token[]): ReadError => { 
   return { readError: e, tokens: v }; 
 }
 
