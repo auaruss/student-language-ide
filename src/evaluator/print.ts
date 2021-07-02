@@ -30,13 +30,17 @@ export const printResults = (rs: Result[]): string => {
 const printTokens = (ts: Token[]): string => {
   return ts.reduce(
     (acc, elem) => {
-      if (isTokenError(elem)) {
+      if (isTokenError(elem))
         return printTokenError(elem) + '\n';
-      } else if (    elem.type === TokenType.OpenParen
-                  || elem.type === TokenType.OpenSquareParen
-                  || elem.type === TokenType.OpenBraceParen) {
+      else if (elem.type === TokenType.OpenParen
+              || elem.type === TokenType.OpenSquareParen
+              || elem.type === TokenType.OpenBraceParen)
         return acc + elem.token;
-      } else return acc + elem.token + ' ';
+      else if (elem.type === TokenType.CloseParen
+            || elem.type === TokenType.CloseSquareParen
+            || elem.type === TokenType.CloseBraceParen)
+        return acc.trim() + elem.token + ' ';
+      else return acc + elem.token + ' ';
     },
     ''
   ).trim();
