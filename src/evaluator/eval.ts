@@ -26,6 +26,8 @@ import {
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
+import { conditionallyCreateMapObjectLiteral } from '@angular/compiler/src/render3/view/util';
+import { CheckboxControlValueAccessor } from '@angular/forms';
 
 /**
  * Evaluates a string into a list of results.
@@ -241,13 +243,12 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       for (let clause of e.clauses) {
         const pred = evaluateExpr(clause[0], env);
         if (isValueError(pred)) return pred;
-        if (pred.type === 'Atomic' && pred.value === 'else')
-          return evaluateExpr(clause[1], env);
         if (! (pred.type === 'Atomic' && typeof pred.value === 'boolean'))
           return ValErr('Expression used as clause predicate in cond must evaluate to a boolean', e);
         if (pred.value) return evaluateExpr(clause[1], env);
       }
 
+      if (e.final !== undefined) return evaluateExpr(e.final, env);
       return ValErr('all question results were false', e);
 
     case 'Call':
