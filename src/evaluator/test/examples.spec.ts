@@ -494,7 +494,7 @@ t('()',
 // Identifier required at the function call position, so this should be a parsing error.
 t('((+) 1 2)', undefined, undefined,
   [
-    TopLevelErr('function call: expected a function after the open parenthesis, but found a part', read('(+) 1 2'))
+    TopLevelErr('function call: expected a function after the open parenthesis, but found something else', read('(+) 1 2'))
   ]
 );
 
@@ -865,8 +865,8 @@ apply2: this function is not defined
  ((+ 2 2) 2 2)`,
  `function call: expected a function after the open parenthesis, but found a string
  id: this function is not defined
+ function call: expected a function after the open parenthesis, but found a boolean
  function call: expected a function after the open parenthesis, but found something else
- function call: expected a function after the open parenthesis, but found a part
  `);
 }
 
@@ -1843,7 +1843,7 @@ t('(define define 1)', undefined, undefined,
 );
 
 tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
-`function call: expected a function after the open parenthesis, but found a part
+`function call: expected a function after the open parenthesis, but found something else
 `);
 
 /** @knowntestfail */
@@ -1892,7 +1892,7 @@ tIO(`(define-struct #t [x y])`,
 `);
 
 tIO(`(define-struct (f x) [x y])`,
-`define-struct: expected the structure name after define-struct, but found a part
+`define-struct: expected the structure name after define-struct, but found something else
 `);
 
 tIO(`(define-struct posn)`,
@@ -1924,7 +1924,7 @@ tIO(`(define-struct posn (x 1) 1)`,
 `);
 
 tIO(`(define-struct posn (x (x y)))`,
-`define-struct: expected a field name, but found a part
+`define-struct: expected a field name, but found something else
 `);
 
 
