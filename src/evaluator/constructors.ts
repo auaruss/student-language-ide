@@ -197,7 +197,14 @@ export const MakeIf = (p: Expr, c: Expr, a: Expr): Expr => {
   };
 }
 
-export const MakeCond = (clauses: [Expr, Expr][]): Expr => {
+export const MakeCond = (clauses: [Expr, Expr][], final?: Expr): Expr => {
+  if (final !== undefined)
+    return {
+      typeOfExpression: 'cond',
+      clauses: clauses,
+      final: final
+    }
+
   return {
     typeOfExpression: 'cond',
     clauses: clauses
