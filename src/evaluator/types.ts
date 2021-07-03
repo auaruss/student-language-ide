@@ -125,6 +125,7 @@ export type Expr
   } | {
     typeOfExpression: 'cond',
     clauses: [Expr, Expr][]
+    final?: Expr
   } | {
     typeOfExpression: 'and',
     arguments: Expr[]
