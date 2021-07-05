@@ -470,7 +470,7 @@ export const parseList = (sexps: SExp[]): TopLevel => {
       return parseCall(sexps[0].sexp, sexps.slice(1));
 
     case 'SExp Array':
-      return TopLevelErr(`function call: expected a function after the open parenthesis, but found a part`, sexps);
+      return TopLevelErr(`function call: expected a function after the open parenthesis, but found something else`, sexps);
   }
 }
 
