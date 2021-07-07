@@ -1482,7 +1482,7 @@ tIO(`(not true)
 `#false
 #true
 not: expects only 1 argument, but found 2
-not: expected either #true or #false; given "one"
+not: expected either #true or #false; given "One"
 `);
 
 /**
