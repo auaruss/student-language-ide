@@ -201,7 +201,7 @@ const printExprResult = (er: ExprResult): string => {
     return printValue(er);
 }
 
-const printValue = (v: Value): string => {
+export const printValue = (v: Value): string => {
   if (v.type === 'Atomic') {
     if (v.value === true) return "#true";
     if (v.value === false) return "#false";
