@@ -9,7 +9,6 @@
 import { MakeStructType, MakeStructureConstructor, MakeStructureAccessor,MakeStructurePredicate, MakeStructTypeValue } from './constructors';
 import { ExprResult, Env, Just, Maybe, Value, StructType } from './types';
 import { MakeBuiltinFunction, MakeAtomic, ValErr, MakeJust } from './constructors';
-import { printValue } from './print';
 
 export const builtinEnv = (): Env => {
   let env = new Map<String, Maybe<ExprResult>>();
@@ -334,7 +333,7 @@ const constructSingletonBooleanOperation = (
       const booleans = checkIfIsBooleans(vs);
       
       if (booleans === false) {
-        return ValErr(`not: expected either #true or #false; given ${ printValue(vs[0]) }`);
+        return ValErr('not: expected either #true or #false; given something else');
       }
 
       if (vs.length !== 1)
