@@ -2,7 +2,7 @@ Welcome to the BSL-IDE, an IDE intended to allow live evaluation of programs.
 
 Install Node.js (https://nodejs.org/en/) and make sure you can run `npm` commands on a terminal or command prompt.
 
-To set up the project, clone this repository and run `npm install`.
+To set up the project, clone this repository and run `npm install`. Then, run `npm install -g @angular/cli` to get the `ng` command, run `npm install -g @angular/cli`.
 
 To run the tests with browser, run `ng test`.
 To run tests without the browser, run `npm test`.
