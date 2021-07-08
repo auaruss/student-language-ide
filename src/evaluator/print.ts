@@ -139,6 +139,8 @@ const printExpr = (e: Expr): string => {
       for (let clause of e.clauses) {
         clauses += ` [${ printExpr(clause[0]) } ${ printExpr(clause[1]) }]`
       }
+
+      if (e.final !== undefined) clauses += ` [else ${ printExpr(e.final) }]`
     
       return `(cond ${ clauses.trim() })`
 

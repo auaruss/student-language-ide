@@ -2138,6 +2138,10 @@ tIO(`(cond [(string=? "hello" "goodbye") 1]
 `(cond [(string=? "hello" "goodbye") 1] [(string=? "hello" "hellow") 2]): all question results were false
 `);
 
+tIO(`(define (! n) (cond [false 2] [else 4]))`,
+`Defined (! n) to be (cond [false 2] [else 4]).
+`);
+
 }
 
 checkExpectTests();
