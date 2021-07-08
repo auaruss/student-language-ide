@@ -196,7 +196,9 @@ parseEnv.set('cond', [
 
     const clauses: [Expr, Expr][] = [];
 
-    for (const sexp of sexps) {
+    for (let i = 0; i < sexps.length; i++) {
+      let sexp = sexps[i];
+
       if (isReadError(sexp))
         return sexp;
       switch (sexp.type) {
@@ -212,6 +214,19 @@ parseEnv.set('cond', [
           if (sexp.sexp.length < 1)
             return TopLevelErr('cond: expected a clause with a question and an answer, but found an empty part', [SExps(IdAtom('cond'), ...sexps)]);
           else if (sexp.sexp.length === 2) {
+
+            // Handles the else case
+            if (isReadError(sexp.sexp[0])) return sexp.sexp[0];
+            if (
+              sexp.sexp[0].type === 'Id'
+              && sexp.sexp[0].sexp === 'else'
+              && i === sexps.length - 1
+            ) {
+              const answer = parseExpression(sexp.sexp[1]);
+              if (! (isExpr(answer))) return answer;
+              return MakeCond(clauses, answer);
+            }
+
             const question = parseExpression(sexp.sexp[0]);
             if (! (isExpr(question))) return question;
 
@@ -227,16 +242,21 @@ parseEnv.set('cond', [
           }
       }
     }
-    let maybeElse = clauses[clauses.length-1][0];
-    if (isTopLevelError(maybeElse) || isExprError(maybeElse)) return maybeElse;
-    if (maybeElse.typeOfExpression === 'VariableUsage' && maybeElse.const === 'else')
-      return MakeCond(
-        clauses.slice(0, clauses.length-1),
-        clauses[clauses.length-1][1]
-      )
+    // let maybeElse = clauses[clauses.length-1][0];
+    // if (isTopLevelError(maybeElse) || isExprError(maybeElse)) return maybeElse;
+    // if (maybeElse.typeOfExpression === 'VariableUsage' && maybeElse.const === 'else')
+    //   return MakeCond(
+    //     clauses.slice(0, clauses.length-1),
+    //     clauses[clauses.length-1][1]
+    //   )
 
     return MakeCond(clauses);
   }
+]);
+
+parseEnv.set('else', [
+  () => TopLevelErr('else: not allowed here, because this is not a question in a clause', [IdAtom('cond')]),
+  (sexps: SExp[]) => TopLevelErr('else: not allowed here, because this is not a question in a clause', [IdAtom('cond')])
 ]);
 
 parseEnv.set('and', [

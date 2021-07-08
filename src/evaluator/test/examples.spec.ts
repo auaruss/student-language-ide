@@ -2227,12 +2227,10 @@ tIO(
 `
 );
 
-/** @knowntestfail treat else as a keyword */
 tIO(`else`,
 `else: not allowed here, because this is not a question in a clause
 `);
 
-/** @knowntestfail treat else as a keyword */
 tIO(`(else 10)`,
 `else: not allowed here, because this is not a question in a clause
 `);
