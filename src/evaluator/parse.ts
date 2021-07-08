@@ -242,13 +242,6 @@ parseEnv.set('cond', [
           }
       }
     }
-    // let maybeElse = clauses[clauses.length-1][0];
-    // if (isTopLevelError(maybeElse) || isExprError(maybeElse)) return maybeElse;
-    // if (maybeElse.typeOfExpression === 'VariableUsage' && maybeElse.const === 'else')
-    //   return MakeCond(
-    //     clauses.slice(0, clauses.length-1),
-    //     clauses[clauses.length-1][1]
-    //   )
 
     return MakeCond(clauses);
   }
