@@ -425,36 +425,53 @@ t('(123)',
 );
 
 /**
- * @UnimplementedTest
+ * @knowntestfail The reader should operate as described below
+ * in option 2.
+ * 
  *    1st option. Reader separates into 3 objects. ( [) 1
  * -> 2nd option. Reader separates into 2 objects. ([) 1 <- We are currently using this.
  *    3rd option. Reader separates into 3 objects, ignoring incorrect closing paren. ( [ 1
  */
- t('([)\n'
- + '1'
+tIO(`
+([)
+1`,
+`Read Error: No Valid SExp for ([)
+1
+`);
+
+/**
+* @knowntestfail see above test failure
+*/
+tIO(`
+([))
+1`,
+
+`Read Error: No Valid SExp for ([)
+Read Error: No Open Paren for )
+1`
 );
 
 /**
-* @UnimplementedTest
+* @knowntestfail see above test failures
 */
-t('([))\n'
- + '1'
-);
+tIO(`(]))
+1`,
+`Read Error: No Valid SExp for (])
+Read Error: No Open Paren for )
+1`);
 
 /**
-* @UnimplementedTest
+* @knowntestfail see above test failures
 */
-t('(]))\n'
-+ '1'
-);
+tIO(`
+([[[][][][][][])
+(define x 10)
+x`,
 
-/**
-* @UnimplementedTest
-*/
-t('([[[][][][][][])\n'
- + '(define x 10)\n'
- + 'x',
-);
+`Read Error: No Valid SExp for ([[[][][][][][])
+Defined x to be 10.
+10
+`);
 
 /**
  * @knowntestfail '.' should not pass the reader as valid
@@ -476,11 +493,13 @@ readerErrorTests();
 
 const parserErrorTests = (): void => {
 
-/** @UnimplementedTest */
-t('(pi)');
+tIO('(pi)',
+`function call: expected a function after the open parenthesis, but found a variable
+`);
 
-/** @UnimplementedTest */
-t('(3)');
+tIO('(3)',
+`function call: expected a function after the open parenthesis, but found a number
+`);
 
 
 t('()',
@@ -508,11 +527,18 @@ tIO(`(+ + *)`,
 `+: expected a function call, but there is no open parenthesis before this function
 `);
   
-
+/**
+ * @knowntestfail redefining the name check-expect
+ * somewhere in the evaluator, which is disallowed
+ */
 tIO(`(define-struct check [expect to be])`,
 `check-expect: this name was defined previously and cannot be re-defined
 `);
 
+/**
+ * @knowntestfail redefining the name check-expect
+ * somewhere in the evaluator, which is disallowed
+ */
 tIO(`(define-struct check-expect [to be])`,
 `check-expect: this name was defined previously and cannot be re-defined
 `);
@@ -557,8 +583,7 @@ tIO(
 `,
 `Defined (! x) to be x.
 !: expected a function call, but there is no open parenthesis before this function
-`
-);
+`);
 
 tIO(`(define (hi bye) (+))
 (pi)`,
@@ -859,15 +884,15 @@ apply2: this function is not defined
 /**
  * @knowntestfail
  */
- tIO(`("string")
- (id)
- (#t)
- ((+ 2 2) 2 2)`,
- `function call: expected a function after the open parenthesis, but found a string
- id: this function is not defined
- function call: expected a function after the open parenthesis, but found a boolean
- function call: expected a function after the open parenthesis, but found something else
- `);
+tIO(`("string")
+(id)
+(#t)
+((+ 2 2) 2 2)`,
+`function call: expected a function after the open parenthesis, but found a string
+id: this function is not defined
+function call: expected a function after the open parenthesis, but found a boolean
+function call: expected a function after the open parenthesis, but found something else
+`);
 }
 
 const atomicValuesTests = (): void => {
@@ -1472,9 +1497,6 @@ t('(+ define 1)', undefined, undefined,
   ]
 );
 
-/**
- * @knowntestfail unimplemented evaluator features
- */
 tIO(`(not true)
 (not false)
 (not true true)
@@ -1482,12 +1504,9 @@ tIO(`(not true)
 `#false
 #true
 not: expects only 1 argument, but found 2
-not: expected either #true or #false; given "One"
+not: expected either #true or #false; given something else
 `);
 
-/**
- * @knowntestfail unimplemented feature
- */
 tIO(`(substring "hello world" 2)
 (substring "hello world" 2 4)
 (substring "hello" 5 5)
@@ -1518,27 +1537,22 @@ const keywordTests = (): void => {
 
 const definitionTests = (): void => {
 
-/**
- * @UnimplementedTest
- * f used before its definition
- * must know its got a defn but that it hasnt been 'filled in'
- */
-t('(define x (f 3)) (define (f y) y)');
 
-/**
- * @UnimplementedTest
- */
-t('(define x (+ (+) 3)');
- 
-/**
- * @UnimplementedTest
- * This is parse error at 'if'. Fix the parser.
- */
-t('(define (f x) (if x))');
- 
-/**
- * @UnimplementedTest
- */
+// f used before its definition
+// must know its got a defn but that it hasnt been 'filled in'
+tIO('(define x (f 3)) (define (f y) y)',
+`(f 3): Expression defined later in program
+Defined (f y) to be y.
+`);
+
+tIO('(define x (+ (+) 3))',
+`+: expects at least 2 arguments, but found only 0
+`);
+
+tIO(`(define (f x) (if x))`,
+`if: expected a question and two answers, but found only 1 part
+`);
+
 t('(define x 10) (define x 20)');
 
 tIO('(define x 10) x',
@@ -1846,7 +1860,6 @@ tIO(`(define (hi bye) ((+ 2 2) 2 2))`,
 `function call: expected a function after the open parenthesis, but found something else
 `);
 
-/** @knowntestfail */
 tIO(`(define (define-struct x y) x)`,
 `define: expected the name of the function, but found a keyword
 `);
@@ -1976,12 +1989,9 @@ defineStructTests();
 
 const checkExpectTests = (): void => {
 
-/**
- * @UnimplementedTest
- */
-t('(check-expect (define x 10) 10)' // does not parse
-
-);
+tIO('(check-expect (define x 10) 10)',
+`define: found a definition that is not at the top level
+`);
 
 t('(check-expect -13 -13)', undefined, undefined,
   [
@@ -2213,10 +2223,12 @@ tIO(
 `
 );
 
+/** @knowntestfail treat else as a keyword */
 tIO(`else`,
 `else: not allowed here, because this is not a question in a clause
 `);
 
+/** @knowntestfail treat else as a keyword */
 tIO(`(else 10)`,
 `else: not allowed here, because this is not a question in a clause
 `);
@@ -2268,15 +2280,14 @@ tIO(`
 ...: expected a finished expression, but found a template
 `);
 
-/**
-* @UnimplementedTest
-*/
-t('(cond ["#t" "hello"] [else "goodbye"])');
+/** @knowntestfail error message mismatch */
+tIO('(cond ["#t" "hello"] [else "goodbye"])',
+`cond: question result is not true or false
+`);
 
-/**
- * @UnimplementedTest
- */
-t('((λ (x) (+ 2 x)) 2)');
+tIO('((λ (x) (+ 2 x)) 2)',
+`function call: expected a function after the open parenthesis, but found something else
+`);
 
 }
 
