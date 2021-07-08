@@ -244,7 +244,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
         const pred = evaluateExpr(clause[0], env);
         if (isValueError(pred)) return pred;
         if (! (pred.type === 'Atomic' && typeof pred.value === 'boolean'))
-          return ValErr('Expression used as clause predicate in cond must evaluate to a boolean', e);
+          return ValErr('cond: question result is not true or false');
         if (pred.value) return evaluateExpr(clause[1], env);
       }
 
