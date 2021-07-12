@@ -32,6 +32,7 @@ export const builtinEnv = (): Env => {
   env.set('sin', sin());
   env.set('cos', cos());
   env.set('add1', addOne());
+  env.set('sub1', subOne());
   env.set('floor', floor());
   env.set('modulo', modulo());
   env.set('abs', absoluteVal());
@@ -59,6 +60,7 @@ export const builtinEnv = (): Env => {
   env.set('>', greaterThan());
 
   env.set('number->string', numberToString());
+  env.set('string-length', stringLength());
 
   return env;
 }
@@ -136,6 +138,10 @@ const cos = (): Just<ExprResult> => {
 
 const addOne = (): Just<ExprResult> => {
   return BFnEnv(constructSingletonNumberOperation('add1', x => x + 1));
+}
+
+const subOne = (): Just<ExprResult> => {
+  return BFnEnv(constructSingletonNumberOperation('sub1', x => x - 1));
 }
 
 const floor = (): Just<ExprResult> => {
@@ -281,7 +287,11 @@ const greaterThan = (): Just<ExprResult> => {
 }
 
 const numberToString = (): Just<ExprResult> => {
-  return BFnEnv(constructSingletonStringOperation('number->string', x => x.toString()));
+  return BFnEnv(constructSingletonNumberOperation('number->string', x => x.toString()));
+}
+
+const stringLength = (): Just<ExprResult> => {
+  return BFnEnv(constructSingletonStringOperation('string-length', x => x.length));
 }
 
 // ----------------------------------------------------------------------------

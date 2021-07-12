@@ -354,7 +354,7 @@ tIO(`; A Year is a non-negative integer
 ; The number of days elapsed on May 7, 2021 since January 18, 2021
 (define length-of-semester (days-between 2021 "May" 7 2021 "January" 18))
 `, 
-`Defined (next-month m) to be (cond [(string=? m January) February][(string=? m February) March][(string=? m March) April][(string=? m April) May][(string=? m May) June][(string=? m June) July][(string=? m July) August][(string=? m August) September][(string=? m September) October][(string=? m October) November][(string=? m November) December][(string=? m December) January]).
+`Defined (next-month m) to be (cond [(string=? m "January") "February"] [(string=? m "February") "March"] [(string=? m "March") "April"] [(string=? m "April") "May"] [(string=? m "May") "June"] [(string=? m "June") "July"] [(string=? m "July") "August"] [(string=? m "August") "September"] [(string=? m "September") "October"] [(string=? m "October") "November"] [(string=? m "November") "December"] [(string=? m "December") "January"]).
 🎉
 🎉
 🎉
@@ -367,7 +367,7 @@ tIO(`; A Year is a non-negative integer
 🎉
 🎉
 🎉
-Defined (fall? m) to be (cond [(string=? m January) false][(string=? m February) false][(string=? m March) false][(string=? m April) false][(string=? m May) false][(string=? m June) false][(string=? m July) false][(string=? m August) false][(string=? m September) true][(string=? m October) true][(string=? m November) true][(string=? m December) false]).
+Defined (fall? m) to be (cond [(string=? m "January") false] [(string=? m "February") false] [(string=? m "March") false] [(string=? m "April") false] [(string=? m "May") false] [(string=? m "June") false] [(string=? m "July") false] [(string=? m "August") false] [(string=? m "September") true] [(string=? m "October") true] [(string=? m "November") true] [(string=? m "December") false]).
 🎉
 🎉
 🎉
@@ -380,15 +380,15 @@ Defined (fall? m) to be (cond [(string=? m January) false][(string=? m February)
 🎉
 🎉
 🎉
-Defined (format-month m f) to be (cond [(string=? long f) m][(string=? short f) (substring m 0 3)]).
+Defined (format-month m f) to be (cond [(string=? "long" f) m] [(string=? "short" f) (substring m 0 3)]).
 🎉
 🎉
-Defined (year-month-day->date y m d o f) to be (cond [(string=? o MDY) (string-append (format-month m f)   (number->string d) ,  (number->string y))][(string=? o DMY) (string-append (number->string d)   (format-month m f)   (number->string y))]).
-(number->string d): Expression undefined in program
-(number->string d): Expression undefined in program
-(number->string d): Expression undefined in program
-(number->string d): Expression undefined in program
-Defined (month->days-in-year m) to be (cond [(string=? m January) 0][(string=? m February) 31][(string=? m March) 59][(string=? m April) 90][(string=? m May) 120][(string=? m June) 151][(string=? m July) 181][(string=? m August) 212][(string=? m September) 243][(string=? m October) 273][(string=? m November) 304][(string=? m December) 334]).
+Defined (year-month-day->date y m d o f) to be (cond [(string=? o "MDY") (string-append (format-month m f) " " (number->string d) ", " (number->string y))] [(string=? o "DMY") (string-append (number->string d) " " (format-month m f) " " (number->string y))]).
+🎉
+🎉
+🎉
+🎉
+Defined (month->days-in-year m) to be (cond [(string=? m "January") 0] [(string=? m "February") 31] [(string=? m "March") 59] [(string=? m "April") 90] [(string=? m "May") 120] [(string=? m "June") 151] [(string=? m "July") 181] [(string=? m "August") 212] [(string=? m "September") 243] [(string=? m "October") 273] [(string=? m "November") 304] [(string=? m "December") 334]).
 🎉
 🎉
 🎉
@@ -413,7 +413,7 @@ Defined (days->year d) to be (floor (/ d 365)).
 🎉
 🎉
 🎉
-Defined (days-in-year->month d) to be (cond [(and (<= 0 d) (> 31 d)) January][(and (<= 31 d) (> 59 d)) February][(and (<= 59 d) (> 90 d)) March][(and (<= 90 d) (> 120 d)) April][(and (<= 120 d) (> 151 d)) May][(and (<= 151 d) (> 181 d)) June][(and (<= 181 d) (> 212 d)) July][(and (<= 212 d) (> 243 d)) August][(and (<= 243 d) (> 273 d)) September][(and (<= 273 d) (> 304 d)) October][(and (<= 304 d) (> 334 d)) November][(and (<= 334 d) (> 365 d)) December]).
+Defined (days-in-year->month d) to be (cond [(and  (<= 0 d) (> 31 d)) "January"] [(and  (<= 31 d) (> 59 d)) "February"] [(and  (<= 59 d) (> 90 d)) "March"] [(and  (<= 90 d) (> 120 d)) "April"] [(and  (<= 120 d) (> 151 d)) "May"] [(and  (<= 151 d) (> 181 d)) "June"] [(and  (<= 181 d) (> 212 d)) "July"] [(and  (<= 212 d) (> 243 d)) "August"] [(and  (<= 243 d) (> 273 d)) "September"] [(and  (<= 273 d) (> 304 d)) "October"] [(and  (<= 304 d) (> 334 d)) "November"] [(and  (<= 334 d) (> 365 d)) "December"]).
 🎉
 🎉
 🎉
@@ -431,7 +431,7 @@ Defined (days->month d) to be (days-in-year->month (modulo d 365)).
 🎉
 🎉
 🎉
-Defined (days-in-year->days-in-month d) to be (cond [(and (<= 0 d) (> 31 d)) (- d 0)][(and (<= 31 d) (> 59 d)) (- d 31)][(and (<= 59 d) (> 90 d)) (- d 59)][(and (<= 90 d) (> 120 d)) (- d 90)][(and (<= 120 d) (> 151 d)) (- d 120)][(and (<= 151 d) (> 181 d)) (- d 151)][(and (<= 181 d) (> 212 d)) (- d 181)][(and (<= 212 d) (> 243 d)) (- d 212)][(and (<= 243 d) (> 273 d)) (- d 243)][(and (<= 273 d) (> 304 d)) (- d 273)][(and (<= 304 d) (> 334 d)) (- d 304)][(and (<= 334 d) (> 365 d)) (- d 334)]).
+Defined (days-in-year->days-in-month d) to be (cond [(and  (<= 0 d) (> 31 d)) (- d 0)] [(and  (<= 31 d) (> 59 d)) (- d 31)] [(and  (<= 59 d) (> 90 d)) (- d 59)] [(and  (<= 90 d) (> 120 d)) (- d 90)] [(and  (<= 120 d) (> 151 d)) (- d 120)] [(and  (<= 151 d) (> 181 d)) (- d 151)] [(and  (<= 181 d) (> 212 d)) (- d 181)] [(and  (<= 212 d) (> 243 d)) (- d 212)] [(and  (<= 243 d) (> 273 d)) (- d 243)] [(and  (<= 273 d) (> 304 d)) (- d 273)] [(and  (<= 304 d) (> 334 d)) (- d 304)] [(and  (<= 334 d) (> 365 d)) (- d 334)]).
 🎉
 🎉
 🎉

@@ -157,6 +157,45 @@ tIO(`; Exercise 1. (Unimplemented)
 (check-expect (edit e5 "\t") e5)
 (check-expect (edit e5 "\r") e5)
 (check-expect (edit e5 "up") e5)`,
-``);
+`Defined date to be a structure type named date.
+Defined address to be a structure type named address.
+Defined luddy to be (make-address "919 E 10th St" "" "Bloomington" 47408).
+Defined google to be (make-address "600 Amphitheatre Parkway" "" "Mountain View" 94043).
+Defined quest to be (make-address "8230 Walnut Hill Ln" "Bldg III Ste 400" "Dallas" 75231).
+Defined (process-address a) to be (... (address-street a) ... (address-apartment a) ... (address-city a) ... (address-zip a) ...).
+Defined (indiana? a) to be (<= 46000 (address-zip a) 47999).
+🎉
+🎉
+🎉
+Defined (format-address a) to be (string-append (address-street a) (if (string=? "" (address-street a)) "" ", ") (address-apartment a) (if (string=? "" (address-apartment a)) "" ", ") (address-city a) (if (string=? "" (address-city a)) "" ", ") (number->string (address-zip a))).
+🎉
+🎉
+🎉
+Defined (smaller-zip a1 a2) to be (if (< (address-zip a1) (address-zip a2)) a1 a2).
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+Defined editor to be a structure type named editor.
+Defined e1 to be (make-editor "hello" " world").
+Defined e2 to be (make-editor "hell" " world").
+Defined e3 to be (make-editor "hel" "l world").
+Defined e4 to be (make-editor "" "smile").
+Defined e5 to be (make-editor "frown" "").
+Defined e6 to be (make-editor "frowny" "").
+Defined (edit ed ke) to be (cond [(string=? ke "\b") (make-editor (substring (editor-pre ed) 0 (sub1 (string-length (editor-pre ed)))) (editor-post ed))] [(string=? ke "left") (if (= (string-length (editor-pre ed)) 0) ed (make-editor (substring (editor-pre ed) 0 (sub1 (string-length (editor-pre ed)))) (string-append (substring (editor-pre ed) (sub1 (string-length (editor-pre ed)))) (editor-post ed))))] [(string=? ke "right") (if (= (string-length (editor-post ed)) 0) ed (make-editor (string-append (editor-pre ed) (substring (editor-post ed) 0 1)) (substring (editor-post ed) 1)))] [(or  (string=? ke "\t") (string=? ke "\r")) ed] [(= (string-length ke) 1) (make-editor (string-append (editor-pre ed) ke) (editor-post ed))] [else ed]).
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+🎉
+`);
 
 }
