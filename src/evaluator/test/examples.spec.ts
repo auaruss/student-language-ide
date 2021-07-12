@@ -49,6 +49,7 @@ import { read } from '../read';
 import { a2Tests } from './assignment2.spec';
 import { a3Tests } from './assignment3.spec';
 import { a4Tests } from './assignment4.spec';
+import { a5Tests } from './assignment5.spec';
 
 const errorTests = (): void => {
 
@@ -2308,6 +2309,7 @@ const currentWorkingOnTheseTests = (): void => {
   a2Tests();
   a3Tests();
   a4Tests();
+  a5Tests();
   demoTests();
 }
 
