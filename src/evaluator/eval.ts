@@ -10,7 +10,7 @@
 
 import {
   TopLevel, Expr, ExprResult,Env,
-  Result, Maybe, Value,
+  Result, Maybe, Value, ValueError,
 } from './types';
 
 import {
@@ -57,13 +57,15 @@ export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
     )) {
       env = extendEnv(toplevel.name, env);
 
-      if (toplevel.type === 'define-struct') {
+      if (toplevel.type === 'define-struct'
+         && (! isInEnv('make-' + toplevel.name, env))
+         && (! isInEnv(toplevel.name + '?', env))
+         && (toplevel.fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
+      ) {
         env = extendEnv('make-' + toplevel.name, env);
         env = extendEnv(toplevel.name + '?', env);
-
-        for (let field of toplevel.fields) {
+        for (let field of toplevel.fields)
           env = extendEnv(toplevel.name + '-' + field, env);
-        }
       }
     }
   }
@@ -151,20 +153,21 @@ const evaluateDefinition = (d: {
   if (d.type === 'define-struct') {
     let structConstructor = env.get('make-' + d.name);
     if (structConstructor === undefined)
-      throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+      return handleDefineStructError(d, env);
     if (structConstructor.type === 'just')
       return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
     
     let structPredicate = env.get(d.name + '?');
-      if (structPredicate === undefined)
-        throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+    if (structPredicate === undefined)
+      return handleDefineStructError(d, env);
+    
     if (structPredicate.type === 'just')
       return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
 
     for (let field of d.fields) {
       let structAccessor = env.get(d.name + '-' + field);
       if (structAccessor === undefined)
-        throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
+        return handleDefineStructError(d, env);
       if (structAccessor.type === 'just')
         return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
     }
@@ -413,14 +416,52 @@ const evaluateCheck = (c: {
 }
 
 const actualEqualsExpected = (actual: ExprResult, expected: Value): boolean => {
-  if (isValue(actual)) {
-    if (expected.type === 'Atomic')
-      return actual.type === 'Atomic' && expected.value === actual.value;
-    else if (expected.type === 'BuiltinFunction')
-      return false;
-    else
-      return false;
-  } else return false;
+  if (isValue(actual))
+    switch (expected.type) {
+      // These 6 cases should not be applicable to this function.
+      case 'BuiltinFunction':
+      case 'StructureAccessor':
+      case 'StructureConstructor':
+      case 'StructurePredicate':
+      case 'StructType':
+      case 'Closure':
+        return false;
+      case 'Atomic':
+        return actual.type === 'Atomic' && expected.value === actual.value;
+      case 'Struct':
+        return (
+          actual.type === 'Struct'
+          && actual.struct.name === expected.struct.name
+          && arraysEqual(actual.struct.fields, expected.struct.fields)
+          && exprResultArraysEqual(actual.values, expected.values)
+        );
+    }
+  return false;
+}
+
+function arraysEqual<T>(a: T[], b: T[]): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+const exprResultArraysEqual = (a: ExprResult[], b: ExprResult[]): boolean => {
+  if (a.length !== b.length) return false;
+
+  for (let i = 0; i < a.length; i++) {
+    const e1 = a[i];
+    const e2 = a[i];
+
+    if (isValueError(e1) || isValueError(e2)) return false;
+    if (! actualEqualsExpected(e1, e2)) return false;
+  }
+
+  return true;
 }
 
 /**
@@ -473,3 +514,19 @@ const getVal = (id: string, env: Env): Maybe<ExprResult> | false => {
   return false;
 }
 
+const handleDefineStructError = (d: {
+  type: 'define-struct',
+  name: string,
+  fields: string[]
+}, env: Env): ValueError => {
+  const names = ['make-' + d.name, d.name + '?'];
+  names.push(...d.fields.map(field => d.name + '-' + field));
+  
+  for (const name of names) {
+    const x = getVal(name, env);
+    if (x !== false && x.type === 'just')
+      return ValErr(`${name}: this name was defined previously and cannot be re-defined`);
+  }
+
+  throw new Error('Bug in define-struct error handling thrown in handleDefineStructError');
+}
