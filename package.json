@@ -1,0 +1,37 @@
+{
+  "name": "auto-audit-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "test": "jest",
+    "test:coverage": "npm run test -- --coverage",
+    "lint": "eslint ./ --ignore-path .gitignore"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/auaruss/auto-audit-frontend.git"
+  },
+  "author": "Alice Russell",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/auaruss/auto-audit-frontend/issues"
+  },
+  "homepage": "https://github.com/auaruss/auto-audit-frontend#readme",
+  "devDependencies": {
+    "@babel/preset-env": "^7.15.0",
+    "babel-jest": "^27.0.6",
+    "css-loader": "^6.2.0",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.24.1",
+    "html-webpack-plugin": "^5.3.2",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^27.0.6",
+    "style-loader": "^3.2.1",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0",
+    "webpack-dev-server": "^4.0.0"
+  }
+}
