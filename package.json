@@ -7,7 +7,8 @@
     "dev": "webpack serve --mode development",
     "test": "jest",
     "test:coverage": "npm run test -- --coverage",
-    "lint": "eslint ./ --ignore-path .gitignore"
+    "lint": "eslint ./ --ignore-path .gitignore",
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",
