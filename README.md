@@ -1,1 +1,1 @@
-An initial setup for a web project.
+A frontend for displaying site-wide audits.
