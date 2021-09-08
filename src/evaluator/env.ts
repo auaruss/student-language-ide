@@ -307,10 +307,14 @@ const constructSingletonNumberOperation = (
     opName,
     (vs: Value[]) => {
       const nums = checkIfIsNumbers(vs);
-      if (vs.length !== 1)
-        throw new Error('Impossible arity mismatch; fix constructSingletonNumberOperation bug');
-      const num: number = nums[0];
-      return MakeAtomic(op(num));
+      if (typeof nums === 'number') {
+        throw new Error('Argument must be a number.');
+      } else {
+        if (vs.length !== 1)
+          throw new Error('Impossible arity mismatch; fix constructSingletonNumberOperation bug');
+        const num: number = nums[0];
+        return MakeAtomic(op(num));
+      }
     },
     1, false
   );
@@ -324,10 +328,14 @@ const constructSingletonStringOperation = (
     opName,
     (vs: Value[]) => {
       const strs = checkIfIsStrings(vs);
-      if (vs.length !== 1)
-        throw new Error('Impossible arity mismatch; fix constructSingletonStringOperation bug');
-      const str: string = strs[0];
-      return MakeAtomic(op(str));
+      if (strs === false) {
+        throw new Error('Argument must be a string.');
+      } else {
+        if (vs.length !== 1)
+          throw new Error('Impossible arity mismatch; fix constructSingletonStringOperation bug');
+        const str: string = strs[0];
+        return MakeAtomic(op(str));
+      }
     },
     1, false
   );

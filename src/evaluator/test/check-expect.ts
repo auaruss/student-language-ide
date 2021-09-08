@@ -1,9 +1,7 @@
-"use strict";
-
-export function checkExpect(res, expected) {
+export function checkExpect<T>(res: T, expected: T) {
     describe('check-expect', () =>  it('', () => expect(res).toEqual(expected)));
 }
-export function checkExpectMultiple(f, res, expected) {
+export function checkExpectMultiple<T, U>(f: (element: T) => U, res: T[], expected: U[]) {
     res.map(function (input, idx) { return checkExpect(f(input), expected[idx]); });
 }
 
