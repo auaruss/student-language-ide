@@ -12,8 +12,6 @@
  * @author Alice Russell
  */
 
-'use strict';
-
 import { MakeCheckExpect, MakeCheckSuccess, MakeIf } from '../constructors';
 import { t, tIO } from './test-harness';
 
@@ -46,10 +44,10 @@ import {
 import { tokenize } from '../tokenize';
 import { read } from '../read';
 
-import { a2Tests } from './assignment2.spec';
-import { a3Tests } from './assignment3.spec';
-import { a4Tests } from './assignment4.spec';
-import { a5Tests } from './assignment5.spec';
+import { a2Tests } from './assignment2';
+import { a3Tests } from './assignment3';
+import { a4Tests } from './assignment4';
+import { a5Tests } from './assignment5';
 
 const errorTests = (): void => {
 
