@@ -549,6 +549,14 @@ tIO(`(define-struct check-expect [to be])`,
 `check-expect: this name was defined previously and cannot be re-defined
 `);
 
+tIO(`(define-struct a [check-expect b])
+(make-a 1 2)
+(a-check-expect (make-a 1 2))`,
+`Defined a to be a structure type named a.
+(make-a 1 2)
+1
+`);
+
 t('hello',
   [ IdTok('hello') ],
   [ IdAtom('hello') ],
