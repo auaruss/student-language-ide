@@ -29,7 +29,6 @@ import { readTokens } from '../read';
 import { parseTopLevels } from '../parse';
 import { evaluateTopLevels } from '../eval';
 import { printResults } from '../print';
-import { convertUpdateArguments } from '@angular/compiler/src/compiler_util/expression_converter';
 
 /**
  * The testing harness for if you just need to give the input and output strings.
@@ -177,7 +176,7 @@ export const t  = (
     }
   }
 
-  let subject;
+  let subject: string = '';
 
   for (let i of [input, tokens, sexps, toplevels, values, output]) {
     if (i !== undefined) {

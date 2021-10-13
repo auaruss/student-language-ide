@@ -26,8 +26,6 @@ import {
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
-import { conditionallyCreateMapObjectLiteral } from '@angular/compiler/src/render3/view/util';
-import { CheckboxControlValueAccessor } from '@angular/forms';
 
 /**
  * Evaluates a string into a list of results.

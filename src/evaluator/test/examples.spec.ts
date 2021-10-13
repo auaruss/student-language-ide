@@ -2299,18 +2299,18 @@ tIO('((λ (x) (+ 2 x)) 2)',
  * These are currently run always by default.
  */
 const currentWorkingOnTheseTests = (): void => {
-  errorTests();
-  readerOnlyTests();
+  // errorTests();
+  // readerOnlyTests();
 
-  builtinEnvironmentTests();
-  keywordTests();
-  atomicValuesTests();
+  // builtinEnvironmentTests();
+  // keywordTests();
+  // atomicValuesTests();
 
-  a2Tests();
-  a3Tests();
-  a4Tests();
-  a5Tests();
-  demoTests();
+  // a2Tests();
+  // a3Tests();
+  // a4Tests();
+  // a5Tests();
+  // demoTests();
 }
 
 /**
