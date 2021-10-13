@@ -220,7 +220,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       
       let exprResult = maybeExprResult.thing;
 
-      if (isValueError(exprResult)) return exprResult;
+      if (isValueError(exprResult)) return ValErr('this variable is not defined', e);
 
       switch (exprResult.type) {
         case 'BuiltinFunction':
