@@ -1,3 +1,4 @@
+import { isToken } from './predicates';
 /**
  * @fileoverview An S-Expression reader for the student languages.
  *               Generally, produces types from the second section of types.ts from types
@@ -14,7 +15,7 @@ import {
 } from './types';
 
 import {
-  NumAtom, IdAtom, StringAtom, BooleanAtom, ReadErr, SExpsFromArray, Res,
+  NumAtom, IdAtom, StringAtom, BooleanAtom, ReadErr, SExpsFromArray, Res, Tok, SExps,
 } from './constructors';
 
 import {
@@ -34,87 +35,39 @@ export const readSexp = (tokens: Token[]): ReadResult<SExp> | ReadResult<ReadErr
 
   const firstToken = tokens[0];
 
-  if (isTokenError(firstToken)) {
-    return Res(ReadErr('Invalid token found while reading SExp', [firstToken]), tokens.slice(1));;
-  } else {
-    switch(firstToken.type) {
-      case TokenType.OpenParen:
-      case TokenType.OpenSquareParen:
-      case TokenType.OpenBraceParen:
-        const readRest = readSexps(tokens.slice(1));
-        // this means parseRest is the rest of the current SExp. so for
-        // '(define hello 1) (define x 10)'
-        // parseRest should be equal to
-        // Res(
-        //   [Id('define'), Id('hello'), Num('1')],
-        //   tokenize(') (define x 10)')
-        // ) (ignoring whitespace in the tokenization)
+  if (isTokenError(firstToken))
+    return Res(ReadErr('Invalid token found while reading SExp', [firstToken]), tokens.slice(1));
+  else switch(firstToken.type) {
+    case TokenType.OpenParen:
+    case TokenType.OpenSquareParen:
+    case TokenType.OpenBraceParen:
+      const firstTokenCastedToOpenParen: OpenParen = {
+        type: firstToken.type,
+        token: firstToken.token
+      };
 
-        // Note that parseRest always returns a success, so we can assume that an SExp exists at the
-        // start of the expression if and only if the remain from parsing the rest starts with a closing paren
-        // which matches our current open paren.
+      return handleOpenParen([firstTokenCastedToOpenParen, ...tokens.slice(1)]);
 
-        // This also means if the remain is empty we return a failure.
-        if (readRest.remain.length === 0) 
-          return Res(ReadErr('No Closing Paren', tokens), []);
-        else {
-          const firstUnprocessedToken = readRest.remain[0];
-          if (isTokenError(firstUnprocessedToken)) {
-            // Here, we know that there may be a matching paren but the expression is malformed because we have a token error.
-            // We want to isolate the malformed expression. For example: (define x #10) is malformed but we should be able to evaluate definitions
-            // and expressions before and after this.
+    case TokenType.CloseParen:
+    case TokenType.CloseSquareParen:
+    case TokenType.CloseBraceParen:
+      return Res(ReadErr('No Open Paren', [firstToken]),tokens.slice(1));
+    case TokenType.Number:
+      return Res(NumAtom(Number(firstToken.token)), tokens.slice(1));
 
-            // We intentionally swallow mismatched parens when there's a token here!
-            // Example: (+ #1 2]]) is considered a single SExp.
-            let x: Token[] = [firstUnprocessedToken];
-            let search = readRest.remain.slice(1);
-            let closingParenType;
-            if (firstToken.type === TokenType.OpenParen)
-              closingParenType = TokenType.CloseParen;
-            else if (firstToken.type === TokenType.OpenSquareParen)
-              closingParenType = TokenType.CloseSquareParen;
-            else 
-              closingParenType = TokenType.CloseBraceParen;
-            while (search.length !== 0) {
-              let nextTok = search[0];
-              search = search.slice(1);
-              x.push(nextTok);
-              if ((! isTokenError(nextTok)) && nextTok.type === closingParenType)
-                return Res(ReadErr('Invalid token found while reading SExp', x), search);
-            }
-            return Res(ReadErr('No Closing Paren', x), []);
-          } else if (firstUnprocessedToken.type === TokenType.CloseParen
-                  || firstUnprocessedToken.type === TokenType.CloseSquareParen
-                  || firstUnprocessedToken.type === TokenType.CloseBraceParen) {
-            if (parensMatch(firstToken.type, firstUnprocessedToken.type))
-              return Res(SExpsFromArray(readRest.thing), readRest.remain.slice(1));
-            return Res(ReadErr('Mismatched Parens', tokens), []);
-          } else
-            return Res({readError: 'No Valid SExp', tokens: []}, []);
-        }
+    case TokenType.String:
+      return Res(StringAtom(firstToken.token.slice(1,-1)), tokens.slice(1));
 
-      case TokenType.CloseParen:
-      case TokenType.CloseSquareParen:
-      case TokenType.CloseBraceParen:
-        return Res(ReadErr('No Open Paren', [firstToken]),tokens.slice(1));
+    case TokenType.Identifier:
+      return Res(IdAtom(firstToken.token), tokens.slice(1));
 
-      case TokenType.Number:
-        return Res(NumAtom(Number(firstToken.token)), tokens.slice(1));
+    case TokenType.Boolean:
+      return Res(BooleanAtom(firstToken.token), tokens.slice(1));
 
-      case TokenType.String:
-        return Res(StringAtom(firstToken.token.slice(1,-1)), tokens.slice(1));
-
-      case TokenType.Identifier:
-        return Res(IdAtom(firstToken.token), tokens.slice(1));
-
-      case TokenType.Boolean:
-        return Res(BooleanAtom(firstToken.token), tokens.slice(1));
-
-      case TokenType.Whitespace:
-      case TokenType.Newline:
-      case TokenType.Comment:
-        return readSexp(tokens.slice(1));
-    }
+    case TokenType.Whitespace:
+    case TokenType.Newline:
+    case TokenType.Comment:
+      return readSexp(tokens.slice(1));
   }
 }
 
@@ -136,18 +89,18 @@ export const readSexps = (tokens: Token[]): ReadResult<SExp[]> => {
     return readSexps(tokens.slice(1));
   }
   
-  let readFirst = readSexp(tokens);
+  let readPrefixExpression = readSexp(tokens);
 
-  if (isReadError(readFirst.thing)) {
+  if (isReadError(readPrefixExpression.thing)) {
     return Res([], tokens);
   }
 
-  let readRest = readSexps(readFirst.remain);
+  let readRest = readSexps(readPrefixExpression.remain);
 
   if (isReadError(readRest.thing)) {
-    return Res([readFirst.thing], readFirst.remain);
+    return Res([readPrefixExpression.thing], readPrefixExpression.remain);
   } else {
-    readRest.thing.unshift(readFirst.thing);
+    readRest.thing.unshift(readPrefixExpression.thing);
     return readRest;
   }
 }
@@ -163,12 +116,6 @@ export const readTokens = (ts: Token[]): SExp[] => {
   
   while (tokens.length !== 0) {
     let next = readSexp(tokens);
-    if (isReadError(next.thing))
-      if (isTokenError(next.thing)) {}
-      else if (next.thing.readError === 'No Valid SExp') {
-        sexps.push(ReadErr('No Valid SExp', tokens));
-        return sexps;
-      }
     sexps.push(next.thing);
     tokens = next.remain;
   }
@@ -194,13 +141,65 @@ export const read = (exp:string): SExp[] => {
  *          False if given any other token types, or given the types in the wrong order.
  */
 const parensMatch = (
-  op: TokenType, cp: TokenType): boolean => {
-  if (op === TokenType.OpenParen) {
-    return cp === TokenType.CloseParen;
-  } else if (op === TokenType.OpenSquareParen) {
-    return cp === TokenType.CloseSquareParen;
-  } else if (op === TokenType.OpenBraceParen) {
-    return cp === TokenType.CloseBraceParen;
+  op: TokenType, cp: TokenType
+): boolean => (
+  (op === TokenType.OpenParen)
+  ? cp === TokenType.CloseParen
+  : (op === TokenType.OpenSquareParen)
+  ? cp === TokenType.CloseSquareParen
+  : (op === TokenType.OpenBraceParen) 
+  ? cp === TokenType.CloseBraceParen
+  : false
+);
+
+type OpenParen = { 
+  type: TokenType.OpenParen
+      | TokenType.OpenSquareParen
+      | TokenType.OpenBraceParen,
+  token: string
+};
+
+const handleOpenParen = (
+  tokens: [OpenParen, ...Token[]]
+): ReadResult<SExp> | ReadResult<ReadError> => {
+  const readRest = readSexps(tokens.slice(1));
+
+  let thingy: Token[] = [];
+  let foundMismatchedParen = false;
+
+  while (readRest.remain.length !== 0) {
+    let nextUnprocessedToken = readRest.remain.shift();
+    if (nextUnprocessedToken === undefined)
+      return Res(ReadErr('No Closing Paren', tokens), []);
+
+    if (isTokenError(nextUnprocessedToken)) {
+      thingy.push(nextUnprocessedToken);
+    } else switch (nextUnprocessedToken.type) {
+      case TokenType.CloseParen:
+      case TokenType.CloseSquareParen:
+      case TokenType.CloseBraceParen:
+        if (parensMatch(tokens[0].type, nextUnprocessedToken.type)) {
+          if (thingy.length === 0) return Res(SExps(...readRest.thing), readRest.remain);
+          return Res(ReadErr('No Valid SExp', [tokens[0], ...thingy, nextUnprocessedToken]), readRest.remain);
+        }
+        foundMismatchedParen = true;
+        //fallthrough to the next case is intentional.
+      
+      case TokenType.OpenParen:
+      case TokenType.OpenSquareParen:
+      case TokenType.OpenBraceParen:
+      case TokenType.Number:
+      case TokenType.String:
+      case TokenType.Identifier:
+      case TokenType.Whitespace:
+      case TokenType.Newline:
+      case TokenType.Comment:
+        thingy.push(nextUnprocessedToken);
+    }
   }
-  return false;
+  
+  return Res(
+    ReadErr((foundMismatchedParen) ? 'No Valid SExp' : 'No Closing Paren', tokens),
+    []
+  );
 }

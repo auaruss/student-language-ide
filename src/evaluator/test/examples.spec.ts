@@ -110,7 +110,16 @@ tokenizerErrorTests();
 const readerErrorTests = (): void => {
 
 tIO(`([)]]]]]]]]]`,
-`Read Error: No Valid SExp for ([)]]]]]]]]]
+`Read Error: No Valid SExp for ([)
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
+Read Error: No Open Paren for ]
 `);
 
 t('(', 
@@ -227,24 +236,20 @@ t('([[[][][][][][])))[][])))){}{}{}',
         OSP,
         CSP,
         CP,
-        CP,
-        CP,
-        OSP,
-        CSP,
-        OSP,
-        CSP,
-        CP,
-        CP,
-        CP,
-        CP,
-        OBP,
-        CBP,
-        OBP,
-        CBP,
-        OBP,
-        CBP
-      ])
-    ]
+      ]
+    ),
+    ReadErr('No Open Paren', [ CP ]),
+    ReadErr('No Open Paren', [ CP ]),
+    SExps(),
+    SExps(),
+    ReadErr('No Open Paren', [ CP ]),
+    ReadErr('No Open Paren', [ CP ]),
+    ReadErr('No Open Paren', [ CP ]),
+    ReadErr('No Open Paren', [ CP ]),
+    SExps(),
+    SExps(),
+    SExps()
+  ]
 );
 
 t(') (hello)',
@@ -447,7 +452,8 @@ tIO(`
 
 `Read Error: No Valid SExp for ([)
 Read Error: No Open Paren for )
-1`
+1
+`
 );
 
 /**
@@ -457,7 +463,8 @@ tIO(`(]))
 1`,
 `Read Error: No Valid SExp for (])
 Read Error: No Open Paren for )
-1`);
+1
+`);
 
 /**
 * @knowntestfail see above test failures
@@ -467,7 +474,7 @@ tIO(`
 (define x 10)
 x`,
 
-`Read Error: No Valid SExp for ([[[][][][][][])
+`Read Error: No Valid SExp for ([[[] [] [] [] [] [])
 Defined x to be 10.
 10
 `);
