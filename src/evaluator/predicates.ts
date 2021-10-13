@@ -69,13 +69,13 @@ export const isTopLevel = (x: any): x is TopLevel => {
     x.type === 'define-function'
     && typeof x.name === 'string'
     && Array.isArray(x.params)
-    && x.params.every(s => typeof s === 'string')
+    && x.params.every((s: any) => typeof s === 'string')
     && isExpr(x.body)
   ) || (
     x.type === 'define-struct'
     && typeof x.name === 'string'
     && Array.isArray(x.fields)
-    && x.fields.every(s => typeof s === 'string')
+    && x.fields.every((s: any) => typeof s === 'string')
   ) || (
     x.type === 'check-expect'
     && isExpr(x.actual)
@@ -122,7 +122,7 @@ export const isExpr = (x: any): x is Expr => {
   ) || (
     x.typeOfExpression === 'cond'
     && Array.isArray(x.clauses)
-    && x.clauses.every(c => {
+    && x.clauses.every((c: any)  => {
       return Array.isArray(c)
       && c.length === 2
       && isExpr(c[0])
@@ -224,7 +224,7 @@ export const isStructType = (x: any): x is StructType => {
   return (x && typeof x === 'object'
     && typeof x.name === 'string'
     && Array.isArray(x.fields)
-    && x.fields.every(s => typeof s === 'string')
+    && x.fields.every((s: any)  => typeof s === 'string')
   );
 }
 
