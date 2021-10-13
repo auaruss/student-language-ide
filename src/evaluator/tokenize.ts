@@ -42,15 +42,23 @@ export const tokenize = (exp: string): Token[] => {
     return [];
   }
   for (let [tokenType, expression] of tokenExpressions) {
-    let result = expression.exec(exp);
+    const result = expression.exec(exp);
     if (result) {
       let firstToken: Token[] = [Tok(tokenType,result[0])];
-      let restString: string = exp.slice(result[0].length);
+
+      if (tokenType === TokenType.Identifier) {
+        if (result[0] === '.')
+          firstToken = [TokErr('`.` is disallowed.')];
+        if (result[0][0] === '#')
+          firstToken = [TokErr(`read-syntax: bad syntax ${result[0]}`)];
+      }
+
+      const restString: string = exp.slice(result[0].length);
       return firstToken.concat(tokenize(restString));
     }
   }
 
-  let firstToken: Token[] = [TokErr(exp[0])];
-  let restString = exp.slice(1);
+  const firstToken: Token[] = [TokErr(exp[0])];
+  const restString = exp.slice(1);
   return firstToken.concat(tokenize(restString));
 }

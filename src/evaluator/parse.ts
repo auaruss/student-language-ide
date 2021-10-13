@@ -14,7 +14,7 @@ import {
   SExps, MakeFunctionDefinition, MakeAnd, MakeOr, MakeCheckExpect, 
   MakeCheckWithin, MakeCall
 } from './constructors';
-import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError, isExprArray } from './predicates';
+import { isExpr, isReadError, isTopLevel, isTopLevelError, isExprError, isExprArray, isTokenError } from './predicates';
 import { read } from './read';
 import { Expr, ParseEnv, SExp, TopLevel, TopLevelError } from './types';
 import { MakeVariableDefinition, MakeStructureDefinition } from './constructors';
@@ -484,6 +484,8 @@ export const parseList = (sexps: SExp[]): TopLevel => {
       return parseCall(sexps[0].sexp, sexps.slice(1));
 
     case 'SExp Array':
+      if (isTokenError(sexps[0].sexp[0]))
+        return sexps[0].sexp[0];
       return TopLevelErr(`function call: expected a function after the open parenthesis, but found something else`, sexps);
   }
 }

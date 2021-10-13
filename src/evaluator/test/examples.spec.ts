@@ -483,14 +483,14 @@ Defined x to be 10.
  * @knowntestfail '.' should not pass the reader as valid
  */
 tIO(`(define (f .) .)`,
-`read-syntax: illegal use of \`.\`
+`Token Error: Unidentified Token in \`.\` is disallowed.
 `);
 
 /**
  * @knowntestfail '#)' should not pass the reader as valid
  */
 tIO(`((#) 2 3)`,
-`read-syntax: bad syntax \`#)\`
+`Token Error: Unidentified Token in #
 `);
 
 }
