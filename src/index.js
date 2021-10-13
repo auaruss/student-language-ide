@@ -7,6 +7,6 @@ const App = () => (
       Hello World
     </h1>
   </div>
-)
+);
 
 ReactDOM.render(<App />, document.getElementById('app'));
