@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+  height:100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+#app {
+  height: 100%;
+  overflow: revert;
+}
+
+.top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+}
+
+.code-mirror-wrapper {
+  height: 100%;
+}
+
+.CodeMirror {
+  height: 100%;
+}
+
+.editor-container {
+  display: flex;
+  // width: 90%;
+  flex-direction: column;
+  padding: .5rem;
+  background-color: hsl(225, 6%, 25%);
+}
+
+.editor-title {
+  display: flex;
+  justify-content: space-between;
+  background-color: hsl(225, 6%, 13%);
+  color: white;
+  padding: 1rem;
+  border-top-right-radius: .5rem;
+  border-top-left-radius: .5rem;
+}
