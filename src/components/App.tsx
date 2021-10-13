@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Editor from './Editor/Editor';
+import { print } from '../evaluator/print';
 
 const App = () => {
   const [definitions, setDefinitions] = useState('');
@@ -15,8 +16,8 @@ const App = () => {
       />
       <Editor
         displayName='evaluations'
-        value={evaluations}
-        onChange={setEvaluations}
+        value={print(definitions)}
+        onChange={(setEvaluations)}
         // position={'right'}
       />
     </div>
