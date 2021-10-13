@@ -538,7 +538,7 @@ tIO(`(+ + *)`,
  * somewhere in the evaluator, which is disallowed
  */
 tIO(`(define-struct check [expect to be])`,
-`check-expect: this name was defined previously and cannot be re-defined
+`define-struct: expected a field name, but found a keyword
 `);
 
 /**
@@ -546,7 +546,7 @@ tIO(`(define-struct check [expect to be])`,
  * somewhere in the evaluator, which is disallowed
  */
 tIO(`(define-struct check-expect [to be])`,
-`check-expect: this name was defined previously and cannot be re-defined
+`define-struct: expected the structure name after define-struct, but found a keyword
 `);
 
 tIO(`(define-struct a [check-expect b])

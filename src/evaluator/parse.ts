@@ -149,7 +149,8 @@ parseEnv.set('define-struct', [
           const maybeFieldName = checkForNonKeywordIdentifier(
             sexp,
             'define-struct: expected a field name, but found ',
-            [SExps(IdAtom('define-struct'), ...sexps)]
+            [SExps(IdAtom('define-struct'), ...sexps)],
+            structureName
           );
           
           if (isTopLevelError(maybeFieldName)) return maybeFieldName;
@@ -517,7 +518,7 @@ const parseCall = (fname: string, sexps: SExp[]): Expr | TopLevelError => {
  */
 const checkForNonKeywordIdentifier = (
   sexp: SExp, err: string,
-  sexpsForErr: SExp[]
+  sexpsForErr: SExp[], structName?: string
 ): string | TopLevelError => {
   if (isReadError(sexp)) return sexp;
 
@@ -532,7 +533,11 @@ const checkForNonKeywordIdentifier = (
       return TopLevelErr(err + 'a boolean', sexpsForErr);
 
     case 'Id':
-      if (parseEnv.has(sexp.sexp))
+      const idToCheck = (structName === undefined) 
+        ? sexp.sexp
+        : structName + '-' + sexp.sexp;
+
+      if (parseEnv.has(idToCheck))
         return TopLevelErr(err + 'a keyword', sexpsForErr);
       return sexp.sexp;
 
