@@ -587,7 +587,7 @@ const exprResultArraysEqual = (a: ExprResult[], b: ExprResult[]): boolean => {
 
   for (let i = 0; i < a.length; i++) {
     const e1 = a[i];
-    const e2 = a[i];
+    const e2 = b[i];
 
     if (isValueError(e1) || isValueError(e2)) return false;
     if (! actualEqualsExpected(e1, e2)) return false;
