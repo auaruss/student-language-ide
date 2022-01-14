@@ -140,50 +140,17 @@ const evaluateDefinition = (d: {
   name: string,
   fields: string[]
 }, env: Env): Result => {
-
   let defnVal = env.get(d.name);
+  let sndarg: ExprResult;
+
   if (defnVal === undefined)
     throw new Error('Somehow, the environment was not populated correctly by the first pass. Bug in evaluateDefinition.');
-    if (defnVal.type === 'just')
-      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(d.name));
+  if (defnVal.type === 'just')
+    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(d.name));
 
-
-  if (d.type === 'define-struct') {
-    let structConstructor = env.get('make-' + d.name);
-    if (structConstructor === undefined)
-      return handleDefineStructError(d, env);
-    if (structConstructor.type === 'just')
-      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
-    
-    let structPredicate = env.get(d.name + '?');
-    if (structPredicate === undefined)
-      return handleDefineStructError(d, env);
-    
-    if (structPredicate.type === 'just')
-      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
-
-    for (let field of d.fields) {
-      let structAccessor = env.get(d.name + '-' + field);
-      if (structAccessor === undefined)
-        return handleDefineStructError(d, env);
-      if (structAccessor.type === 'just')
-        return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
-    }
-  }
-
-  let sndarg: ExprResult;
   switch (d.type) {
-    case 'define-struct':
-      const s = MakeStructType(d.name, d.fields);
-
-      mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
-      mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
-
-      for (let i = 0; i < d.fields.length; i++)
-        mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
-
-      sndarg = { type: 'StructType', name: d.name };
-      break;
+    case 'define-struct': 
+      return evaluateStructureDefinition(d, env);
 
     case 'define-function':
       sndarg = Clos(d.params, env, d.body);
@@ -199,9 +166,60 @@ const evaluateDefinition = (d: {
 }
 
 /**
+ * Evaluates a strcuture definition and creates the related helper functions.
+ * (e.g. for a posn structure, make-posn, posn-x, posn-y, posn?)
+ * @warning Mutates the environment.
+ * @param d a top level definition
+ * @param env the environment for the selected student language
+ * @returns a definition result, which includes the information 
+ *          intended to print out something human-readable about the definition
+ */
+const evaluateStructureDefinition = (d: {
+  type: 'define-struct',
+  name: string,
+  fields: string[]
+}, env: Env) => {
+  let structConstructor = env.get('make-' + d.name);
+  
+  if (structConstructor === undefined)
+    return handleDefineStructError(d, env);
+  if (structConstructor.type === 'just')
+    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
+
+  
+  let structPredicate = env.get(d.name + '?');
+
+  if (structPredicate === undefined)
+    return handleDefineStructError(d, env);
+  if (structPredicate.type === 'just')
+    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
+
+  for (let field of d.fields) {
+    let structAccessor = env.get(d.name + '-' + field);
+    if (structAccessor === undefined)
+      return handleDefineStructError(d, env);
+    if (structAccessor.type === 'just')
+      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
+  }
+
+  const s = MakeStructType(d.name, d.fields);
+
+  mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
+  mutateEnv(d.name + '?', MakeJust(MakeStructurePredicate(s)), env);
+
+  for (let i = 0; i < d.fields.length; i++)
+    mutateEnv(d.name + '-' + d.fields[i], MakeJust(MakeStructureAccessor(s, i)), env);
+
+  const sndarg: ExprResult = { type: 'StructType', name: d.name };
+  mutateEnv(d.name, MakeJust(sndarg), env);
+  return Bind(d.name, sndarg);
+}
+
+/**
  * Evaluates an expression.
  * @param e an expression
- * @param env an environment which is a base environment from a student language or one extended inside a function call
+ * @param env an environment which is a base environment
+ *            from a student language or one extended inside a function call
  * @returns an expression result
  */
 const evaluateExpr = (e: Expr, env: Env): ExprResult => {
@@ -214,101 +232,80 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
       return MakeAtomic(e.const);
 
     case 'VariableUsage':
-      let maybeExprResult = getVal(e.const, env);
-      if (!maybeExprResult || maybeExprResult.type === 'nothing')
-        return ValErr('this variable is not defined', e);
-      
-      let exprResult = maybeExprResult.thing;
-
-      if (isValueError(exprResult)) return ValErr('this variable is not defined', e);
-
-      switch (exprResult.type) {
-        case 'BuiltinFunction':
-        case 'Closure':
-        case 'StructureAccessor':
-        case 'StructureConstructor':
-        case 'StructurePredicate':
-          return ValErr(e.const + ': expected a function call, but there is no open parenthesis before this function');
-      }
-
-      return exprResult;
+      return evaluateVariableUsage(e, env);
 
     case 'if':
-      const pred = evaluateExpr(e.predicate, env);
-      if (isValueError(pred)) return pred;
-      if (pred.type !== 'Atomic' || typeof pred.value !== 'boolean')
-        return ValErr('predicate must be a boolean', e);
-      return pred.value ? evaluateExpr(e.consequent, env) : evaluateExpr(e.alternative, env);
+      return evaluateIf(e, env);
 
     case 'cond':
-      for (let clause of e.clauses) {
-        const pred = evaluateExpr(clause[0], env);
-        if (isValueError(pred)) return pred;
-        if (! (pred.type === 'Atomic' && typeof pred.value === 'boolean'))
-          return ValErr('cond: question result is not true or false');
-        if (pred.value) return evaluateExpr(clause[1], env);
-      }
-
-      if (e.final !== undefined) return evaluateExpr(e.final, env);
-      return ValErr('all question results were false', e);
+      return evaluateCond(e, env);
 
     case 'Call':
-      const op = evaluateOperator(e, e.op, env);
-      if (isValueError(op)) return op;
-
-      const args = evaluateOperands(e.args, env);
-      if (! isValueArray(args)) {
-        for (let arg of args) {
-          if (isValueError(arg)) return arg;
-        }
-        throw new Error("Bug in evaluateExpr, an argument to a function somehow is neither a value or a value error. Check all related predicates if you don't think the bug is here.");
-      }
-  
-      return apply(op, args, env, e);
+      return evaluateCall(e, env);
 
     case 'and':
-      for (let argument of e.arguments) {
-        let evaluatedArg = evaluateExpr(argument, env);
-        
-        if (isValueError(evaluatedArg)) return evaluatedArg;
-
-        switch (evaluatedArg.type) {
-          case 'Atomic':
-            if (evaluatedArg.value === false)
-              return MakeAtomic(false);
-            if (evaluatedArg.value === true)
-              break;
-          
-          // Fallthrough case for all non-boolean values.
-          default:
-            return ValErr(`and: question result is not true or false`, argument);   
-        }
-      }
-      return MakeAtomic(true);
+      return evaluateAnd(e, env);
 
     case 'or':
-      for (let argument of e.arguments) {
-        let evaluatedArg = evaluateExpr(argument, env);
-        
-        if (isValueError(evaluatedArg)) return evaluatedArg;
-
-        switch (evaluatedArg.type) {
-          case 'Atomic':
-            if (evaluatedArg.value === false)
-              break;
-            if (evaluatedArg.value === true)
-              return MakeAtomic(true);
-          
-          // Fallthrough case for all non-boolean values.
-          default:
-            return ValErr(`or: question result is not true or false`, argument);
-        }
-      }
-      return MakeAtomic(false);
+      return evaluateOr(e, env);
 
     case 'TemplatePlaceholder':
       return ValErr('...: expected a finished expression, but found a template');
   }
+}
+
+const evaluateVariableUsage = (e: {
+  typeOfExpression: 'VariableUsage',
+  const: string
+}, env: Env) => {
+  let maybeExprResult = getVal(e.const, env);
+  if (!maybeExprResult || maybeExprResult.type === 'nothing')
+    return ValErr('this variable is not defined', e);
+  
+  let exprResult = maybeExprResult.thing;
+
+  if (isValueError(exprResult)) return ValErr('this variable is not defined', e);
+
+  switch (exprResult.type) {
+    case 'BuiltinFunction':
+    case 'Closure':
+    case 'StructureAccessor':
+    case 'StructureConstructor':
+    case 'StructurePredicate':
+      return ValErr(e.const + ': expected a function call, but there is no open parenthesis before this function');
+  }
+
+  return exprResult;
+}
+
+const evaluateIf = (e: {
+  typeOfExpression: 'if',
+  predicate: Expr,
+  consequent: Expr,
+  alternative: Expr
+}, env: Env) => {
+  const pred = evaluateExpr(e.predicate, env);
+      if (isValueError(pred)) return pred;
+      if (pred.type !== 'Atomic' || typeof pred.value !== 'boolean')
+        return ValErr('predicate must be a boolean', e);
+      return pred.value ? evaluateExpr(e.consequent, env) : evaluateExpr(e.alternative, env);
+}
+
+const evaluateCond = (e: {
+  typeOfExpression: 'cond',
+  clauses: [Expr, Expr][]
+  final?: Expr
+}, env: Env) => {
+  for (let clause of e.clauses) {
+    const pred = evaluateExpr(clause[0], env);
+    if (isValueError(pred)) return pred;
+    if (! (pred.type === 'Atomic' && typeof pred.value === 'boolean'))
+      return ValErr('cond: question result is not true or false');
+    if (pred.value) return evaluateExpr(clause[1], env);
+  }
+
+  if (e.final !== undefined) return evaluateExpr(e.final, env);
+  return ValErr('all question results were false', e);
 }
 
 const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
@@ -322,6 +319,75 @@ const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
     return maybeBody.thing;
 
   return maybeBody.thing;
+}
+
+const evaluateCall = (e: {
+  typeOfExpression: 'Call',
+  op: string,
+  args: Expr[],
+}, env: Env) => {
+  const op = evaluateOperator(e, e.op, env);
+  if (isValueError(op)) return op;
+
+  const args = evaluateOperands(e.args, env);
+  if (! isValueArray(args)) {
+    for (let arg of args) {
+      if (isValueError(arg)) return arg;
+    }
+    throw new Error("Bug in evaluateExpr, an argument to a function somehow is neither a value or a value error. Check all related predicates if you don't think the bug is here.");
+  }
+
+  return apply(op, args, env, e);
+}
+
+const evaluateAnd = (e: {
+  typeOfExpression: 'and',
+  arguments: Expr[]
+}, env: Env) => {
+  for (let argument of e.arguments) {
+    let evaluatedArg = evaluateExpr(argument, env);
+    
+    if (isValueError(evaluatedArg)) return evaluatedArg;
+
+    switch (evaluatedArg.type) {
+      case 'Atomic':
+        if (evaluatedArg.value === false)
+          return MakeAtomic(false);
+        if (evaluatedArg.value === true)
+          break;
+      
+      // Fallthrough case for all non-boolean values.
+      default:
+        return ValErr(`and: question result is not true or false`, argument);   
+    }
+  }
+
+  return MakeAtomic(true);
+}
+
+const evaluateOr = (e: {
+  typeOfExpression: 'or',
+  arguments: Expr[]
+}, env: Env) => {
+  for (let argument of e.arguments) {
+    let evaluatedArg = evaluateExpr(argument, env);
+    
+    if (isValueError(evaluatedArg)) return evaluatedArg;
+
+    switch (evaluatedArg.type) {
+      case 'Atomic':
+        if (evaluatedArg.value === false)
+          break;
+        if (evaluatedArg.value === true)
+          return MakeAtomic(true);
+      
+      // Fallthrough case for all non-boolean values.
+      default:
+        return ValErr(`or: question result is not true or false`, argument);
+    }
+  }
+
+  return MakeAtomic(false);
 }
 
 /**
