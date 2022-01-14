@@ -10,7 +10,7 @@
 
 import {
   TopLevel, Expr, ExprResult,Env,
-  Result, Maybe, Value, ValueError,
+  Result, Maybe, Value, ValueError, Closure, StructType
 } from './types';
 
 import {
@@ -308,19 +308,6 @@ const evaluateCond = (e: {
   return ValErr('all question results were false', e);
 }
 
-const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
-  let maybeBody = getVal(op, env);
-
-  if (!maybeBody)
-    return ValErr('Expression undefined in program', e);
-  if (maybeBody.type === 'nothing')
-    return ValErr('Expression defined later in program', e);
-  if (isValueError(maybeBody.thing))
-    return maybeBody.thing;
-
-  return maybeBody.thing;
-}
-
 const evaluateCall = (e: {
   typeOfExpression: 'Call',
   op: string,
@@ -390,6 +377,19 @@ const evaluateOr = (e: {
   return MakeAtomic(false);
 }
 
+const evaluateOperator = (e: Expr, op: string, env: Env): ExprResult  => {
+  let maybeBody = getVal(op, env);
+
+  if (!maybeBody)
+    return ValErr('Expression undefined in program', e);
+  if (maybeBody.type === 'nothing')
+    return ValErr('Expression defined later in program', e);
+  if (isValueError(maybeBody.thing))
+    return maybeBody.thing;
+
+  return maybeBody.thing;
+}
+
 /**
  * @todo e
  * @param args 
@@ -413,35 +413,63 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
       return op.value(args);
 
     case 'Closure':
-      let clos = op.value;
-      if (! (clos.args.length === args.length))
-        return ValErr('Arity mismatch', e);
-
-      let localEnv = new Map<String, Maybe<ExprResult>>(clos.env);
-
-      for (let i = 0; i < args.length; i++) {
-        localEnv = extendEnv(clos.args[i], localEnv, MakeJust(args[i]));
-      }
-        
-      return evaluateExpr(clos.body, localEnv);
+      return applyClosure(op, args, e);
 
     case 'StructureAccessor':
-      if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
-      if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
-      if (args[0].struct !== op.struct) return ValErr(`posn-x: expects a posn, given a ${ args[0].struct.name }`);
-      return args[0].values[op.index];
+      return applyStructureAccessor(op, args, e);
 
     case 'StructureConstructor':
-      if (args.length !== op.struct.fields.length)
-        return ValErr('incorrect number of fields for make-' + op.struct.name, e);
-      return MakeStruct(op.struct, args);
+      return applyStructureConstructor(op, args, e);
 
     case 'StructurePredicate':
-      if (args.length !== 1) return ValErr('must apply a structure predicate to exactly one argument', e);
-      if (args[0].type !== 'Struct') return MakeAtomic(false);
-      return MakeAtomic(op.struct === args[0].struct);
+      return applyStructurePredicate(op, args, e);
   }
+}
 
+const applyClosure = (op: {
+  type: 'Closure',
+  value: Closure
+}, args: Value[], e: Expr) => {
+  let clos = op.value;
+  if (! (clos.args.length === args.length))
+    return ValErr('Arity mismatch', e);
+
+  let localEnv = new Map<String, Maybe<ExprResult>>(clos.env);
+
+  for (let i = 0; i < args.length; i++) {
+    localEnv = extendEnv(clos.args[i], localEnv, MakeJust(args[i]));
+  }
+    
+  return evaluateExpr(clos.body, localEnv);
+}
+
+const applyStructureAccessor = (op: {
+  type: 'StructureAccessor',
+  struct: StructType,
+  index: number
+}, args: Value[], e: Expr) => {
+  if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
+  if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
+  if (args[0].struct !== op.struct) return ValErr(`posn-x: expects a posn, given a ${ args[0].struct.name }`);
+  return args[0].values[op.index];
+}
+
+const applyStructureConstructor = (op: {
+  type: 'StructureConstructor',
+  struct: StructType
+}, args: Value[], e: Expr) => {
+  if (args.length !== op.struct.fields.length)
+  return ValErr('incorrect number of fields for make-' + op.struct.name, e);
+  return MakeStruct(op.struct, args);
+}
+
+const applyStructurePredicate = (op: {
+  type: 'StructurePredicate',
+  struct: StructType
+}, args: Value[], e: Expr) => {
+  if (args.length !== 1) return ValErr('must apply a structure predicate to exactly one argument', e);
+  if (args[0].type !== 'Struct') return MakeAtomic(false);
+  return MakeAtomic(op.struct === args[0].struct);
 }
 
 /**
