@@ -10,7 +10,7 @@
 
 import {
   TopLevel, Expr, ExprResult,Env,
-  Result, Maybe, Value, ValueError, Closure, StructType
+  Result, Maybe, Value, ValueError, Closure, StructType, ResultError
 } from './types';
 
 import {
@@ -89,21 +89,31 @@ const extendEnvIfDefinition = (toplevel: TopLevel, env: Env): Env => {
   if (toplevel.type === 'define-constant'
       || toplevel.type === 'define-function'
       || toplevel.type === 'define-struct') {
-    env = extendEnv(toplevel.name, env);
+    extendEnv(toplevel.name, env);
 
-    if (toplevel.type === 'define-struct'
-      && (! isInEnv('make-' + toplevel.name, env))
-      && (! isInEnv(toplevel.name + '?', env))
-      && (toplevel.fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
-    ) {
-      env = extendEnv('make-' + toplevel.name, env);
-      env = extendEnv(toplevel.name + '?', env);
-      for (let field of toplevel.fields)
-        env = extendEnv(toplevel.name + '-' + field, env);
-    }
+    if (toplevel.type === 'define-struct')
+      guardIfStructHelperIsAlreadyInEnv(toplevel, env);
   }
 
   return env;
+}
+
+const guardIfStructHelperIsAlreadyInEnv = ({
+  name,
+  fields
+}: {
+  name: string,
+  fields: string[]
+}, env: Env) => {
+  if ((! isInEnv('make-' + name, env))
+    && (! isInEnv(name + '?', env))
+    && (fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
+  ) {
+    env = extendEnv('make-' + name, env);
+    env = extendEnv(name + '?', env);
+    for (let field of fields)
+      env = extendEnv(name + '-' + field, env);
+  }
 }
 
 /**
@@ -188,29 +198,17 @@ const evaluateStructureDefinition = (d: {
   name: string,
   fields: string[]
 }, env: Env) => {
-  let structConstructor = env.get('make-' + d.name);
-  
-  if (structConstructor === undefined)
-    return handleDefineStructError(d, env);
-  if (structConstructor.type === 'just')
-    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
+  const maybeError = guardDefineStructErrors(d, env);
+  if (maybeError !== true)
+    return maybeError;
+  return evaluateCorrectStructureDefinition(d, env);
+}
 
-  
-  let structPredicate = env.get(d.name + '?');
-
-  if (structPredicate === undefined)
-    return handleDefineStructError(d, env);
-  if (structPredicate.type === 'just')
-    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
-
-  for (let field of d.fields) {
-    let structAccessor = env.get(d.name + '-' + field);
-    if (structAccessor === undefined)
-      return handleDefineStructError(d, env);
-    if (structAccessor.type === 'just')
-      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
-  }
-
+const evaluateCorrectStructureDefinition = (d: {
+  type: 'define-struct',
+  name: string,
+  fields: string[]
+}, env: Env) => {
   const s = MakeStructType(d.name, d.fields);
 
   mutateEnv('make-' + d.name, MakeJust(MakeStructureConstructor(s)), env);
@@ -223,6 +221,39 @@ const evaluateStructureDefinition = (d: {
   mutateEnv(d.name, MakeJust(sndarg), env);
   return Bind(d.name, sndarg);
 }
+
+const guardDefineStructErrors = (d: {
+  type: 'define-struct',
+  name: string,
+  fields: string[]
+}, env: Env): ResultError | ValueError | true => {
+  let structConstructor = env.get('make-' + d.name);
+  let structPredicate = env.get(d.name + '?');
+  
+  if (structConstructor === undefined)
+    return handleDefineStructError(d, env);
+  if (structConstructor.type === 'just')
+    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`make-${ d.name }`));
+  if (structPredicate === undefined)
+    return handleDefineStructError(d, env);
+  if (structPredicate.type === 'just')
+    return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
+  if (guardFieldErrors(d, env) !== true) 
+    return guardFieldErrors(d, env);
+}
+
+const guardFieldErrors = (d: {
+  type: 'define-struct';
+  name: string;
+  fields: string[];
+}, env: Env): ResultError | ValueError | true =>
+  d.fields.reduce((acc: ResultError | ValueError | true, field: string) => {
+    if (env.get(d.name + '-' + field) === undefined)
+      return handleDefineStructError(d, env);
+    if (env.get(d.name + '-' + field).type === 'just')
+      return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }-${ field }`));
+    return acc;
+  }, true);
 
 /**
  * Evaluates an expression.
