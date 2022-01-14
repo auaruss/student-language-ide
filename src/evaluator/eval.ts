@@ -22,7 +22,7 @@ import {
 
 import {
   isValue, isValueArray, isTopLevelError,
-  isExpr, isTopLevel, isExprError, isValueError
+  isExpr, isTopLevel, isExprError, isValueError, isResult
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
@@ -43,58 +43,67 @@ export const evaluate = (exp: string): Result[] => {
  * @returns a list of results after evaluating the top level syntactical objects
  */
 export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
-  let env = builtinEnv();
+  let env = populateEnv(toplevels, builtinEnv());
 
-  for (const toplevel of toplevels) {
-    if ((! isTopLevelError(toplevel)) 
-        && (! isExpr(toplevel))
-        && (
-          toplevel.type === 'define-constant'
-          || toplevel.type === 'define-function'
-          || toplevel.type === 'define-struct'
-    )) {
-      env = extendEnv(toplevel.name, env);
+  return toplevels
+    .map(evaluateIfNotTest(env))
+    .map(evaluateIfTest(env));
+}
 
-      if (toplevel.type === 'define-struct'
-         && (! isInEnv('make-' + toplevel.name, env))
-         && (! isInEnv(toplevel.name + '?', env))
-         && (toplevel.fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
-      ) {
-        env = extendEnv('make-' + toplevel.name, env);
-        env = extendEnv(toplevel.name + '?', env);
-        for (let field of toplevel.fields)
-          env = extendEnv(toplevel.name + '-' + field, env);
-      }
+
+const evaluateIfTest = (env: Env) => (toplevel: Result | {
+  type: "check-expect";
+  actual: Expr;
+  expected: Expr;
+} | {
+  type: "check-within";
+  actual: Expr;
+  expected: Expr;
+  margin: Expr;
+} | {
+  type: "check-error";
+  expression: Expr;
+  expectedErrorMessage?: string;
+}): Result => isResult(toplevel) ? toplevel : evaluateCheck(toplevel, env);
+
+const evaluateIfNotTest = (env: Env) => (toplevel: TopLevel) => 
+  ((! isTopLevelError(toplevel))
+      && (! isExpr(toplevel))
+      && (
+           (toplevel.type === 'check-expect')
+        || (toplevel.type === 'check-within')
+        || (toplevel.type === 'check-error')
+      )
+  ) ? toplevel
+    : evaluateTopLevel(toplevel, env);
+
+const populateEnv = (toplevels: TopLevel[], env: Env): Env =>
+  (toplevels.length === 0) 
+    ? env
+    : populateEnv(toplevels.slice(1), extendEnvIfDefinition(toplevels[0], env));
+
+const extendEnvIfDefinition = (toplevel: TopLevel, env: Env): Env => {
+  if (isTopLevelError(toplevel) || isExpr (toplevel))
+    return env;
+
+  if (toplevel.type === 'define-constant'
+      || toplevel.type === 'define-function'
+      || toplevel.type === 'define-struct') {
+    env = extendEnv(toplevel.name, env);
+
+    if (toplevel.type === 'define-struct'
+      && (! isInEnv('make-' + toplevel.name, env))
+      && (! isInEnv(toplevel.name + '?', env))
+      && (toplevel.fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
+    ) {
+      env = extendEnv('make-' + toplevel.name, env);
+      env = extendEnv(toplevel.name + '?', env);
+      for (let field of toplevel.fields)
+        env = extendEnv(toplevel.name + '-' + field, env);
     }
   }
 
-  const evalPass = toplevels.map(
-    e => {
-      return (
-        ((! isTopLevelError(e))
-          && (! isExpr(e))
-          && (
-               (e.type === 'check-expect')
-            || (e.type === 'check-within')
-            || (e.type === 'check-error')
-          )
-        ) ? e
-        : evaluateTopLevel(e, env)
-      );
-    }
-  );
-
-  return evalPass.map(
-    e => {
-      return (
-        ((! isTopLevelError(e))
-          && isTopLevel(e)
-          && (! isExpr(e))
-        ) ? evaluateCheck(e, env)
-        : e
-      );
-    }
-  );
+  return env;
 }
 
 /**
@@ -257,7 +266,7 @@ const evaluateExpr = (e: Expr, env: Env): ExprResult => {
 const evaluateVariableUsage = (e: {
   typeOfExpression: 'VariableUsage',
   const: string
-}, env: Env) => {
+}, env: Env): ExprResult => {
   let maybeExprResult = getVal(e.const, env);
   if (!maybeExprResult || maybeExprResult.type === 'nothing')
     return ValErr('this variable is not defined', e);
@@ -283,7 +292,7 @@ const evaluateIf = (e: {
   predicate: Expr,
   consequent: Expr,
   alternative: Expr
-}, env: Env) => {
+}, env: Env): ExprResult => {
   const pred = evaluateExpr(e.predicate, env);
       if (isValueError(pred)) return pred;
       if (pred.type !== 'Atomic' || typeof pred.value !== 'boolean')
@@ -295,7 +304,7 @@ const evaluateCond = (e: {
   typeOfExpression: 'cond',
   clauses: [Expr, Expr][]
   final?: Expr
-}, env: Env) => {
+}, env: Env): ExprResult => {
   for (let clause of e.clauses) {
     const pred = evaluateExpr(clause[0], env);
     if (isValueError(pred)) return pred;
@@ -312,7 +321,7 @@ const evaluateCall = (e: {
   typeOfExpression: 'Call',
   op: string,
   args: Expr[],
-}, env: Env) => {
+}, env: Env): ExprResult => {
   const op = evaluateOperator(e, e.op, env);
   if (isValueError(op)) return op;
 
@@ -330,7 +339,7 @@ const evaluateCall = (e: {
 const evaluateAnd = (e: {
   typeOfExpression: 'and',
   arguments: Expr[]
-}, env: Env) => {
+}, env: Env): ExprResult => {
   for (let argument of e.arguments) {
     let evaluatedArg = evaluateExpr(argument, env);
     
@@ -355,7 +364,7 @@ const evaluateAnd = (e: {
 const evaluateOr = (e: {
   typeOfExpression: 'or',
   arguments: Expr[]
-}, env: Env) => {
+}, env: Env): ExprResult => {
   for (let argument of e.arguments) {
     let evaluatedArg = evaluateExpr(argument, env);
     
@@ -429,7 +438,7 @@ const apply = (op: Value, args: Value[], env: Env, e: Expr): ExprResult => {
 const applyClosure = (op: {
   type: 'Closure',
   value: Closure
-}, args: Value[], e: Expr) => {
+}, args: Value[], e: Expr): ExprResult => {
   let clos = op.value;
   if (! (clos.args.length === args.length))
     return ValErr('Arity mismatch', e);
@@ -447,7 +456,7 @@ const applyStructureAccessor = (op: {
   type: 'StructureAccessor',
   struct: StructType,
   index: number
-}, args: Value[], e: Expr) => {
+}, args: Value[], e: Expr): ExprResult => {
   if (args.length !== 1) return ValErr('must apply a structure accessor to exactly one argument', e);
   if (args[0].type !== 'Struct') return ValErr('must apply a structure accessor to a struct', e);
   if (args[0].struct !== op.struct) return ValErr(`posn-x: expects a posn, given a ${ args[0].struct.name }`);
@@ -457,7 +466,7 @@ const applyStructureAccessor = (op: {
 const applyStructureConstructor = (op: {
   type: 'StructureConstructor',
   struct: StructType
-}, args: Value[], e: Expr) => {
+}, args: Value[], e: Expr): ExprResult => {
   if (args.length !== op.struct.fields.length)
   return ValErr('incorrect number of fields for make-' + op.struct.name, e);
   return MakeStruct(op.struct, args);
@@ -466,7 +475,7 @@ const applyStructureConstructor = (op: {
 const applyStructurePredicate = (op: {
   type: 'StructurePredicate',
   struct: StructType
-}, args: Value[], e: Expr) => {
+}, args: Value[], e: Expr): ExprResult => {
   if (args.length !== 1) return ValErr('must apply a structure predicate to exactly one argument', e);
   if (args[0].type !== 'Struct') return MakeAtomic(false);
   return MakeAtomic(op.struct === args[0].struct);
