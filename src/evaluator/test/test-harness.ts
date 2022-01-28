@@ -72,7 +72,7 @@ export const t  = (
           tokens = ts;
         }
       } catch (e) {
-        it('Threw this error on the tokenizer: ' + e, () => expect(e).toBeDefined());
+        it('Threw this error on the tokenizer: ' + e, () => fail(e));
       }
     }
 
@@ -88,7 +88,7 @@ export const t  = (
           sexps = s;
         }
       } catch (e) {
-        it('Threw this error on the reader: ' + e, () => expect(e).toBeDefined());
+        it('Threw this error on the reader: ' + e, () => () => fail(e));
       }
     }
 
@@ -104,7 +104,7 @@ export const t  = (
           toplevels = d;
         }
       } catch (e) {
-        it('Threw this error on the parser: ' + e, () => expect(e).toBeDefined());
+        it('Threw this error on the parser: ' + e, () => fail(e));
       }
     }
 
@@ -158,7 +158,7 @@ export const t  = (
           values = doe;
         }
       } catch (e) {
-        it('Threw this error on the evaluator: ' + e, () => expect(e).toBeDefined());;
+        it('Threw this error on the evaluator: ' + e, () => fail(e));
       }
     }
 
@@ -171,7 +171,7 @@ export const t  = (
           });
         }
       } catch (e) {
-        it('Threw this error on the printer: ' + e, () => expect(e).toBeDefined());
+        it('Threw this error on the printer: ' + e, () => () => fail(e));
       }
     }
   }
