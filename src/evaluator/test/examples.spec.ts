@@ -48,6 +48,7 @@ import { a2Tests } from './assignment2';
 import { a3Tests } from './assignment3';
 import { a4Tests } from './assignment4';
 import { a5Tests } from './assignment5';
+import { a6Tests } from './assignment6';
 
 const errorTests = (): void => {
 
@@ -428,14 +429,6 @@ t('(123)',
   ]
 );
 
-/**
- * @knowntestfail The reader should operate as described below
- * in option 2.
- * 
- *    1st option. Reader separates into 3 objects. ( [) 1
- * -> 2nd option. Reader separates into 2 objects. ([) 1 <- We are currently using this.
- *    3rd option. Reader separates into 3 objects, ignoring incorrect closing paren. ( [ 1
- */
 tIO(`
 ([)
 1`,
@@ -443,9 +436,6 @@ tIO(`
 1
 `);
 
-/**
-* @knowntestfail see above test failure
-*/
 tIO(`
 ([))
 1`,
@@ -456,9 +446,7 @@ Read Error: No Open Paren for )
 `
 );
 
-/**
-* @knowntestfail see above test failures
-*/
+
 tIO(`(]))
 1`,
 `Read Error: No Valid SExp for (])
@@ -466,9 +454,7 @@ Read Error: No Open Paren for )
 1
 `);
 
-/**
-* @knowntestfail see above test failures
-*/
+
 tIO(`
 ([[[][][][][][])
 (define x 10)
@@ -479,16 +465,10 @@ Defined x to be 10.
 10
 `);
 
-/**
- * @knowntestfail '.' should not pass the reader as valid
- */
 tIO(`(define (f .) .)`,
 `Token Error: Unidentified Token in \`.\` is disallowed.
 `);
 
-/**
- * @knowntestfail '#)' should not pass the reader as valid
- */
 tIO(`((#) 2 3)`,
 `Token Error: Unidentified Token in #
 `);
@@ -533,18 +513,10 @@ tIO(`(+ + *)`,
 `+: expected a function call, but there is no open parenthesis before this function
 `);
   
-/**
- * @knowntestfail redefining the name check-expect
- * somewhere in the evaluator, which is disallowed
- */
 tIO(`(define-struct check [expect to be])`,
 `define-struct: expected a field name, but found a keyword
 `);
 
-/**
- * @knowntestfail redefining the name check-expect
- * somewhere in the evaluator, which is disallowed
- */
 tIO(`(define-struct check-expect [to be])`,
 `define-struct: expected the structure name after define-struct, but found a keyword
 `);
@@ -837,10 +809,6 @@ t('(define (fib n)\n' +
 
 const parserStaticCheckTests = (): void => {
 
-/**
- * @knowntestfail 
- */
-// What should happen when we replace an existing function with a new variable in scope then try to use that variable.
 tIO(`
 (define (format-month m f)
   (cond [(string=? "long" f) m]
@@ -851,9 +819,6 @@ tIO(`
 function call: expected a function after the open parenthesis, but found a variable
 `);
 
-/**
- * @knowntestfail
- */
 tIO(
 `(and false +)
 
@@ -873,31 +838,19 @@ posn?: expected a function call, but there is no open parenthesis before this fu
 "hello": and: question result is not true or false
 `);
 
-/**
- * @knowntestfail
- */
 tIO('(define (hi bye) rye)',
 `rye: this variable is not defined
 `);
  
-/**
- * @knowntestfail
- */
 tIO('(define (hi bye) (f 2 2))',
 `f: this function is not defined
 `);
 
-/**
- * @knowntestfail
- */
 tIO(`(define (apply2 f x y) (f x y)) (apply2 + 2 3)`,
 `function call: expected a function after the open parenthesis, but found a variable
 apply2: this function is not defined
 `);
 
-/**
- * @knowntestfail
- */
 tIO(`("string")
 (id)
 (#t)
@@ -1354,9 +1307,6 @@ tIO(`(posn "x" 10)`,
 `posn: expected a function after the open parenthesis, but found a structure type (do you mean make-posn)
 `);
 
-/**
- * @knowntestfail Fixing this test requires making error reporting into a side channel.
- */
 tIO(`(define p (make-posn (+ 2 "hello") 3))
 (posn-y p)
 `,
@@ -2296,7 +2246,6 @@ tIO(`
 ...: expected a finished expression, but found a template
 `);
 
-/** @knowntestfail error message mismatch */
 tIO('(cond ["#t" "hello"] [else "goodbye"])',
 `cond: question result is not true or false
 `);
@@ -2323,6 +2272,7 @@ const currentWorkingOnTheseTests = (): void => {
   a3Tests();
   a4Tests();
   a5Tests();
+  a6Tests();
   demoTests();
 }
 
