@@ -1,3 +1,4 @@
+import { isExprResult } from './predicates';
 /**
  * @fileoverview An evaluator for the student languages.
  *               Generally, produces types from the fourth section of types.ts given types
@@ -22,7 +23,7 @@ import {
 
 import {
   isValue, isValueArray, isTopLevelError,
-  isExpr, isTopLevel, isExprError, isValueError, isResult
+  isExpr, isTopLevel, isExprError, isValueError, isResult, isResultError
 } from './predicates';
 import { parse } from './parse';
 import { builtinEnv } from './env';
@@ -44,12 +45,10 @@ export const evaluate = (exp: string): Result[] => {
  */
 export const evaluateTopLevels = (toplevels: TopLevel[]): Result[] => {
   let env = populateEnv(toplevels, builtinEnv());
-
   return toplevels
     .map(evaluateIfNotTest(env))
     .map(evaluateIfTest(env));
 }
-
 
 const evaluateIfTest = (env: Env) => (toplevel: Result | {
   type: "check-expect";
@@ -64,7 +63,14 @@ const evaluateIfTest = (env: Env) => (toplevel: Result | {
   type: "check-error";
   expression: Expr;
   expectedErrorMessage?: string;
-}): Result => isResult(toplevel) ? toplevel : evaluateCheck(toplevel, env);
+}): Result => { 
+  if (isResultError(toplevel) || isExprResult(toplevel)) return toplevel;
+  if (toplevel.type === 'check-expect'
+    || toplevel.type === 'check-within'
+    || toplevel.type === 'check-error') 
+    return evaluateCheck(toplevel, env);
+  return toplevel;
+}
 
 const evaluateIfNotTest = (env: Env) => (toplevel: TopLevel) => 
   ((! isTopLevelError(toplevel))
@@ -78,21 +84,19 @@ const evaluateIfNotTest = (env: Env) => (toplevel: TopLevel) =>
     : evaluateTopLevel(toplevel, env);
 
 const populateEnv = (toplevels: TopLevel[], env: Env): Env =>
-  (toplevels.length === 0) 
-    ? env
-    : populateEnv(toplevels.slice(1), extendEnvIfDefinition(toplevels[0], env));
+  toplevels.reduce(extendEnvIfDefinition, env);
 
-const extendEnvIfDefinition = (toplevel: TopLevel, env: Env): Env => {
-  if (isTopLevelError(toplevel) || isExpr (toplevel))
+const extendEnvIfDefinition = (env: Env, toplevel: TopLevel): Env => {
+  if (isTopLevelError(toplevel) || isExpr(toplevel))
     return env;
 
   if (toplevel.type === 'define-constant'
       || toplevel.type === 'define-function'
       || toplevel.type === 'define-struct') {
-    extendEnv(toplevel.name, env);
+    env = extendEnv(toplevel.name, env);
 
     if (toplevel.type === 'define-struct')
-      guardIfStructHelperIsAlreadyInEnv(toplevel, env);
+      env = guardIfStructHelperIsAlreadyInEnv(toplevel, env);
   }
 
   return env;
@@ -104,7 +108,7 @@ const guardIfStructHelperIsAlreadyInEnv = ({
 }: {
   name: string,
   fields: string[]
-}, env: Env) => {
+}, env: Env): Env => {
   if ((! isInEnv('make-' + name, env))
     && (! isInEnv(name + '?', env))
     && (fields.reduce((acc, elem) => acc && (! isInEnv(elem, env)), true))
@@ -114,6 +118,8 @@ const guardIfStructHelperIsAlreadyInEnv = ({
     for (let field of fields)
       env = extendEnv(name + '-' + field, env);
   }
+
+  return env;
 }
 
 /**
@@ -238,8 +244,7 @@ const guardDefineStructErrors = (d: {
     return handleDefineStructError(d, env);
   if (structPredicate.type === 'just')
     return ResultErr(`this name was defined previously and cannot be re-defined`, MakeVariableUsageExpr(`${ d.name }?`));
-  if (guardFieldErrors(d, env) !== true) 
-    return guardFieldErrors(d, env);
+  return guardFieldErrors(d, env);
 }
 
 const guardFieldErrors = (d: {
